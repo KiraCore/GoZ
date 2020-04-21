@@ -11,16 +11,7 @@ RUN curl -sL https://deb.nodesource.com/setup_11.x | bash -
 RUN apt-get update && apt-get -qq install -y nodejs && apt-get -qq install -y nginx
 
 RUN npm install -g @angular/cli
-RUN npm install -g heroku
 RUN npm install -g web3 --unsafe-perm=true --allow-root
 
 RUN git config --global url.https://github.com/.insteadOf git://github.com/
-
-
-
-
-
-
-
-
 
