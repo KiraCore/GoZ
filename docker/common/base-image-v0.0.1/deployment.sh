@@ -7,7 +7,7 @@ set -x
 echo "APT Update, Upfrade and Intall..."
 apt-get update
 apt-get upgrade -y --force-yes
-apt-get install -y --force-yes \
+apt-get install -y --allow-unauthenticated --allow-downgrades --allow-remove-essential --allow-change-held-packages --force-yes \
     gnupg \
     apt-transport-https \
     apt-utils \
@@ -53,9 +53,10 @@ apt-get install -y --force-yes \
     zip
 
 apt install -y --force-yes npm
-npm install -g n && n stable
+npm install -g n
+n stable
 
-chmod +x -R /etc/env
+chmod +x -R /etc/environment 
 
 echo "Creating GIT simlink"
 ln -s /usr/bin/git /bin/git
