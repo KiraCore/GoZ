@@ -1,5 +1,5 @@
 FROM ubuntu:18.04
-COPY ../bin/deployment-v0.0.1.sh /tmp/build.sh
+COPY ./deployment.sh /tmp/build.sh
 
 RUN chmod +x /tmp/build.sh
 
