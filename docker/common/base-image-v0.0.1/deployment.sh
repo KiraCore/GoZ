@@ -13,6 +13,9 @@ EOF
 
 echo "setting the PGP key"
 
+apt-get update
+apt-get install gnupg
+
 apt-key add - <<'PGDG_ACCC4CF8'
 -----BEGIN PGP PUBLIC KEY BLOCK-----
 Version: GnuPG v1
