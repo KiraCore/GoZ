@@ -1,6 +1,8 @@
 FROM ubuntu:18.04
 COPY ./deployment.sh /tmp/build.sh
 
+RUN apt-get update && apt-get install -y gnupg2
+
 RUN chmod +x /tmp/build.sh
 
 RUN LC_ALL=C DEBIAN_FRONTEND=noninteractive /tmp/build.sh \
