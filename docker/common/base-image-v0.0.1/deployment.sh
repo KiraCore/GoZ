@@ -25,6 +25,7 @@ apt-get install -y --allow-unauthenticated --allow-downgrades --allow-remove-ess
     htop \
     imagemagick \
     iputils-tracepath \
+    iputils-ping \
     jq \
     language-pack-en \
     libzip4 \
@@ -34,6 +35,7 @@ apt-get install -y --allow-unauthenticated --allow-downgrades --allow-remove-ess
     locales \
     make \
     netcat-openbsd \
+    net-tools \
     openssh-client \
     openssh-server \
     pkg-config \

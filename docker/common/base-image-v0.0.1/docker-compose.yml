@@ -1,0 +1,5 @@
+version: '3.8'
+services:
+  kirabase:
+    container_name: kira-base-image
+    network_mode: host
