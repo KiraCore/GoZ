@@ -7,10 +7,11 @@ ENV PROFILE_PATH="/etc/profile"
 ENV BASHRC_PATH="/root/.bashrc"
 
 ENV GOROOT="/usr/local/go"
-ENV GOPATH="/home/go"
-ENV GOBIN="/home/bin"
+ENV GOPATH="${HOME}/go"
+ENV GOBIN="${GOPATH}/bin"
 ENV GO_VERSION="1.14"
-ENV PATH="/root/.cargo/bin:${PATH}:${GOBIN}"
+ENV DOTNET_ROOT="/usr/bin/dotnet"
+ENV PATH="/root/.cargo/bin:${PATH}:${GOBIN}:${GOROOT}:${GOPATH}"
 ENV RUSTFLAGS="-Ctarget-feature=+aes,+ssse3"
 
 RUN chmod +x /tmp/build.sh
@@ -37,3 +38,6 @@ RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
 
 # Check if cargo is visible
 RUN cargo --help
+
+# Check go version and environment
+RUN go version
