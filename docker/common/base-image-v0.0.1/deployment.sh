@@ -8,42 +8,54 @@ echo "APT Update, Upfrade and Intall..."
 apt-get update
 apt-get upgrade -y --force-yes
 apt-get install -y --allow-unauthenticated --allow-downgrades --allow-remove-essential --allow-change-held-packages --force-yes \
-    gnupg \
     apt-transport-https \
+    autoconf \
+    automake \
     apt-utils \
     build-essential \
     bind9-host \
     bzip2 \
+    ca-certificates \
     coreutils \
     curl \
     clang \
     cmake \
     dnsutils \
+    dpkg-dev \
     ed \
+    file \
     gcc \
+    g++ \
     git \
+    gnupg \
     htop \
     imagemagick \
     iputils-tracepath \
     iputils-ping \
     jq \
     language-pack-en \
+    libtool \
     libzip4 \
     libssl-dev \
     libudev-dev \
     libunwind-dev \
+    libusb-1.0-0-dev \
     locales \
     make \
+    netbase \
     netcat-openbsd \
     net-tools \
     openssh-client \
     openssh-server \
     pkg-config \
     python \
+    patch \
+    procps \
     rename \
     socat \
     sshfs \
     stunnel \
+    subversion \
     syslinux \
     tar \
     telnet \
@@ -53,6 +65,39 @@ apt-get install -y --allow-unauthenticated --allow-downgrades --allow-remove-ess
     wipe \
     yarn \
     zip
+
+echo "APT Intall Rust Dependencies..."
+apt-get install -y --no-install-recommends --allow-unauthenticated --allow-downgrades --allow-remove-essential --allow-change-held-packages --force-yes \
+    libc6-dev \
+    libbz2-dev \
+    libcurl4-openssl-dev \
+    libdb-dev \
+    libevent-dev \
+    libffi-dev \
+    libgdbm-dev \
+    libglib2.0-dev \
+    libgmp-dev \
+    libjpeg-dev \
+    libkrb5-dev \
+    liblzma-dev \
+    libmagickcore-dev \
+    libmagickwand-dev \
+    libmaxminddb-dev \
+    libncurses5-dev \
+    libncursesw5-dev \
+    libpng-dev \
+    libpq-dev \
+    libreadline-dev \
+    libsqlite3-dev \
+    libssl-dev \
+    libwebp-dev \
+    libxml2-dev \
+    libxslt-dev \
+    libyaml-dev \
+    xz-utils \
+    zlib1g-dev
+
+echo "Intalling NPM..."
 
 apt install -y --force-yes npm
 npm install -g n

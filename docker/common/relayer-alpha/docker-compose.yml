@@ -1,0 +1,5 @@
+version: '3.8'
+services:
+  relayer:
+    container_name: relayer-image
+    network_mode: host

@@ -1,16 +1,20 @@
 # GoZ
 Game of Zones
 
-
-
 # Registry Images
 
+## Latest Images
+> Base: `kiracore/goz:base-image-v0.0.1`
+> Gaia: `kiracore/goz:gaia-ibc-alpha`
+> Relayer: `kiracore/goz:relayer-alpha`
 
-> Base Image: `kiracore/goz:base-image-v0.0.1`
+## Accessing Images with SSH console
 
-docker inspect --format="{{.Id}}" kiracore/goz:base-image-v0.0.1
-> docker exec -it $(docker inspect --format="{{.Id}}" kiracore/goz:base-image-v0.0.1) bash
+> Base container: 
+`docker exec -it $(docker ps -a -q  --filter ancestor=kiracore/goz:base-image-v0.0.1) bash`
 
-# Docker Commands
+> Gaia container: 
+`docker exec -it $(docker ps -a -q  --filter ancestor=kiracore/goz:gaia-ibc-alpha) bash`
 
-> `docker container ls` //To list all the running containers.
+> Relayer container: 
+`docker exec -it $(docker ps -a -q  --filter ancestor=kiracore/goz:relayer-alpha) bash`
