@@ -100,7 +100,7 @@ apt-get install -y --no-install-recommends --allow-unauthenticated --allow-downg
 
 echo "Intalling NPM..."
   
-apt install -y --force-yes --allow npm
+apt install -y --force-yes npm
 npm install -g n
 n stable
 
