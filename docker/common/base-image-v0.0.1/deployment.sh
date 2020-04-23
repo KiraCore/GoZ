@@ -68,8 +68,14 @@ apt-get install -y --allow-unauthenticated --allow-downgrades --allow-remove-ess
     yarn \
     zip
 
+echo "Intalling NPM..."
+apt-get install -y --allow-unauthenticated --force-yes \
+    npm
+npm install -g n
+n stable
+
 echo "APT Intall Rust Dependencies..."
-apt-get install -y --no-install-recommends --allow-unauthenticated --allow-downgrades --allow-remove-essential --allow-change-held-packages --force-yes \
+apt-get install -y --allow-unauthenticated --force-yes \
     libc6-dev \
     libbz2-dev \
     libcurl4-openssl-dev \
@@ -97,15 +103,6 @@ apt-get install -y --no-install-recommends --allow-unauthenticated --allow-downg
     libyaml-dev \
     xz-utils \
     zlib1g-dev
-
-echo "Intalling NPM..."
-  
-apt-get install -y --allow-unauthenticated --allow-downgrades --allow-remove-essential --allow-change-held-packages --force-yes \
-    npm
-npm install -g n
-n stable
-
-chmod +x -R /etc/environment 
 
 echo "Creating GIT simlink"
 ln -s /usr/bin/git /bin/git
