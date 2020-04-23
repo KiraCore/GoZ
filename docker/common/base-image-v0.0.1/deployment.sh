@@ -123,3 +123,4 @@ echo "Installing latest go version $GO_VERSION https://golang.org/doc/install ..
 wget https://dl.google.com/go/go$GO_VERSION.linux-amd64.tar.gz
 tar -C /usr/local -xzf go$GO_VERSION.linux-amd64.tar.gz
 
+#echo "source $PROFILE_PATH" >> $BASHRC_PATH

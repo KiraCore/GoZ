@@ -4,7 +4,7 @@ COPY ./deployment.sh /tmp/build.sh
 RUN apt-get update && apt-get install -y gnupg2
 
 ENV PROFILE_PATH="/etc/profile"
-ENV BASHRC_PATH="$HOME/.bashrc"
+ENV BASHRC_PATH="${HOME}/.bashrc"
 
 ENV GOROOT="/usr/local/go"
 ENV GOPATH="/home/go"
@@ -31,5 +31,5 @@ RUN git config --global url.https://github.com/.insteadOf git://github.com/
 
 RUN curl -sSf sh.rustup.rs | sh -s -- -y
 
-# Check cargo is visible
+# Check if cargo is visible
 RUN cargo --help
