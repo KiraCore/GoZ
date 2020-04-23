@@ -29,7 +29,11 @@ RUN npm install -g web3 --unsafe-perm=true --allow-root
 
 RUN git config --global url.https://github.com/.insteadOf git://github.com/
 
-RUN curl -sSf sh.rustup.rs | sh -s -- -y
+# Update new packages
+RUN apt-get update
+
+# Get Rust
+RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
 
 # Check if cargo is visible
 RUN cargo --help
