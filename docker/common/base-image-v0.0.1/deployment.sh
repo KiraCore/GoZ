@@ -36,7 +36,6 @@ apt-get install -y --allow-unauthenticated --allow-downgrades --allow-remove-ess
     language-pack-en \
     libtool \
     libzip4 \
-    libssl-dev \
     libssl1.0-dev \
     libudev-dev \
     libunwind-dev \
