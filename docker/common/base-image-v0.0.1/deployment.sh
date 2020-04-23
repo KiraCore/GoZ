@@ -37,6 +37,7 @@ apt-get install -y --allow-unauthenticated --allow-downgrades --allow-remove-ess
     libtool \
     libzip4 \
     libssl-dev \
+    libssl1.0-dev \
     libudev-dev \
     libunwind-dev \
     libusb-1.0-0-dev \
