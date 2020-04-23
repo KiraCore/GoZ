@@ -7,7 +7,7 @@ ENV PROFILE_PATH="/etc/profile"
 ENV BASHRC_PATH="/root/.bashrc"
 
 ENV GOROOT="/usr/local/go"
-ENV GOPATH="${HOME}/go"
+ENV GOPATH="/home/go"
 ENV GOBIN="${GOPATH}/bin"
 ENV GO_VERSION="1.14"
 ENV DOTNET_ROOT="/usr/bin/dotnet"
@@ -37,7 +37,8 @@ RUN apt-get update
 RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
 
 # Check if cargo is visible
-RUN cargo --help
+RUN cargo --version 
 
 # Check go version and environment
 RUN go version
+RUN go env
