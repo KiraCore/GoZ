@@ -45,6 +45,8 @@ apt-get install -y --allow-unauthenticated --allow-downgrades --allow-remove-ess
     netbase \
     netcat-openbsd \
     net-tools \
+    nodejs-dev \
+    node-gyp \
     openssh-client \
     openssh-server \
     pkg-config \
@@ -89,7 +91,6 @@ apt-get install -y --no-install-recommends --allow-unauthenticated --allow-downg
     libpq-dev \
     libreadline-dev \
     libsqlite3-dev \
-    libssl-dev \
     libwebp-dev \
     libxml2-dev \
     libxslt-dev \
@@ -98,8 +99,8 @@ apt-get install -y --no-install-recommends --allow-unauthenticated --allow-downg
     zlib1g-dev
 
 echo "Intalling NPM..."
-
-apt install -y --force-yes npm
+  
+apt install -y --force-yes --allow npm
 npm install -g n
 n stable
 
