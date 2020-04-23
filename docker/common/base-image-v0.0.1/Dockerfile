@@ -4,7 +4,7 @@ COPY ./deployment.sh /tmp/build.sh
 RUN apt-get update && apt-get install -y gnupg2
 
 ENV PROFILE_PATH="/etc/profile"
-ENV BASHRC_PATH="${HOME}/.bashrc"
+ENV BASHRC_PATH="/root/.bashrc"
 
 ENV GOROOT="/usr/local/go"
 ENV GOPATH="/home/go"
