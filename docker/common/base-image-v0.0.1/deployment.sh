@@ -118,3 +118,8 @@ apt-get update
 apt-get install -y aspnetcore-runtime-3.1
 apt-get install -y dotnet-sdk-2.1
 apt-get install -y dotnet-sdk-3.1
+
+echo "Installing latest go version $GO_VERSION https://golang.org/doc/install ..."
+wget https://dl.google.com/go/go$GO_VERSION.linux-amd64.tar.gz
+tar -C /usr/local -xzf go$GO_VERSION.linux-amd64.tar.gz
+

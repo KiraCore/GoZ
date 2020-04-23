@@ -4,13 +4,6 @@ exec 2>&1
 set -e
 set -x
 
-PROFILE_PATH="/etc/profile"
-echo "Adding variables to PATH in $PROFILE_PATH..."
-
-echo "RELAYER=\$GOPATH/src/github.com/iqlusioninc/relayer" >> $PROFILE_PATH
-
-$PROFILE_PATH
-
 BRANCH="master"
 echo "Downloading and installing relayer in $RELAYER, branch $BRANCH..."
 mkdir -p $(dirname $RELAYER) && \
