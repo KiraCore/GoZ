@@ -8,11 +8,14 @@ ENV BASHRC_PATH="/root/.bashrc"
 
 ENV GOROOT="/usr/local/go"
 ENV GOPATH="/home/go"
-ENV GOBIN="${GOPATH}/bin"
+ENV GOBIN="${GOROOT}/bin"
 ENV GO_VERSION="1.14"
 ENV DOTNET_ROOT="/usr/bin/dotnet"
 ENV PATH="/root/.cargo/bin:${PATH}:${GOBIN}:${GOROOT}:${GOPATH}"
 ENV RUSTFLAGS="-Ctarget-feature=+aes,+ssse3"
+ENV GO111MODULE=on
+
+RUN mkdir -p ${GOPATH}/src ${GOPATH}/bin
 
 RUN chmod +x /tmp/build.sh
 RUN chmod 777 $PROFILE_PATH
@@ -40,5 +43,6 @@ RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
 RUN cargo --version 
 
 # Check go version and environment
+RUN echo $PATH
 RUN go version
 RUN go env
