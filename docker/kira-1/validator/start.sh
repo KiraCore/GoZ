@@ -42,12 +42,15 @@ rly keys list $CHAINID
 gaiad init --chain-id $CHAINID $CHAINID
 
 # external variables: NODE_ID, NODE_KEY, VALIDATOR_KEY
-# setup node key
+# setup node key and unescape
 rm -f -v $NODE_KEY_PATH && \
- echo $NODE_KEY >> $NODE_KEY_PATH
-# setup validator signing key
+ echo $NODE_KEY > $NODE_KEY_PATH && \
+ sed -i 's/\\\"/\"/g' $NODE_KEY_PATH
+
+# setup validator signing key and unescape
 rm -f -v $VALIDATOR_KEY_PATH && \
- echo $VALIDATOR_KEY >> $VALIDATOR_KEY_PATH
+ echo $VALIDATOR_KEY > $VALIDATOR_KEY_PATH && \
+ sed -i 's/\\\"/\"/g' $VALIDATOR_KEY_PATH
 
 # NOTE: ensure that the gaia rpc is open to all connections
 sed -i 's#tcp://127.0.0.1:26657#tcp://0.0.0.0:26657#g' $CONFIG_TOML_PATH
@@ -65,6 +68,22 @@ $KEYRINGPASS
 EOF
 
 echo ${PASSPHRASE} | gaiacli keys list
+
+echo "Creating genesis file..."
+echo ${KEYRINGPASS} | gaiad add-genesis-account $(gaiacli keys show validator -a) 100000000000$DENOM,10000000samoleans
+gaiad add-genesis-account $(rly chains addr $CHAINID) 10000000000000$DENOM,10000000samoleans
+
+gaiad gentx --name validator --amount 90000000000$DENOM << EOF
+$KEYRINGPASS
+$KEYRINGPASS
+$KEYRINGPASS
+EOF
+
+gaiad collect-gentxs
+
+################################
+
+
 
 echo "Node setup setup was finalized."
 /bin/bash
