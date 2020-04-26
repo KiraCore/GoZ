@@ -25,11 +25,17 @@ CONFIG_TOML_PATH=$HOME/.gaiad/config/config.toml
 # external variables RLYKEY_ADDRESS, RLYKEY_MNEMONIC
 
 cd
+
+if [ -f "$CHAINID.json" ]; then
+   echo "Validator node was already initalized."
+   exit 0
+fi
+
 rly config init
 echo "{\"key\":\"$RLYKEY\",\"chain-id\":\"$CHAINID\",\"rpc-addr\":\"http://$DOMAIN:26657\",\"account-prefix\":\"cosmos\",\"gas\":200000,\"gas-prices\":\"0.025$DENOM\",\"default-denom\":\"$DENOM\",\"trusting-period\":\"330h\"}" > $CHAINID.json
 # NOTE: you will want to save the content from this JSON file
 rly chains add -f $CHAINID.json
-rly keys restore $CHAINID $RLYKEY $RLYKEY_MNEMONIC
+rly keys restore $CHAINID $RLYKEY "$RLYKEY_MNEMONIC"
 rly keys list $CHAINID
 
 gaiad init --chain-id $CHAINID $CHAINID
@@ -54,3 +60,4 @@ $PASSPHRASE
 EOF
 
 echo ${PASSPHRASE} | gaiacli keys list
+
