@@ -42,6 +42,7 @@ apt-get install -y --allow-unauthenticated --allow-downgrades --allow-remove-ess
     libusb-1.0-0-dev \
     locales \
     make \
+    nano \
     netbase \
     netcat-openbsd \
     net-tools \

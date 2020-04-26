@@ -7,6 +7,7 @@ Game of Zones
 > Base: `kiracore/goz:base-image-v0.0.1`
 > Gaia: `kiracore/goz:gaia-ibc-alpha`
 > Relayer: `kiracore/goz:relayer-alpha`
+> Validator: `kiracore/goz:kira-1-validator`
 
 ## Accessing Images with SSH console
 
@@ -18,6 +19,9 @@ Game of Zones
 
 > Relayer container: 
 `docker exec -it $(docker ps -a -q  --filter ancestor=kiracore/goz:relayer-alpha) bash`
+
+> Validator container: 
+`docker exec -it $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-1-validator) bash`
 
 ## Docker Commands
 

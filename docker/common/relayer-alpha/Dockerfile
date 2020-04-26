@@ -9,4 +9,4 @@ RUN chmod +x /tmp/build.sh
 ARG DEBIAN_FRONTEND=noninteractive
 RUN LC_ALL=C DEBIAN_FRONTEND=noninteractive /tmp/build.sh
 
-RUN rly version
+RUN rly help
