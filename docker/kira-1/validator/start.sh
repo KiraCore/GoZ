@@ -55,13 +55,19 @@ sed -i "s/stake/$DENOM/g" $GENESIS_JSON_PATH
 sed -i 's/pruning = "syncable"/pruning = "nothing"/g' $APP_TOML_PATH
 
 # external variables: KEYRINGPASS, PASSPHRASE
-#gaiacli keys import validator $VALIDATOR_SELF_KEY_PATH << EOF
-#$KEYRINGPASS
-#$PASSPHRASE
-#EOF
+# Exporting: gaiacli keys export validator -o text
+# Deleting: gaiacli keys delete validator
+# Importing (first time requires to input keyring password twice):
+gaiacli keys import validator $VALIDATOR_SELF_KEY_PATH << EOF
+$PASSPHRASE
+$KEYRINGPASS
+$KEYRINGPASS
+EOF
 
-#echo ${PASSPHRASE} | gaiacli keys list
+echo ${PASSPHRASE} | gaiacli keys list
 
 echo "Node setup setup was finalized."
 /bin/bash
 exit 0
+
+
