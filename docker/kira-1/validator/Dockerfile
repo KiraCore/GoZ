@@ -7,7 +7,7 @@ ENV DENOM=ukex
 ENV CHAINID=kira-1
 ENV DOMAIN=goz.kiraex.com
 ENV RLYKEY=faucet
-ENV VALIDATOR_KEY_PATH=/root/validator.key
+ENV VALIDATOR_SELF_KEY_PATH=/root/validator.key
 
 RUN chmod +x /tmp/build.sh
 RUN chmod +x /root/start.sh
