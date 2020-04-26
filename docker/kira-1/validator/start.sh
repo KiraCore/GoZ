@@ -28,6 +28,7 @@ cd
 
 if [ -f "$CHAINID.json" ]; then
    echo "Validator node was already initalized."
+   /bin/bash
    exit 0
 fi
 
@@ -61,3 +62,6 @@ sed -i 's/pruning = "syncable"/pruning = "nothing"/g' $APP_TOML_PATH
 
 #echo ${PASSPHRASE} | gaiacli keys list
 
+echo "Node setup setup was finalized."
+/bin/bash
+exit 0

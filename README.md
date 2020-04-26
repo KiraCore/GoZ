@@ -25,6 +25,10 @@ Node Address: goz.kiraex.com
 > Validator container: 
 `docker exec -it $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-1-validator) bash`
 
+## If container is not running
+
+> Validator container:
+`docker run -it -d $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-1-validator) /bin/bash`
 
 ## Checking container error logs
 
