@@ -1,6 +1,8 @@
 # GoZ
 Game of Zones
 
+Node Address: goz.kiraex.com 
+
 # Registry Images
 
 ## Latest Images
@@ -22,6 +24,15 @@ Game of Zones
 
 > Validator container: 
 `docker exec -it $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-1-validator) bash`
+
+
+## Checking container error logs
+
+> Validator container (HEAD): 
+`docker logs --follow $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-1-validator)`
+
+> Validator container (TAIL): 
+`docker logs --tail 50 --follow --timestamps $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-1-validator)`
 
 ## Docker Commands
 
