@@ -123,4 +123,8 @@ echo "Installing latest go version $GO_VERSION https://golang.org/doc/install ..
 wget https://dl.google.com/go/go$GO_VERSION.linux-amd64.tar.gz
 tar -C /usr/local -xvf go$GO_VERSION.linux-amd64.tar.gz
 
-#echo "source $PROFILE_PATH" >> $BASHRC_PATH
+echo "Installing custom systemctl..."
+wget https://raw.githubusercontent.com/gdraheim/docker-systemctl-replacement/master/files/docker/systemctl.py -O /usr/local/bin/systemctl2
+chmod -v 777 /usr/local/bin/systemctl2
+
+systemctl2 --version

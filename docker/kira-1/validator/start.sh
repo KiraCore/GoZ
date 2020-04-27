@@ -10,28 +10,51 @@ VALIDATOR_KEY_PATH=$HOME/.gaiad/config/priv_validator_key.json
 APP_TOML_PATH=$HOME/.gaiad/config/app.toml
 GENESIS_JSON_PATH=$HOME/.gaiad/config/genesis.json
 CONFIG_TOML_PATH=$HOME/.gaiad/config/config.toml
-
-##{
-##    "key": "faucet",
-##    "chain-id": "kira-1",
-##    "rpc-addr": "http://goz.kiraex.com:26657",
-##    "account-prefix": "cosmos",
-##    "gas": 200000,
-##    "gas-prices": "0.025ukex",
-##    "default-denom": "ukex",
-##    "trusting-period": "330h"
-##}
-
-# external variables RLYKEY_ADDRESS, RLYKEY_MNEMONIC
+INIT_START_FILE=$HOME/init_started
+INIT_END_FILE=$HOME/init_ended
 
 cd
 
-if [ -f "$CHAINID.json" ]; then
-   echo "Validator node was already initalized."
+if [ -f "$INIT_END_FILE" ]; then
+   echo "Validator node was completed successfully, starting services..."
+
+   systemctl2 start gaiad
+   systemctl2 start faucet
+
+   sleep 10
+   
+   STATUS_FAUCET="$(systemctl2 is-active faucet.service)"
+   STATUS_GAIA="$(systemctl2 is-active gaiad.service)"
+   
+   while true
+   do
+       if [ "${STATUS_GAIA}" = "active" ] && [ "${STATUS_FAUCET}" = "active" ] ; then
+           echo "Logs lookup..."
+           tail -n 1 /var/log/journal/faucet.service.log
+           tail -n 1 /var/log/journal/gaiad.service.log
+           sleep 5
+       else 
+           echo "Faucet Service ($STATUS_FAUCET) or Gaia Service ($STATUS_GAIA) is not active."
+           echo ">> Faucet log:"
+           tail -n 100 /var/log/journal/faucet.service.log
+           echo ">> Gaia log:"
+           tail -n 100 /var/log/journal/gaiad.service.log
+           echo ">> Stopping services..."
+           systemctl2 stop gaiad
+           systemctl2 stop faucet
+           exit 1  
+       fi
+   done
+elif [ -f "$INIT_START_FILE" ]; then
+   echo "Node setup failed :("
    /bin/bash
    exit 0
+else
+   echo "Starting node setup..."
+   touch $INIT_START_FILE
 fi
 
+# external variables RLYKEY_ADDRESS, RLYKEY_MNEMONIC
 rly config init
 echo "{\"key\":\"$RLYKEY\",\"chain-id\":\"$CHAINID\",\"rpc-addr\":\"http://$DOMAIN:26657\",\"account-prefix\":\"cosmos\",\"gas\":200000,\"gas-prices\":\"0.025$DENOM\",\"default-denom\":\"$DENOM\",\"trusting-period\":\"330h\"}" > $CHAINID.json
 # NOTE: you will want to save the content from this JSON file
@@ -81,12 +104,15 @@ EOF
 
 gaiad collect-gentxs
 
-################################
+rly dev gaia "root" "/usr/local" > gaiad.service
+mv -v gaiad.service /etc/systemd/system/gaiad.service
 
+rly dev faucet "root" "/usr/local" $CHAINID $RLYKEY 100000$DENOM > faucet.service
+mv -v faucet.service /etc/systemd/system/faucet.service
 
+systemctl2 status faucet.service
+systemctl2 status gaiad.service
 
-echo "Node setup setup was finalized."
-/bin/bash
-exit 0
-
+touch $INIT_END_FILE
+echo "Node setup setup ended."
 
