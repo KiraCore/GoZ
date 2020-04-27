@@ -17,9 +17,11 @@ GAIACLI_HOME=$HOME/.gaiacli
 P2P_LOCAL_PORT=26656
 RPC_LOCAL_PORT=26657
 LCD_LOCAL_PORT=1317
+RLY_LOCAL_PORT=8000
 P2P_PROXY_PORT=10000
 RPC_PROXY_PORT=10001
 LCD_PROXY_PORT=10002
+RLY_PROXY_PORT=10003
 NODE_ADDESS="tcp://localhost:$RPC_LOCAL_PORT"
 
 cd
@@ -27,10 +29,13 @@ cd
 if [ -f "$INIT_END_FILE" ]; then
    echo "Validator node was completed successfully, starting services..."
 
-   systemctl2 start gaiad
-   systemctl2 start faucet
-   systemctl2 start lcd
-   systemctl2 start nginx
+   systemctl2 restart gaiad
+   
+   sleep 30
+   
+   systemctl2 restart faucet
+   systemctl2 restart lcd
+   systemctl2 restart nginx
 
    sleep 10
    
@@ -44,10 +49,10 @@ if [ -f "$INIT_END_FILE" ]; then
        if [ "${STATUS_GAIA}" = "active" ] && [ "${STATUS_FAUCET}" = "active" ] && [ "${STATUS_LCD}" = "active" ] && [ "${STATUS_NGINX}" = "active" ] ; then
            echo "Logs lookup..."
            tail -n 1 /var/log/journal/faucet.service.log
-           tail -n 1 /var/log/journal/gaiad.service.log
+           tail -n 2 /var/log/journal/gaiad.service.log
            tail -n 1 /var/log/journal/lcd.service.log
            tail -n 1 /var/log/journal/nginx.service.log
-           sleep 5
+           sleep 7
        else 
            echo "Faucet Service ($STATUS_FAUCET), Gaia Service ($STATUS_GAIA), LCD Service ($STATUS_LCD) or NGINX Service ($STATUS_NGINX) is not active."
            echo ">> Faucet log:"
@@ -62,6 +67,7 @@ if [ -f "$INIT_END_FILE" ]; then
            systemctl2 stop gaiad
            systemctl2 stop faucet
            systemctl2 stop lcd
+           systemctl2 stop nginx
            exit 1  
        fi
    done
@@ -149,14 +155,15 @@ After=network.target
 Type=simple
 EnvironmentFile=/etc/environment
 ExecStart=$GAIACLI_BIN rest-server --chain-id=$CHAINID --home=$GAIACLI_HOME --node=$NODE_ADDESS 
-Restart=always
+Restart=on-failure
 RestartSec=5
+LimitNOFILE=4096
 [Install]
 WantedBy=default.target
 EOL
 
 # rly dev faucet "root" "/usr/local" $CHAINID $RLYKEY 100000$DENOM > faucet.service && mv -v faucet.service /etc/systemd/system/faucet.service
-cat > /etc/systemd/system/lcd.service << EOL
+cat > /etc/systemd/system/faucet.service << EOL
 [Unit]
 Description=faucet
 After=network.target
@@ -185,6 +192,7 @@ systemctl2 status nginx.service || true
 ${SCRIPTS_DIR}/local-cors-proxy-v0.0.1.sh $RPC_PROXY_PORT http://127.0.0.1:$RPC_LOCAL_PORT; wait
 ${SCRIPTS_DIR}/local-cors-proxy-v0.0.1.sh $LCD_PROXY_PORT http://127.0.0.1:$LCD_LOCAL_PORT; wait
 ${SCRIPTS_DIR}/local-cors-proxy-v0.0.1.sh $P2P_PROXY_PORT http://127.0.0.1:$P2P_LOCAL_PORT; wait
+${SCRIPTS_DIR}/local-cors-proxy-v0.0.1.sh $RLY_PROXY_PORT http://127.0.0.1:$RLY_LOCAL_PORT; wait
 
 touch $INIT_END_FILE
 echo "Node setup setup ended."
