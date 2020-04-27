@@ -23,7 +23,7 @@ Node Address: goz.kiraex.com
 `docker exec -it $(docker ps -a -q  --filter ancestor=kiracore/goz:relayer-alpha) bash`
 
 > Validator container: 
-`docker exec -it $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-1-validator) bash -c "systemctl status"`
+`docker exec -it $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-1-validator) bash`
 
 ## If container is not running
 

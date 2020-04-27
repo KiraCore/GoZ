@@ -110,8 +110,11 @@ mv -v gaiad.service /etc/systemd/system/gaiad.service
 rly dev faucet "root" "/usr/local" $CHAINID $RLYKEY 100000$DENOM > faucet.service
 mv -v faucet.service /etc/systemd/system/faucet.service
 
-systemctl2 status faucet.service
-systemctl2 status gaiad.service
+systemctl2 enable faucet.service
+systemctl2 enable gaiad.service
+
+systemctl2 status faucet.service || true
+systemctl2 status gaiad.service || true
 
 touch $INIT_END_FILE
 echo "Node setup setup ended."
