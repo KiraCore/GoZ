@@ -11,15 +11,19 @@ ENV GOPATH="/home/go"
 ENV GOBIN="${GOROOT}/bin"
 ENV GO_VERSION="1.14"
 ENV DOTNET_ROOT="/usr/bin/dotnet"
-ENV PATH="/root/.cargo/bin:${PATH}:${GOBIN}:${GOROOT}:${GOPATH}"
+ENV PATH="/root/.cargo/bin:${PATH}:${GOBIN}:${GOROOT}:${GOPATH}:/usr/local/bin/CDHelper"
 ENV RUSTFLAGS="-Ctarget-feature=+aes,+ssse3"
 ENV GO111MODULE=on
+ENV NGINX_CONFIG="/etc/nginx/nginx.conf"
+ENV SCRIPTS_DIR=/root/scripts
 
-RUN mkdir -p ${GOPATH}/src ${GOPATH}/bin
+RUN mkdir -p ${GOPATH}/src ${GOPATH}/bin ${SCRIPTS_DIR}
+COPY ./scripts/local-cors-proxy-v0.0.1.sh ${SCRIPTS_DIR}/local-cors-proxy-v0.0.1.sh
 
 RUN chmod +x /tmp/build.sh
 RUN chmod 777 $PROFILE_PATH
 RUN chmod 777 $BASHRC_PATH
+RUN chmod -R 777 $SCRIPTS_DIR
 
 RUN LC_ALL=C DEBIAN_FRONTEND=noninteractive /tmp/build.sh \
   && rm -rf /var/lib/apt/lists/*

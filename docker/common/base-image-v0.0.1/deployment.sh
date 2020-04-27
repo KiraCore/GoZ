@@ -43,6 +43,7 @@ apt-get install -y --allow-unauthenticated --allow-downgrades --allow-remove-ess
     locales \
     make \
     nano \
+    nginx \
     netbase \
     netcat-openbsd \
     net-tools \
@@ -128,3 +129,32 @@ wget https://raw.githubusercontent.com/gdraheim/docker-systemctl-replacement/mas
 chmod -v 777 /usr/local/bin/systemctl2
 
 systemctl2 --version
+
+echo "Installing CDHelper..."
+CDHelperVersion="v0.5.0" && \
+ cd /usr/local/src && \
+ rm -f -v ./CDHelper-linux-x64.zip && \
+ wget https://github.com/asmodat/CDHelper/releases/download/$CDHelperVersion/CDHelper-linux-x64.zip && \
+ rm -rfv /usr/local/bin/CDHelper && \
+ unzip CDHelper-linux-x64.zip -d /usr/local/bin/CDHelper && \
+ chmod -R -v 555 /usr/local/bin/CDHelper
+
+CDHelper version
+
+echo "NGINX Setup..."
+
+cat > $NGINX_CONFIG << EOL
+worker_processes 1;
+events { worker_connections 512; }
+http { 
+#server{} 
+}
+#EOF
+EOL
+
+mkdir -v /etc/systemd/system/nginx.service.d
+printf "[Service]\nExecStartPost=/bin/sleep 0.1\n" > /etc/systemd/system/nginx.service.d/override.conf
+
+systemctl2 enable nginx.service
+
+

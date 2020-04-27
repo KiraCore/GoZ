@@ -2,6 +2,7 @@ FROM kiracore/goz:gaia-ibc-alpha
 COPY ./deployment.sh /tmp/build.sh
 
 ENV RELAYER="${GOPATH}/src/github.com/iqlusioninc/relayer"
+ENV RLY_BIN="${GOBIN}/rly"
 ARG BRANCH="master"
 
 RUN chmod +x /tmp/build.sh

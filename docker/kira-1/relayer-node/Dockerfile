@@ -7,6 +7,8 @@ ENV CHAINID=kira-1
 ENV RLYKEY=testkey
 ENV BASECHAIN_JSON_PATH=/root/kira-1.json
 
+
+
 RUN chmod +x /tmp/build.sh
 RUN chmod +x /root/start.sh
 RUN chmod a+r,a+w /root/kira-1.json
