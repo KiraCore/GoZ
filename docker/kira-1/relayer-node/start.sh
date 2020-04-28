@@ -4,7 +4,7 @@ exec 2>&1
 set -e
 set -x
 
-echo "Staring node..."
+echo "Node init start."
 NODE_KEY_PATH=$HOME/.gaiad/config/node_key.json
 VALIDATOR_KEY_PATH=$HOME/.gaiad/config/priv_validator_key.json
 APP_TOML_PATH=$HOME/.gaiad/config/app.toml
@@ -33,5 +33,6 @@ CONFIG_TOML_PATH=$HOME/.gaiad/config/config.toml
 #rly q bal {{chain_id}}
 
 
+echo "Node init stop."
 /bin/bash
 exit 0
