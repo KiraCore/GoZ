@@ -209,13 +209,6 @@ aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY"
 
 aws configure list
 
-gcloud --format="value(networkInterfaces[0].accessConfigs[0].natIP)" compute instances list
-
-gcloud compute addresses list
-
-gcloud compute instances describe 
-
-
 touch $INIT_END_FILE
 echo "Node setup setup ended."
 
