@@ -11,10 +11,13 @@ ENV GOPATH="/home/go"
 ENV GOBIN="${GOROOT}/bin"
 ENV GO_VERSION="1.14"
 ENV DOTNET_ROOT="/usr/bin/dotnet"
-ENV PATH="/root/.cargo/bin:${PATH}:${GOBIN}:${GOROOT}:${GOPATH}:/usr/local/bin/CDHelper"
+ENV PATH="/root/.cargo/bin:${PATH}:${GOBIN}:${GOROOT}:${GOPATH}:/usr/local/bin/CDHelper:/usr/local/bin/AWSHelper"
 ENV RUSTFLAGS="-Ctarget-feature=+aes,+ssse3"
 ENV GO111MODULE=on
 ENV NGINX_CONFIG="/etc/nginx/nginx.conf"
+ENV NGINX_SERVICED_PATH="/etc/systemd/system/nginx.service.d"
+ENV AWSHelperVersion="v0.12.0"
+ENV CDHelperVersion="v0.5.0"
 ENV SCRIPTS_DIR=/root/scripts
 
 RUN mkdir -p ${GOPATH}/src ${GOPATH}/bin ${SCRIPTS_DIR}

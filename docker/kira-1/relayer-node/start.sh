@@ -31,3 +31,7 @@ CONFIG_TOML_PATH=$HOME/.gaiad/config/config.toml
 #
 ## you should see a balance for the rly key now
 #rly q bal {{chain_id}}
+
+
+/bin/bash
+exit 0

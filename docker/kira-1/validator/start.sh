@@ -14,14 +14,11 @@ INIT_START_FILE=$HOME/init_started
 INIT_END_FILE=$HOME/init_ended
 GAIACLI_HOME=$HOME/.gaiacli
 
+# external variables: P2P_PROXY_PORT, RPC_PROXY_PORT, LCD_PROXY_PORT, RLY_PROXY_PORT
 P2P_LOCAL_PORT=26656
 RPC_LOCAL_PORT=26657
 LCD_LOCAL_PORT=1317
 RLY_LOCAL_PORT=8000
-P2P_PROXY_PORT=10000
-RPC_PROXY_PORT=10001
-LCD_PROXY_PORT=10002
-RLY_PROXY_PORT=10003
 NODE_ADDESS="tcp://localhost:$RPC_LOCAL_PORT"
 
 cd
@@ -30,7 +27,15 @@ if [ -f "$INIT_END_FILE" ]; then
    echo "Validator node was completed successfully, starting services..."
 
    systemctl2 restart gaiad
+
+   # setup external ip in the AWSRoute53 registry
+   INSTANCE_NAME=$(curl -H "Metadata-Flavor: Google" http://metadata/computeMetadata/v1/instance/name 2>/dev/null)
+   INTERNAL_IP=$(curl -H "Metadata-Flavor: Google" http://metadata/computeMetadata/v1/instance/network-interfaces/0/ip 2>/dev/null)
+   EXTERNAL_IP=$(curl -H "Metadata-Flavor: Google" http://metadata/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/external-ip 2>/dev/null)
    
+   # external variables: ROUTE53_RECORD_NAME, ROUTE53_ZONE, EXTERNAL_IP, ROUTE53_TTY
+   AWSHelper route53 upsert-a-record --name="$ROUTE53_RECORD_NAME" --zone=$ROUTE53_ZONE --value="$EXTERNAL_IP" --ttl=$ROUTE53_TTY
+
    sleep 30
    
    systemctl2 restart faucet
@@ -82,7 +87,7 @@ fi
 
 # external variables RLYKEY_ADDRESS, RLYKEY_MNEMONIC
 rly config init
-echo "{\"key\":\"$RLYKEY\",\"chain-id\":\"$CHAINID\",\"rpc-addr\":\"http://$DOMAIN:26657\",\"account-prefix\":\"cosmos\",\"gas\":200000,\"gas-prices\":\"0.025$DENOM\",\"default-denom\":\"$DENOM\",\"trusting-period\":\"330h\"}" > $CHAINID.json
+echo "{\"key\":\"$RLYKEY\",\"chain-id\":\"$CHAINID\",\"rpc-addr\":\"http://$DOMAIN:$RPC_LOCAL_PORT\",\"account-prefix\":\"cosmos\",\"gas\":200000,\"gas-prices\":\"0.025$DENOM\",\"default-denom\":\"$DENOM\",\"trusting-period\":\"330h\"}" > $CHAINID.json
 # NOTE: you will want to save the content from this JSON file
 rly chains add -f $CHAINID.json
 rly keys restore $CHAINID $RLYKEY "$RLYKEY_MNEMONIC"
@@ -155,7 +160,7 @@ After=network.target
 Type=simple
 EnvironmentFile=/etc/environment
 ExecStart=$GAIACLI_BIN rest-server --chain-id=$CHAINID --home=$GAIACLI_HOME --node=$NODE_ADDESS 
-Restart=on-failure
+Restart=always
 RestartSec=5
 LimitNOFILE=4096
 [Install]
@@ -172,7 +177,7 @@ Type=simple
 User=root
 WorkingDirectory=/usr/local
 ExecStart=$RLY_BIN testnets faucet $CHAINID $RLYKEY 100000$DENOM
-Restart=on-failure
+Restart=always
 RestartSec=3
 LimitNOFILE=4096
 [Install]
@@ -193,6 +198,23 @@ ${SCRIPTS_DIR}/local-cors-proxy-v0.0.1.sh $RPC_PROXY_PORT http://127.0.0.1:$RPC_
 ${SCRIPTS_DIR}/local-cors-proxy-v0.0.1.sh $LCD_PROXY_PORT http://127.0.0.1:$LCD_LOCAL_PORT; wait
 ${SCRIPTS_DIR}/local-cors-proxy-v0.0.1.sh $P2P_PROXY_PORT http://127.0.0.1:$P2P_LOCAL_PORT; wait
 ${SCRIPTS_DIR}/local-cors-proxy-v0.0.1.sh $RLY_PROXY_PORT http://127.0.0.1:$RLY_LOCAL_PORT; wait
+
+
+echo "AWS Account Setup..."
+
+aws configure set output $AWS_OUTPUT
+aws configure set region $AWS_REGION
+aws configure set aws_access_key_id "$AWS_ACCESS_KEY_ID"
+aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY"
+
+aws configure list
+
+gcloud --format="value(networkInterfaces[0].accessConfigs[0].natIP)" compute instances list
+
+gcloud compute addresses list
+
+gcloud compute instances describe 
+
 
 touch $INIT_END_FILE
 echo "Node setup setup ended."

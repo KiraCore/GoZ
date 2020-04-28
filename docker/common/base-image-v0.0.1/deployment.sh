@@ -4,20 +4,24 @@ exec 2>&1
 set -e
 set -x
 
+echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+
+apt-get install -y apt-transport-https ca-certificates gnupg curl
+
+curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
+
 echo "APT Update, Upfrade and Intall..."
 apt-get update
 apt-get upgrade -y --force-yes
 apt-get install -y --allow-unauthenticated --allow-downgrades --allow-remove-essential --allow-change-held-packages --force-yes \
-    apt-transport-https \
     autoconf \
     automake \
     apt-utils \
+    awscli \
     build-essential \
     bind9-host \
     bzip2 \
-    ca-certificates \
     coreutils \
-    curl \
     clang \
     cmake \
     dnsutils \
@@ -27,7 +31,8 @@ apt-get install -y --allow-unauthenticated --allow-downgrades --allow-remove-ess
     gcc \
     g++ \
     git \
-    gnupg \
+    google-cloud-sdk \
+    groff \
     htop \
     imagemagick \
     iputils-tracepath \
@@ -55,6 +60,8 @@ apt-get install -y --allow-unauthenticated --allow-downgrades --allow-remove-ess
     python \
     patch \
     procps \
+    python3 \
+    python3-pip \
     rename \
     socat \
     sshfs \
@@ -69,6 +76,9 @@ apt-get install -y --allow-unauthenticated --allow-downgrades --allow-remove-ess
     wipe \
     yarn \
     zip
+
+# https://linuxhint.com/install_aws_cli_ubuntu/
+aws --version
 
 echo "Intalling NPM..."
 apt-get install -y --allow-unauthenticated --force-yes \
@@ -131,15 +141,41 @@ chmod -v 777 /usr/local/bin/systemctl2
 systemctl2 --version
 
 echo "Installing CDHelper..."
-CDHelperVersion="v0.5.0" && \
- cd /usr/local/src && \
- rm -f -v ./CDHelper-linux-x64.zip && \
- wget https://github.com/asmodat/CDHelper/releases/download/$CDHelperVersion/CDHelper-linux-x64.zip && \
- rm -rfv /usr/local/bin/CDHelper && \
- unzip CDHelper-linux-x64.zip -d /usr/local/bin/CDHelper && \
- chmod -R -v 555 /usr/local/bin/CDHelper
+cd /usr/local/src
+rm -f -v ./CDHelper-linux-x64.zip
+wget https://github.com/asmodat/CDHelper/releases/download/$CDHelperVersion/CDHelper-linux-x64.zip
+rm -rfv /usr/local/bin/CDHelper
+unzip CDHelper-linux-x64.zip -d /usr/local/bin/CDHelper
+chmod -R -v 555 /usr/local/bin/CDHelper
 
 CDHelper version
+
+cat > /etc/systemd/system/scheduler.service << EOL
+[Unit]
+Description=Asmodat Deployment Scheduler
+After=network.target
+[Service]
+Type=simple
+User=root
+EnvironmentFile=/etc/environment
+ExecStart=/usr/local/bin/CDHelper/CDHelper scheduler github
+WorkingDirectory=/root
+Restart=on-failure
+RestartSec=5
+LimitNOFILE=4096
+[Install]
+WantedBy=multi-user.target
+EOL
+
+echo "Installing AWSHelper..."
+cd /usr/local/src
+rm -f -v ./AWSHelper-linux-x64.zip
+wget https://github.com/asmodat/AWSHelper/releases/download/$AWSHelperVersion/AWSHelper-linux-x64.zip
+rm -rfv /usr/local/bin/AWSHelper
+unzip AWSHelper-linux-x64.zip -d /usr/local/bin/AWSHelper
+chmod -Rv 777 /usr/local/bin/AWSHelper
+
+AWSHelper version
 
 echo "NGINX Setup..."
 
@@ -152,9 +188,9 @@ http {
 #EOF
 EOL
 
-mkdir -v /etc/systemd/system/nginx.service.d
-printf "[Service]\nExecStartPost=/bin/sleep 0.1\n" > /etc/systemd/system/nginx.service.d/override.conf
+mkdir -v $NGINX_SERVICED_PATH
+printf "[Service]\nExecStartPost=/bin/sleep 0.1\n" > $NGINX_SERVICED_PATH/override.conf
 
 systemctl2 enable nginx.service
-
+systemctl2 enable scheduler.service
 

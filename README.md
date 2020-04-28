@@ -1,7 +1,8 @@
 # GoZ
 Game of Zones
 
-Node Address: goz.kiraex.com 
+Node Address: `goz.kiraex.com` 
+Node Info: `curl goz.kiraex.com:10002/node_info`
 
 # Registry Images
 
@@ -25,18 +26,28 @@ Node Address: goz.kiraex.com
 > Validator container: 
 `docker exec -it $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-1-validator) bash`
 
+> Relay-Node container: 
+`docker exec -it $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-1-relayer) bash`
+
 ## If container is not running
 
-> Validator container:
+> Validator-Node container:
 `docker run -it -d $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-1-validator) /bin/bash`
+
+> Relayer-Node container:
+`docker run -it -d $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-1-relayer) /bin/bash`
 
 ## Checking container error logs
 
 > Validator container (HEAD): 
 `docker logs --follow $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-1-validator)`
-
 > Validator container (TAIL): 
 `docker logs --tail 50 --follow --timestamps $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-1-validator)`
+
+> Validator container (HEAD): 
+`docker logs --follow $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-1-relayer)`
+> Validator container (TAIL): 
+`docker logs --tail 50 --follow --timestamps $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-1-relayer)`
 
 ## Docker Commands
 
@@ -45,3 +56,7 @@ Node Address: goz.kiraex.com
 # Google Cloud
 
 > Agent logs: `sudo journalctl -u konlet-startup`
+> Instance Metadata: `curl -H "Metadata-Flavor: Google" http://metadata/computeMetadata/v1/instance/`
+
+
+
