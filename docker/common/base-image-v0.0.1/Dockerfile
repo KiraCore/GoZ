@@ -16,24 +16,22 @@ ENV RUSTFLAGS="-Ctarget-feature=+aes,+ssse3"
 ENV GO111MODULE=on
 ENV NGINX_CONFIG="/etc/nginx/nginx.conf"
 ENV NGINX_SERVICED_PATH="/etc/systemd/system/nginx.service.d"
-ENV AWSHelperVersion="v0.12.0"
-ENV CDHelperVersion="v0.5.0"
 ENV SCRIPTS_DIR=/root/scripts
 
 RUN mkdir -p ${GOPATH}/src ${GOPATH}/bin ${SCRIPTS_DIR}
-COPY ./scripts/local-cors-proxy-v0.0.1.sh ${SCRIPTS_DIR}/local-cors-proxy-v0.0.1.sh
+ADD ./scripts ${SCRIPTS_DIR}
 
 RUN chmod +x /tmp/build.sh
 RUN chmod 777 $PROFILE_PATH
 RUN chmod 777 $BASHRC_PATH
-RUN chmod -R 777 $SCRIPTS_DIR
-
-RUN LC_ALL=C DEBIAN_FRONTEND=noninteractive /tmp/build.sh \
-  && rm -rf /var/lib/apt/lists/*
+RUN chmod -R 777 ${SCRIPTS_DIR}
 
 ARG DEBIAN_FRONTEND=noninteractive
-RUN curl -sL https://deb.nodesource.com/setup_11.x | bash -
-RUN apt-get update && apt-get -qq install -y nodejs && apt-get -qq install -y nginx
+RUN LC_ALL=C /tmp/build.sh \
+  && rm -rf /var/lib/apt/lists/*
+
+#RUN curl -sL https://deb.nodesource.com/setup_11.x | bash -
+#RUN apt-get update && apt-get -qq install -y nodejs
 
 RUN npm install -g @angular/cli
 RUN npm install -g web3 --unsafe-perm=true --allow-root
@@ -53,3 +51,12 @@ RUN cargo --version
 RUN echo $PATH
 RUN go version
 RUN go env
+
+# Install Asmodat Helper tools
+RUN ${SCRIPTS_DIR}/awshelper-update-v0.0.1.sh "v0.12.0" 
+RUN ${SCRIPTS_DIR}/cdhelperupdate-v0.0.1.sh "v0.5.0" 
+ENV AWSHelperVersion="v0.12.0"
+ENV CDHelperVersion="v0.5.0"
+
+
+

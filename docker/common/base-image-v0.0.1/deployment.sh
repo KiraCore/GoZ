@@ -52,6 +52,7 @@ apt-get install -y --allow-unauthenticated --allow-downgrades --allow-remove-ess
     netbase \
     netcat-openbsd \
     net-tools \
+    nodejs \
     nodejs-dev \
     node-gyp \
     openssh-client \
@@ -140,42 +141,42 @@ chmod -v 777 /usr/local/bin/systemctl2
 
 systemctl2 --version
 
-echo "Installing CDHelper..."
-cd /usr/local/src
-rm -f -v ./CDHelper-linux-x64.zip
-wget https://github.com/asmodat/CDHelper/releases/download/$CDHelperVersion/CDHelper-linux-x64.zip
-rm -rfv /usr/local/bin/CDHelper
-unzip CDHelper-linux-x64.zip -d /usr/local/bin/CDHelper
-chmod -R -v 555 /usr/local/bin/CDHelper
-
-CDHelper version
-
-cat > /etc/systemd/system/scheduler.service << EOL
-[Unit]
-Description=Asmodat Deployment Scheduler
-After=network.target
-[Service]
-Type=simple
-User=root
-EnvironmentFile=/etc/environment
-ExecStart=/usr/local/bin/CDHelper/CDHelper scheduler github
-WorkingDirectory=/root
-Restart=on-failure
-RestartSec=5
-LimitNOFILE=4096
-[Install]
-WantedBy=multi-user.target
-EOL
-
-echo "Installing AWSHelper..."
-cd /usr/local/src
-rm -f -v ./AWSHelper-linux-x64.zip
-wget https://github.com/asmodat/AWSHelper/releases/download/$AWSHelperVersion/AWSHelper-linux-x64.zip
-rm -rfv /usr/local/bin/AWSHelper
-unzip AWSHelper-linux-x64.zip -d /usr/local/bin/AWSHelper
-chmod -Rv 777 /usr/local/bin/AWSHelper
-
-AWSHelper version
+# echo "Installing CDHelper..."
+# cd /usr/local/src
+# rm -f -v ./CDHelper-linux-x64.zip
+# wget https://github.com/asmodat/CDHelper/releases/download/$CDHelperVersion/CDHelper-linux-x64.zip
+# rm -rfv /usr/local/bin/CDHelper
+# unzip CDHelper-linux-x64.zip -d /usr/local/bin/CDHelper
+# chmod -R -v 555 /usr/local/bin/CDHelper
+# 
+# CDHelper version
+# 
+# cat > /etc/systemd/system/scheduler.service << EOL
+# [Unit]
+# Description=Asmodat Deployment Scheduler
+# After=network.target
+# [Service]
+# Type=simple
+# User=root
+# EnvironmentFile=/etc/environment
+# ExecStart=/usr/local/bin/CDHelper/CDHelper scheduler github
+# WorkingDirectory=/root
+# Restart=on-failure
+# RestartSec=5
+# LimitNOFILE=4096
+# [Install]
+# WantedBy=multi-user.target
+# EOL
+# 
+# echo "Installing AWSHelper..."
+# cd /usr/local/src
+# rm -f -v ./AWSHelper-linux-x64.zip
+# wget https://github.com/asmodat/AWSHelper/releases/download/$AWSHelperVersion/AWSHelper-linux-x64.zip
+# rm -rfv /usr/local/bin/AWSHelper
+# unzip AWSHelper-linux-x64.zip -d /usr/local/bin/AWSHelper
+# chmod -Rv 777 /usr/local/bin/AWSHelper
+# 
+# AWSHelper version
 
 echo "NGINX Setup..."
 
@@ -192,5 +193,5 @@ mkdir -v $NGINX_SERVICED_PATH
 printf "[Service]\nExecStartPost=/bin/sleep 0.1\n" > $NGINX_SERVICED_PATH/override.conf
 
 systemctl2 enable nginx.service
-systemctl2 enable scheduler.service
+#systemctl2 enable scheduler.service
 
