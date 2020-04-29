@@ -4,18 +4,19 @@ exec 2>&1
 set -e
 set -x
 
-echo "Node init start."
-NODE_KEY_PATH=$HOME/.gaiad/config/node_key.json
-VALIDATOR_KEY_PATH=$HOME/.gaiad/config/priv_validator_key.json
-APP_TOML_PATH=$HOME/.gaiad/config/app.toml
-GENESIS_JSON_PATH=$HOME/.gaiad/config/genesis.json
-CONFIG_TOML_PATH=$HOME/.gaiad/config/config.toml
+echo "Relayer Node init START"
+
+CHAIN_ID=$(cat $BASECHAIN_JSON_PATH | jq -r '."chain-id"')
+# do not import already imported base-chain
+rm -fv $RLYS_HOME/$CHAIN_ID.json
+chmod 777 -R $RLYS_HOME
+
+rly cfg init
+
+
 
 ####################
 
-CHAIN_ID=$(cat $BASECHAIN_JSON_PATH | jq -r '."chain-id"')
-
-#rly cfg init
 #rly ch add -f $BASECHAIN_JSON_PATH
 #
 ## create a local rly key for the chain
@@ -34,18 +35,18 @@ CHAIN_ID=$(cat $BASECHAIN_JSON_PATH | jq -r '."chain-id"')
 #rly q bal $CHAIN_ID
 #
 #############################################################################
-echo "Downloading $REPO from $RELAYER, branch $BRANCH, checkout $CHECKOUT..."
-
-
-SOURCE_RLYS_DIR=$RLY_OUTPUT/testnets/relayer-alpha-2
-DESTINATION_RLYS_DIR=$HOME/relayers
-
-rm -rfv $DESTINATION_RLYS_DIR
-cp -avr $SOURCE_RLYS_DIR $DESTINATION_RLYS_DIR
-
-# do not import already imported base-chain
-rm -fv $DESTINATION_RLYS_DIR/$CHAIN_ID.json
-chmod 777 -R $DESTINATION_RLYS_DIR
+# echo "Downloading $REPO from $RELAYER, branch $BRANCH, checkout $CHECKOUT..."
+# 
+# 
+# SOURCE_RLYS_DIR=$RLY_OUTPUT/testnets/relayer-alpha-2
+# DESTINATION_RLYS_DIR=$HOME/relayers
+# 
+# rm -rfv $DESTINATION_RLYS_DIR
+# cp -avr $SOURCE_RLYS_DIR $DESTINATION_RLYS_DIR
+# 
+# # do not import already imported base-chain
+# rm -fv $DESTINATION_RLYS_DIR/$CHAIN_ID.json
+# chmod 777 -R $DESTINATION_RLYS_DIR
 #############################################################################
 
 
@@ -92,6 +93,6 @@ chmod 777 -R $DESTINATION_RLYS_DIR
 
 
 
-echo "Node init stop."
+echo "Relayer Node init STOP"
 /bin/bash
 exit 0

@@ -54,7 +54,7 @@ RUN go env
 
 # Install Asmodat Helper tools
 RUN ${SCRIPTS_DIR}/awshelper-update-v0.0.1.sh "v0.12.0" 
-RUN ${SCRIPTS_DIR}/cdhelperupdate-v0.0.1.sh "v0.5.0" 
+RUN ${SCRIPTS_DIR}/cdhelper-update-v0.0.1.sh "v0.5.0" 
 ENV AWSHelperVersion="v0.12.0"
 ENV CDHelperVersion="v0.5.0"
 
