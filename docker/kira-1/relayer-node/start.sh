@@ -36,30 +36,9 @@ CHAIN_ID=$(cat $BASECHAIN_JSON_PATH | jq -r '."chain-id"')
 #############################################################################
 echo "Downloading $REPO from $RELAYER, branch $BRANCH, checkout $CHECKOUT..."
 
-REPO="https://github.com/iqlusioninc/relayer"
-BRANCH="master"
-CHECKOUT=""
-REPO_DIR=/tmp/rly
-SOURCE_RLYS_DIR=$REPO_DIR/testnets/relayer-alpha-2
+
+SOURCE_RLYS_DIR=$RLY_OUTPUT/testnets/relayer-alpha-2
 DESTINATION_RLYS_DIR=$HOME/relayers
-
-mkdir -p $(dirname $REPO_DIR)
-
-if [ ! -z "$BRANCH" ]
-then
-    git clone --branch $BRANCH $REPO $REPO_DIR
-else
-    git clone $REPO $REPO_DIR
-fi
-
-cd $REPO_DIR
-
-if [ ! -z "$CHECKOUT" ]
-then
-    git checkout $CHECKOUT
-fi   
-
-git describe --tags
 
 rm -rfv $DESTINATION_RLYS_DIR
 cp -avr $SOURCE_RLYS_DIR $DESTINATION_RLYS_DIR
@@ -70,7 +49,7 @@ chmod 777 -R $DESTINATION_RLYS_DIR
 #############################################################################
 
 
-#python3 $RELAY_SCRIPS/relay.py "$DESTINATION_RLYS_DIR"
+#python3 $RELAY_SCRIPS/relay.py "$RLYS_HOME"
 
 
 
