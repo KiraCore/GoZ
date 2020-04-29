@@ -44,9 +44,9 @@ Node Info: `curl goz.kiraex.com:10002/node_info`
 > Validator container (TAIL): 
 `docker logs --tail 50 --follow --timestamps $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-1-validator)`
 
-> Validator container (HEAD): 
+> Relayer Node container (HEAD): 
 `docker logs --follow $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-1-relayer)`
-> Validator container (TAIL): 
+> Relayer Node container (TAIL): 
 `docker logs --tail 50 --follow --timestamps $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-1-relayer)`
 
 ## Docker Commands
