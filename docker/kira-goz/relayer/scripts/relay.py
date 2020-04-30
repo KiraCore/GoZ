@@ -29,13 +29,17 @@ if not base_chain_info["balance"]:
 
 ext_chains_info = {}
 
-def QueryChainInfo(filename):
+# interate all config files
+for filename in os.listdir(DESTINATION_RLYS_DIR):
     file_dir=f"{DESTINATION_RLYS_DIR}/{filename}"
     print(f"Loading... {file_dir}")
 
+    # use diffrent key for each chain
+    # ext_chain_info = FaucetHelper.ClaimTokens(file_dir,None,BUCKET)
+    # use same key for each chain
     ext_chain_info = FaucetHelper.ClaimTokens(file_dir,RLYKEY_MNEMONIC,BUCKET)
     if not ext_chain_info:
-        return
+        continue
 
     balance = ext_chain_info["balance"]
     denom = ext_chain_info["default-denom"]
@@ -43,27 +47,6 @@ def QueryChainInfo(filename):
     if amount > 0:
        ext_chain_id = ext_chain_info["chain-id"]
        ext_chains_info[f"{ext_chain_id}"]=ext_chain_info
-
-Parallel(n_jobs=4)(delayed(QueryChainInfo)(filename) for filename in os.listdir(DESTINATION_RLYS_DIR))
-
-# interate all config files
-#for filename in os.listdir(DESTINATION_RLYS_DIR):
-#    file_dir=f"{DESTINATION_RLYS_DIR}/{filename}"
-#    print(f"Loading... {file_dir}")
-#
-#    # use diffrent key for each chain
-#    # ext_chain_info = FaucetHelper.ClaimTokens(file_dir,None,BUCKET)
-#    # use same key for each chain
-#    ext_chain_info = FaucetHelper.ClaimTokens(file_dir,RLYKEY_MNEMONIC,BUCKET)
-#    if not ext_chain_info:
-#        continue
-#
-#    balance = ext_chain_info["balance"]
-#    denom = ext_chain_info["default-denom"]
-#    amount = RelayerHelper.GetAmountByDenom(balance, denom)
-#    if amount > 0:
-#       ext_chain_id = ext_chain_info["chain-id"]
-#       ext_chains_info[f"{ext_chain_id}"]=ext_chain_info
 
 connections={}
 for chain_id in ext_chains_info:
