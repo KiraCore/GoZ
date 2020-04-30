@@ -1,5 +1,4 @@
 FROM kiracore/goz:base-image-v0.0.1
-COPY ./deployment.sh /tmp/build.sh
 
 ENV GAIA="${GOPATH}/src/github.com/cosmos/gaia"
 ENV GAIAD_BIN="${GOBIN}/gaiad"
