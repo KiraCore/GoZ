@@ -30,9 +30,6 @@ ARG DEBIAN_FRONTEND=noninteractive
 RUN LC_ALL=C /tmp/build.sh \
   && rm -rf /var/lib/apt/lists/*
 
-#RUN curl -sL https://deb.nodesource.com/setup_11.x | bash -
-#RUN apt-get update && apt-get -qq install -y nodejs
-
 RUN npm install -g @angular/cli
 RUN npm install -g web3 --unsafe-perm=true --allow-root
 

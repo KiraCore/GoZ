@@ -4,14 +4,14 @@ COPY ./start.sh /root/start.sh
 
 ENV RELAY_SCRIPS=/root/scripts/relay
 ENV RELAY_CONFIGS=/root/configs/relay
-ENV BASECHAIN_JSON_PATH=${RELAY_CONFIGS}/kira-1.json
+ENV BASECHAIN_JSON_PATH=${RELAY_CONFIGS}/kira-alpha.json
 ENV RLY_REPO="https://github.com/iqlusioninc/relayer"
 ENV RLY_BRANCH="master"
 ENV RLY_CHECKOUT=""
 ENV RLY_OUTPUT=/tmp/rly
 ENV RLYS_SOURCE=${RLY_OUTPUT}/testnets/relayer-alpha-2
 ENV RLYS_HOME=/root/relayers
-ENV BUCKET="kira-core-goz"
+ENV BUCKET="kira-core-alpha"
 
 ADD ./scripts ${RELAY_SCRIPS}
 ADD ./configs ${RELAY_CONFIGS}

@@ -12,9 +12,5 @@ RUN ${SCRIPTS_DIR}/git-pull-v0.0.1.sh "${REPO}" "${BRANCH}" "${CHECKOUT}" "${REL
 
 RUN cd ${RELAYER} && make install
 
-#RUN chmod +x /tmp/build.sh
-#ARG DEBIAN_FRONTEND=noninteractive
-#RUN LC_ALL=C DEBIAN_FRONTEND=noninteractive /tmp/build.sh
-
 RUN rly help
 

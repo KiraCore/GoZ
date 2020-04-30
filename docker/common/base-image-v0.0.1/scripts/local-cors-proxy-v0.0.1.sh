@@ -54,7 +54,7 @@ then
 
 else
 	echo "FAILED to setup nginx configuration, LISTEN_PORT ($LISTEN_PORT) is invalid."
-    exit 1
+  exit 1
 fi
 
 echo "------------------------------------------------"
