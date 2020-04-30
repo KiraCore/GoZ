@@ -4,8 +4,8 @@ COPY ./start.sh /root/start.sh
 COPY ./validator.key /root/validator.key
 
 ENV DENOM=ukex
-ENV CHAINID=kira-alpha
-ENV DOMAIN=alpha.kiraex.com
+ENV CHAINID=kira-1
+ENV DOMAIN=goz.kiraex.com
 ENV RLYKEY=faucet
 ENV VALIDATOR_SELF_KEY_PATH=/root/validator.key
 
