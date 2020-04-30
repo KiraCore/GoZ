@@ -17,7 +17,7 @@ def callRawTrue(s, showErrors):
         p = Popen(s, shell=True, stdout=PIPE, stderr=PIPE, universal_newlines=True)
         o, err = p.communicate()
         if not not err:
-            print(f"Call '{s}' ended with error: '" + str(err) + "'.")
+            print(f"Call '{s}' ended with error: {str(err)}")
             return None
         if not err and not o:
             return True
@@ -26,30 +26,28 @@ def callRawTrue(s, showErrors):
         pass
         if showErrors:
             if err is not None:
-                print(f"Call '{s}' failed with error: '" + str(err) + "'.")
+                print(f"Call '{s}' failed with error: {str(err)}")
             else:
-                print(f"Call '{s}' failed during output parsing: '" + str(e) + "'.")
+                print(f"Call '{s}' failed during output parsing: {str(err)}")
         return None
 
 def callJson(s, showErrors):
-    o = None
-    err = None
     try:
         p = Popen(s, shell=True, stdout=PIPE, stderr=PIPE, universal_newlines=True)
         o, err = p.communicate()
-        if not not err:
-            print(f"Call '{s}' ended with error: '" + str(err) + "'.")
+        if (not (not err)):
+            print(f"Call '{s}' ended with error: {str(err)}")
             return None
-        if not err and not o:
+        if (not err) and (not o):
             return {}
         return json.loads(o)
     except Exception as e:
         pass
         if showErrors:
             if err is not None:
-                print(f"Call '{s}' failed with error: '" + str(err) + "'.")
+                print(f"Call '{s}' failed with error: {str(err)}")
             else:
-                print(f"Call '{s}' failed to parse output: '" + str(o) + "', error: '" + str(e) + "'.")
+                print(f"Call '{s}' failed to parse output: '{str(o)}', error: {str(err)}")
         return None
 
 def callProcessRawTrue(s, q, showErrors):
@@ -57,7 +55,7 @@ def callProcessRawTrue(s, q, showErrors):
         p = Popen(s, shell=True, stdout=PIPE, stderr=PIPE, universal_newlines=True)
         o, err = p.communicate()
         if not not err:
-            print(f"Call '{s}' ended with error: '" + str(err) + "'.")
+            print(f"Call '{s}' ended with error: {str(err)}")
             o = None
         if not err and not o:
             o = True
@@ -69,9 +67,9 @@ def callProcessRawTrue(s, q, showErrors):
         pass
         if showErrors:
             if err is not None:
-                print(f"Call '{s}' failed with error: '" + str(err) + "'.")
+                print(f"Call '{s}' failed with error: {str(err)}")
             else:
-                print(f"Call '{s}' failed during output parsing: '" + str(e) + "'.")
+                print(f"Call '{s}' failed during output parsing: {str(err)}")
         if q is not None:
             q.put(o)
         return None

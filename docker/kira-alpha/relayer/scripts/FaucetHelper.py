@@ -30,14 +30,14 @@ def ClaimTokensWithMnemonic(chain_info, mnemonic, bucket):
             return None
         
         if mnemonic: # restore old key
-            RelayerHelper.RestoreKey(chain_id, key_name, mnemonic) # rly keys restore kira-1 chain_key_kira-1 "$RLYKEY_MNEMONIC"
+            RelayerHelper.RestoreKey(chain_id, key_name, mnemonic) # rly keys restore kira-alpha chain_key_kira-alpha "$RLYKEY_MNEMONIC"
         else: # add new key
             print(f"Saving new key '{chain_id}' '{key_name}' to '{tmp_file}'...")
             key = RelayerHelper.UpsertKey(chain_id, key_name)
             StringHelper.WriteToFile(key,tmp_file)
             RelayerHelper.callRawTrue(f"AWSHelper s3 upload-object --bucket='{bucket}' --path='{s3_key_path}' --input='{tmp_file}'",True)
     
-        if not RelayerHelper.ConfigureDefaultKey(chain_id, key_name): # rly ch edit kira-1 key chain_key_kira-1
+        if not RelayerHelper.ConfigureDefaultKey(chain_id, key_name): # rly ch edit kira-alpha key chain_key_kira-alpha
             print(f"Failed to configure '{chain_id}' chain to use {key_name} key by default :(")
             return None
     
@@ -52,7 +52,7 @@ def ClaimTokensWithMnemonic(chain_info, mnemonic, bucket):
 
     # connect for 15s, retry 2x with 1s delay
     if not RelayerHelper.RequestTokens_Process(chain_id, 15, 2, 1): # rly testnets request kira-1
-    print(f"Faucet {chain_id} didn't gave out any tokens :(")
+        print(f"Faucet {chain_id} didn't gave out any tokens :(")
 
     chain_info["balance"]=RelayerHelper.QueryBalance(chain_id)
     chain_info["address"]=RelayerHelper.QueryChainAddress(chain_id)

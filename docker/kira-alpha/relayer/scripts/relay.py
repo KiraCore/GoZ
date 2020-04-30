@@ -21,9 +21,9 @@ BASECHAIN_JSON_PATH = os.getenv('BASECHAIN_JSON_PATH')
 BUCKET = os.getenv('BUCKET')
 
 base_chain_info = FaucetHelper.ClaimTokens(BASECHAIN_JSON_PATH, RLYKEY_MNEMONIC, BUCKET)
-base_chain_id = base_chain_info["chain-id"]
+base_chain_id = None if (not base_chain_info) else base_chain_info["chain-id"]
 
-if not base_chain_info["balance"]:
+if (not base_chain_info) or (not base_chain_info["balance"]):
     print(f"Failed to acquire balance information from the base chain {base_chain_id}, aborting...")
     exit(1)
 
@@ -44,13 +44,21 @@ for filename in os.listdir(DESTINATION_RLYS_DIR):
     balance = ext_chain_info["balance"]
     denom = ext_chain_info["default-denom"]
     amount = RelayerHelper.GetAmountByDenom(balance, denom)
+
+    ext_chain_id = None
+    ext_chain_info = None
     if amount > 0:
        ext_chain_id = ext_chain_info["chain-id"]
        ext_chains_info[f"{ext_chain_id}"]=ext_chain_info
+    else:
+       print(f"Insufficient token balance, skipping connection...")
+       continue
 
-connections={}
-for chain_id in ext_chains_info:
-    chain_info=ext_chains_info[f"{chain_id}"]
+    chain_id = ext_chain_id
+    chain_info = ext_chain_info
+#connections={}
+#for chain_id in ext_chains_info:
+#    chain_info=ext_chains_info[f"{chain_id}"]
     print(f"Connecting {base_chain_id} and {chain_id}...")
     connection=IBCHelper.Connect(base_chain_info, chain_info)
     if (not connection["success"]):
