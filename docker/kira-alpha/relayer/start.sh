@@ -68,21 +68,21 @@ rly q bal $GOZCHAIN_ID
 ////
 
 
-rly pth gen $CHAIN_ID transfer $GOZCHAIN_ID transfer ${CHAIN_ID}_${GOZCHAIN_ID}
-rly tx link ${CHAIN_ID}_${GOZCHAIN_ID}
-
-rly q bal chainylira
-rly pth gen $CHAIN_ID transfer chainylira transfer ${CHAIN_ID}_chainylira
-rly tx link ${CHAIN_ID}_chainylira
-
-Balance of chain_key_ 
-[{'denom': 'nickel', 'amount': '1000000'}]
-Connecting kira-alpha and chainylira...
-
-rly pth gen kira-alpha transfer hashquarkchain transfer kira-alpha_hashquarkchain
-rly tx link kira-alpha_hashquarkchain
-
-rly transact link kira-alpha_chainylira -o=600s
+# rly pth gen $CHAIN_ID transfer $GOZCHAIN_ID transfer ${CHAIN_ID}_${GOZCHAIN_ID}
+# rly tx link ${CHAIN_ID}_${GOZCHAIN_ID}
+# 
+# rly q bal chainylira
+# rly pth gen $CHAIN_ID transfer chainylira transfer ${CHAIN_ID}_chainylira
+# rly tx link ${CHAIN_ID}_chainylira
+# 
+# Balance of chain_key_ 
+# [{'denom': 'nickel', 'amount': '1000000'}]
+# Connecting kira-alpha and chainylira...
+# 
+# rly pth gen kira-alpha transfer hashquarkchain transfer kira-alpha_hashquarkchain
+# rly tx link kira-alpha_hashquarkchain
+# 
+# rly transact link kira-alpha_chainylira -o=600s
 
 ####################
 #rly ch add -f $BASECHAIN_JSON_PATH

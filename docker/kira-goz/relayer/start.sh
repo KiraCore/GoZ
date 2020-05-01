@@ -19,7 +19,7 @@ CHAIN_ID=$(cat $BASECHAIN_JSON_PATH | jq -r '."chain-id"')
 rm -fv $RLYS_HOME/$CHAIN_ID.json
 chmod 777 -R $RLYS_HOME
 
-rly cfg init
+rly cfg init || true
 
 
 ####################
@@ -42,8 +42,6 @@ rly cfg init
 #####################
 
 #python3 $RELAY_SCRIPS/relay.py "$RLYS_HOME"
-
-
 
 echo "Relayer Node init STOP"
 /bin/bash
