@@ -22,5 +22,7 @@ RUN chmod 777 -R ${RLYS_HOME}
 ARG DEBIAN_FRONTEND=noninteractive
 RUN LC_ALL=C DEBIAN_FRONTEND=noninteractive /tmp/build.sh
 
+RUN printenv 
+
 CMD [ "/bin/bash","/root/start.sh" ]
 
