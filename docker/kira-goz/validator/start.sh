@@ -85,7 +85,7 @@ else
    touch $INIT_START_FILE
 fi
 
-# external variables RLYKEY_ADDRESS, RLYKEY_MNEMONIC
+#  NOTE: external variables RLYKEY_ADDRESS, RLYKEY_MNEMONIC
 rly config init
 echo "{\"key\":\"$RLYKEY\",\"chain-id\":\"$CHAINID\",\"rpc-addr\":\"http://$DOMAIN:$RPC_LOCAL_PORT\",\"account-prefix\":\"cosmos\",\"gas\":200000,\"gas-prices\":\"0.025$DENOM\",\"default-denom\":\"$DENOM\",\"trusting-period\":\"330h\"}" > $CHAINID.json
 # NOTE: you will want to save the content from this JSON file
@@ -95,13 +95,15 @@ rly keys list $CHAINID
 
 gaiad init --chain-id $CHAINID $CHAINID
 
-# external variables: NODE_ID, NODE_KEY, VALIDATOR_KEY
+# NOTE: external variables: NODE_ID, NODE_KEY, VALIDATOR_KEY
 # setup node key and unescape
+# NOTE: to create new key delete $NODE_KEY_PATH and run gaiad start 
 rm -f -v $NODE_KEY_PATH && \
  echo $NODE_KEY > $NODE_KEY_PATH && \
  sed -i 's/\\\"/\"/g' $NODE_KEY_PATH
 
 # setup validator signing key and unescape
+# NOTE: to create new key delete $VALIDATOR_KEY_PATH and run gaiad start 
 rm -f -v $VALIDATOR_KEY_PATH && \
  echo $VALIDATOR_KEY > $VALIDATOR_KEY_PATH && \
  sed -i 's/\\\"/\"/g' $VALIDATOR_KEY_PATH
@@ -111,10 +113,10 @@ sed -i 's#tcp://127.0.0.1:26657#tcp://0.0.0.0:26657#g' $CONFIG_TOML_PATH
 sed -i "s/stake/$DENOM/g" $GENESIS_JSON_PATH
 sed -i 's/pruning = "syncable"/pruning = "nothing"/g' $APP_TOML_PATH
 
-# external variables: KEYRINGPASS, PASSPHRASE
-# Exporting: gaiacli keys export validator -o text
-# Deleting: gaiacli keys delete validator
-# Importing (first time requires to input keyring password twice):
+#  NOTE: external variables: KEYRINGPASS, PASSPHRASE
+#  NOTE: Exporting: gaiacli keys export validator -o text
+#  NOTE: Deleting: gaiacli keys delete validator
+#  NOTE: Importing (first time requires to input keyring password twice):
 gaiacli keys import validator $VALIDATOR_SELF_KEY_PATH << EOF
 $PASSPHRASE
 $KEYRINGPASS
@@ -198,7 +200,6 @@ ${SCRIPTS_DIR}/local-cors-proxy-v0.0.1.sh $RPC_PROXY_PORT http://127.0.0.1:$RPC_
 ${SCRIPTS_DIR}/local-cors-proxy-v0.0.1.sh $LCD_PROXY_PORT http://127.0.0.1:$LCD_LOCAL_PORT; wait
 ${SCRIPTS_DIR}/local-cors-proxy-v0.0.1.sh $P2P_PROXY_PORT http://127.0.0.1:$P2P_LOCAL_PORT; wait
 ${SCRIPTS_DIR}/local-cors-proxy-v0.0.1.sh $RLY_PROXY_PORT http://127.0.0.1:$RLY_LOCAL_PORT; wait
-
 
 echo "AWS Account Setup..."
 
