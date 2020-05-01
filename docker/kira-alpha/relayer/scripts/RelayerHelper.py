@@ -13,11 +13,13 @@ from joblib import Parallel, delayed
 from subprocess import Popen, PIPE
 
 def callRawTrue(s, showErrors):
+    err = None
     try:
-        p = Popen(s, shell=True, stdout=PIPE, stderr=PIPE, universal_newlines=True)
+        p = Popen(s, shell=True, stdout=PIPE, stderr=PIPE, universal_newlines=True, encoding="utf-8")
         o, err = p.communicate()
-        if not not err:
-            print(f"Call '{s}' ended with error: {str(err)}")
+        status = p.wait()
+        if (not (not err)) or (status != 0):
+            print(f"Call '{s}' failed with status {status}, error: {str(err)}")
             return None
         if not err and not o:
             return True
@@ -32,11 +34,13 @@ def callRawTrue(s, showErrors):
         return None
 
 def callJson(s, showErrors):
+    err = None
     try:
-        p = Popen(s, shell=True, stdout=PIPE, stderr=PIPE, universal_newlines=True)
+        p = Popen(s, shell=True, stdout=PIPE, stderr=PIPE, universal_newlines=True, encoding="utf-8")
         o, err = p.communicate()
-        if (not (not err)):
-            print(f"Call '{s}' ended with error: {str(err)}")
+        status = p.wait()
+        if (not (not err)) or (status != 0):
+            print(f"Call '{s}' failed with status {status}, error: {str(err)}")
             return None
         if (not err) and (not o):
             return {}
@@ -51,11 +55,13 @@ def callJson(s, showErrors):
         return None
 
 def callProcessRawTrue(s, q, showErrors):
+    err = None
     try:
-        p = Popen(s, shell=True, stdout=PIPE, stderr=PIPE, universal_newlines=True)
+        p = Popen(s, shell=True, stdout=PIPE, stderr=PIPE, universal_newlines=True, encoding="utf-8")
         o, err = p.communicate()
-        if not not err:
-            print(f"Call '{s}' ended with error: {str(err)}")
+        status = p.wait()
+        if (not (not err)) or (status != 0):
+            print(f"Call '{s}' failed with status {status}, error: {str(err)}")
             o = None
         if not err and not o:
             o = True
@@ -136,14 +142,17 @@ def TransferTokens(src_chain_id, dst_chain_id, amount, dst_chain_addr): # rly tx
     return False if (not callRawTrue(f"rly tx transfer {src_chain_id} {dst_chain_id} {amount} true {dst_chain_addr}",True)) else True
 
 def QueryBalance(chain_id):
-    balance=callRawTrue(f"rly q bal {chain_id} -j",True)
-    return None if (not balance) else json.loads(balance)
+    balance=callJson(f"rly q bal {chain_id} -j",True)
+    if (not (not balance)) and (len(balance) <= 0):
+        return []
+    else:
+        return None if (not balance) else balance
 
 def DeletePath(path):
     return False if (not callRawTrue(f"rly pth delete {path}",True)) else True
 
 def GeneratePath(chain_id_src, chain_id_dst, path):
-    out=callRawTrue(f"rly pth gen '{chain_id_src}' transfer '{chain_id_dst}' transfer '{path}'",True)
+    out=callRawTrue(f"rly pth gen {chain_id_src} transfer {chain_id_dst} transfer {path}",True)
     return False if (not out) else True
 
 def QueryChainAddress(chain_id):
@@ -151,7 +160,28 @@ def QueryChainAddress(chain_id):
     return None if (not addr) else addr
 
 def QueryPath(path):
-    out=callRawTrue(f"rly pth show {path} -j",True)
+    out=callJson(f"rly pth show {path} -j",True)
+    return None if (not out) else out
+
+def TransactClients(path):
+    out=callRawTrue(f"rly transact clients {path}",True)
+    return None if (not out) else out
+
+def TransactConnection(path, timeout):
+    out=callRawTrue(f"rly transact connection {path} --timeout {timeout}s",True)
+    return None if (not out) else out
+
+def TransactChannel(path, timeout):
+    out=callRawTrue(f"rly transact channel {path} --timeout {timeout}s",True)
+    return None if (not out) else out
+
+def TransactLink(path, timeout):
+    out=callRawTrue(f"rly transact link {path} --timeout {timeout}s",True)
+    return None if (not out) else out
+
+# relay any packets that remain to be relayed on a given path, in both directions
+def TransactRelay(path): # rly tx rly kira-alpha_isillienchain
+    out=callRawTrue(f"rly transact relay {path}",True)
     return None if (not out) else out
 
 def GetAmountByDenom(balances, denom):
@@ -165,13 +195,13 @@ def GetAmountByDenom(balances, denom):
     return amount
 
 def DeleteKey(chain_id, key_name):
-    return False if (not callRawTrue(f"rly keys delete '{chain_id}' '{key_name}'",False)) else True
+    return False if (not callRawTrue(f"rly keys delete {chain_id} {key_name}",False)) else True
 
 def RestoreKey(chain_id, key_name, mnemonic):
-    return None if (not callRawTrue(f"rly keys restore '{chain_id}' '{key_name}' '{mnemonic}'",True)) else True
+    return None if (not callRawTrue(f"rly keys restore {chain_id} {key_name} '{mnemonic}'",True)) else True
 
 def UpsertKey(chain_id, key_name):
-    return callRawTrue(f"rly keys add '{chain_id}' '{key_name}'",True)
+    return callRawTrue(f"rly keys add {chain_id} {key_name}",True)
 
 def DownloadKey(bucket, s3_key_path, output_file):
     key_exists=callRawTrue(f"AWSHelper s3 object-exists --bucket='{bucket}' --path='{s3_key_path}' --throw-if-not-found=true",True)

@@ -70,8 +70,33 @@ Status: `curl alpha.kiraex.com:10001/status`
 
 # Google Cloud
 
-> Agent logs: `sudo journalctl -u konlet-startup`
+> Agent Logs: `sudo journalctl -u konlet-startup`
 > Instance Metadata: `curl -H "Metadata-Flavor: Google" http://metadata/computeMetadata/v1/instance/`
 
+# Relayer Commands
 
+> Address Lookup: `rly ch addr kira-alpha`
+> Show All Connections: `rly pth list`
+> Relay Failed Tx:  `rly tx rly kira-alpha_kira-1`
+> Delete Path: `rly pth delete kira-alpha_hashquarkchain`
+> Show Path: `rly pth show kira-alpha_hashquarkchain -j`
+  
+  Example Output:
+```
+{"chains":{"src":{"chain-id":"kira-alpha","client-id":"wyrwjrphee","connection-id":"fggmltnqgu","channel-id":"rxkhmzzlea","port-id":"transfer","order":"ORDERED"},"dst":{"chain-id":"hashquarkchain","client-id":"dahykiltwr","connection-id":"qkrjxeqgus","channel-id":"mryfsrxoit","port-id":"transfer","order":"ORDERED"},"strategy":{"type":"naive"}},"status":{"chains":true,"clients":true,"connection":true,"channel":true}}
+```
+
+> Token Transfer
+ * Generate Path:  `rly pth gen kira-1 transfer hashquarkchain transfer kira-1_hashquarkchain`
+ * Link Chains (all in one): `rly tx link kira-1_hashquarkchain`
+ * Transfer Tokens: `rly tx transfer hashquarkchain kira-1 1quark true $(rly ch addr kira-1)`
+ * Transfer Hanging Packets: `rly tx rly kira-1_hashquarkchain`
+
+> Chain Linking (step by step):
+ * Transact Clients: `rly transact clients kira-alpha_hashquarkchain --debug`
+ * Transact Connection: `rly transact connection kira-alpha_hashquarkchain --debug`
+ * Transact Channel: `rly transact channel kira-alpha_hashquarkchain --debug`
+  
+> Check Balances: `rly q bal kira-1 -j`
+> Update Connection: `rly tx raw update-client {src_chain_id} {dst_chain_id} {client-id}`
 
