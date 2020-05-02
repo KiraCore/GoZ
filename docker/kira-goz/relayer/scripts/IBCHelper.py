@@ -1,5 +1,5 @@
 import RelayerHelper
-import FaucetHelper
+import ClientHelper
 import StringHelper
 import ArrayHelper
 import subprocess
@@ -63,14 +63,14 @@ def Connect(chain_info_src, chain_info_dst, timeout):
             print(f"ERROR: Failed to create channel (step 3) between {chain_id_src} and {chain_id_dst}, path: '{path}'")
 
     if (not IsConnected(path)):
-        RelayerHelper.DeletePath(path) # rly pth delete kira-alpha_hashquarkchain
-        if (not RelayerHelper.GeneratePath(chain_id_src,chain_id_dst,path)): #  rly pth gen kira-alpha transfer hashquarkchain transfer kira-alpha_hashquarkchain
+        RelayerHelper.DeletePath(path) # rly pth delete kira-alpha_gameofzoneshub-1
+        if (not RelayerHelper.GeneratePath(chain_id_src,chain_id_dst,path)): #  rly pth gen kira-alpha transfer hashquarkchain transfer kira-alpha_gameofzoneshub-1
             print(f"ERROR: Failed to generate path '{path}' between {chain_id_src} and {chain_id_dst}")
             return None
-        if (not RelayerHelper.TransactLink(path, timeout)): # rly transact link kira-alpha_hashquarkchain --timeout 10s
+        if (not RelayerHelper.TransactLink(path, timeout)): # rly transact link kira-alpha_gameofzoneshub-1 --timeout 10s
             print(f"ERROR: Failed to link {chain_id_src} and {chain_id_dst} via path '{path}'")
 
-    path_info = RelayerHelper.QueryPath(path) # rly pth show kira-alpha_hashquarkchain -j
+    path_info = RelayerHelper.QueryPath(path) # rly pth show kira-alpha_gameofzoneshub-1 -j
     if not path_info:
         print(f"Failed to fetch path info of {path}")
         return None
@@ -98,19 +98,33 @@ def ConnectWithJson(src_json_path, scr_mnemonic, dst_json_path, dst_mnemonic, bu
     lc_update_retry = 3 # 3x
     lc_update_delay = 5 # 5s
 
-    src_chain_info = FaucetHelper.ClaimTokens(src_json_path, scr_mnemonic, bucket, timeout)
+    src_chain_info = ClientHelper.InitializeClientWithJsonFile(src_json_path, scr_mnemonic, bucket, timeout)
     src_chain_id = src_chain_info["chain-id"]
 
-    if (not src_chain_info["balance"]):
-        print(f"Failed to acquire balance information from the source chain '{src_chain_id}', aborting connection...")
-        return None
+    if (ClientHelper.QueryFeeTokenBalance(src_chain_info) <= 0):
+        print(f"WARNING: Insufficient account balance on the source chain '{src_chain_id}'.")
+        if ((not RelayerHelper.RequestTokens_Process(src_chain_id, timeout, lc_update_retry, lc_update_delay)) or # rly testnets request kira-1
+           (ClientHelper.QueryFeeTokenBalance(src_chain_info) <= 0)): # rly q bal kira-1 -j
+            print(f"ERROR: Failed to acquire any tokens from the {src_chain_id} faucet, aborting connection...")
+            return None
+        else:
+            src_chain_info["balance"] = RelayerHelper.TryQueryBalance(src_chain_id)
     
-    dst_chain_info = FaucetHelper.ClaimTokens(dst_json_path, dst_mnemonic, bucket, timeout)
+    print(f"SUCCESS: Source client {src_chain_id} was initalized")
+    
+    dst_chain_info = ClientHelper.InitializeClientWithJsonFile(dst_json_path, dst_mnemonic, bucket, timeout)
     dst_chain_id = dst_chain_info["chain-id"]
     
-    if (not dst_chain_info) or (not dst_chain_info["balance"]):
-        print(f"Failed to acquire balance information from the destination chain '{dst_chain_id}', aborting connection...")
-        return None
+    if (ClientHelper.QueryFeeTokenBalance(dst_chain_info) <= 0):
+        print(f"WARNING: Insufficient account balance on the source chain '{dst_chain_id}'.")
+        if ((not RelayerHelper.RequestTokens_Process(dst_chain_id, timeout, lc_update_retry, lc_update_delay)) or # rly testnets request kira-1
+           (ClientHelper.QueryFeeTokenBalance(dst_chain_info) <= 0)): # rly q bal kira-1 -j
+            print(f"ERROR: Failed to acquire any tokens from the {dst_chain_id} faucet, aborting connection...")
+            return None
+        else:
+            dst_chain_info["balance"] = RelayerHelper.TryQueryBalance(dst_chain_id)
+
+    print(f"SUCCESS: Destination client {src_chain_id} was initalized")
     
     path = f"{src_chain_id}_{dst_chain_id}"
     

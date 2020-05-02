@@ -39,10 +39,20 @@ Private Sentry:
   * Node Info: `curl goz-sentry-private.kiraex.com:10002/node_info`
   * Node Status: `curl goz-sentry-private.kiraex.com:10001/status`
 
-Private Public:
+SEEDS: 
+```
+tcp://ef71392a1658182a9207985807100bb3d106dce6@35.233.155.199:26656,tcp://c65d517ed3784605c96fb6be5a16c4d577e35bb3@goz-sentry-public.kiraex.com:10000
+```
+
+Public Sentry:
   * Node Address (P2P seed): `tcp://c65d517ed3784605c96fb6be5a16c4d577e35bb3@goz-sentry-public.kiraex.com:10000`
   * Node Info: `curl goz-sentry-public.kiraex.com:10002/node_info`
   * Node Status: `curl goz-sentry-public.kiraex.com:10001/status`
+
+SEEDS: 
+```
+tcp://ef71392a1658182a9207985807100bb3d106dce6@35.233.155.199:26656,tcp://c5a16d35506b3052d9d6f684881ced8016d42e76@goz-sentry-private.kiraex.com:10000
+```
 
 
 ## Accessing Images with SSH console
@@ -60,7 +70,7 @@ Private Public:
  * GoZ: `docker exec -it $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-goz-relayer) bash`
 
 > Kira Sentry container: 
- * GoZ: `docker exec -it $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-alpha-relayer) bash`
+ * GoZ: `docker exec -it $(docker ps -a -q  --filter ancestor=kiracore/goz:goz-hub-sentry) bash`
 
 ## Checking container error logs
 
@@ -78,6 +88,11 @@ Private Public:
  * Alpha: `docker logs --tail 50 --follow --timestamps $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-alpha-relayer)`
  * GoZ: `docker logs --tail 50 --follow --timestamps $(docker ps -a -q  --filter ancestor=kiracore/goz:goz-alpha-relayer)`
 
+> Kira Sentry container  (HEAD): 
+ * GoZ: `docker logs --follow $(docker ps -a -q  --filter ancestor=kiracore/goz:goz-hub-sentry)`
+> Kira Sentry container  (TAIL): 
+ * GoZ:  `docker logs --tail 50 --follow --timestamps $(docker ps -a -q  --filter ancestor=kiracore/goz:goz-hub-sentry)`
+  
 ## If container is NOT running
 
 > Kira Validator container:
@@ -128,3 +143,4 @@ Private Public:
 
 > Agent Logs: `sudo journalctl -u konlet-startup`
 > Instance Metadata: `curl -H "Metadata-Flavor: Google" http://metadata/computeMetadata/v1/instance/`
+

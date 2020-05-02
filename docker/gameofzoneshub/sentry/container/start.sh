@@ -47,7 +47,6 @@ if [ -f "$INIT_END_FILE" ]; then
 
    sleep 30
    
-   systemctl2 restart gaiad
    systemctl2 restart lcd
    systemctl2 restart nginx
 
@@ -95,25 +94,27 @@ else
    touch $INIT_START_FILE
 fi
 
+gaiad init "$MONIKER" --home $GAIAD_HOME
+
+mkdir -p $GAIAD_CONFIG
+chmod -v -R 777 $GAIAD_HOME
+
 cat $SENTRY_CONFIGS/genesis.json > $GAIAD_CONFIG_GENESIS
 
-chmod -v -R 777 $GAIAD_HOME
 DENOM=$(python -c "import sys, json; print(json.load(open('$GAIAD_CONFIG_GENESIS'))['app_state']['mint']['params']['mint_denom'])")
 MIN_GAS="${MIN_GAS_VALUE}${DENOM}"
 CHAIN_ID=$(python -c "import sys, json; print(json.load(open('$GAIAD_CONFIG_GENESIS'))['chain_id'])")
 
-gaiad init $MONIKER --home $GAIAD_HOME
-
 # NOTE: ensure that the gaia rpc is open to all connections
 sed -i 's#tcp://127.0.0.1:26657#tcp://0.0.0.0:26657#g' $GAIAD_CONFIG_TOML
 #sed -i 's/pruning = "syncable"/pruning = "nothing"/g' $GAIAD_APP_TOML
-CDHelper text replace --old="seeds = \"\"" --new="seeds = \"$SEEDS\"" --input=$GAIAD_CONFIG
-CDHelper text replace --old="pex = false" --new="pex = $PEX" --input=$GAIAD_CONFIG
-CDHelper text replace --old="addr_book_strict = true" --new="addr_book_strict = false" --input=$GAIAD_CONFIG
+CDHelper text replace --old="seeds = \"\"" --new="seeds = \"$SEEDS\"" --input=$GAIAD_CONFIG_TOML
+CDHelper text replace --old="pex = false" --new="pex = $PEX" --input=$GAIAD_CONFIG_TOML
+CDHelper text replace --old="addr_book_strict = true" --new="addr_book_strict = false" --input=$GAIAD_CONFIG_TOML
 
-[ -n "$PEERS" ] && CDHelper text replace --old="persistent_peers = \"\"" --new="persistent_peers = \"$PEERS\"" --input=$GAIAD_CONFIG
-[ -n "$VALIDATORS" ] && CDHelper text replace --old="private_peer_ids = \"\"" --new="private_peer_ids = \"$VALIDATORS\"" --input=$GAIAD_CONFIG
-CDHelper text replace --old="minimum-gas-prices = \"\"" --new="minimum-gas-prices = \"$MIN_GAS\"" --input=$GAIAD_APP_CONFIG
+[ -n "$PEERS" ] && CDHelper text replace --old="persistent_peers = \"\"" --new="persistent_peers = \"$PEERS\"" --input=$GAIAD_CONFIG_TOML
+[ -n "$VALIDATORS" ] && CDHelper text replace --old="private_peer_ids = \"\"" --new="private_peer_ids = \"$VALIDATORS\"" --input=$GAIAD_CONFIG_TOML
+CDHelper text replace --old="minimum-gas-prices = \"\"" --new="minimum-gas-prices = \"$MIN_GAS\"" --input=$GAIAD_APP_TOML
 
 
 gaiacli config trust-node true --home $GAIAD_HOME

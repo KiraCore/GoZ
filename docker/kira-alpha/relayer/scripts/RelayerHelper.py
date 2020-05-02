@@ -1,3 +1,4 @@
+import TaskHelper
 import FaucetHelper
 import StringHelper
 import multiprocessing
@@ -12,177 +13,106 @@ import time
 from joblib import Parallel, delayed
 from subprocess import Popen, PIPE
 
-def callRawTrue(s, showErrors):
+def callRaw(s, showErrors):
     err = None
     try:
-        p = Popen(s, shell=True, stdout=PIPE, stderr=PIPE, universal_newlines=True, encoding="utf-8")
-        o, err = p.communicate()
-        status = p.wait()
-        if (not (not err)) or (status != 0):
-            print(f"Call '{s}' failed with status {status}, error: {str(err)}")
-            return None
-        if not err and not o:
-            return True
-        return o
+        o = TaskHelper.CMD(s)
     except Exception as e:
         pass
         if showErrors:
-            if err is not None:
-                print(f"Call '{s}' failed with error: {str(err)}")
-            else:
-                print(f"Call '{s}' failed during output parsing: {str(err)}")
+            print(f"ERROR: CMD {str(e)}")
         return None
 
 def callJson(s, showErrors):
-    err = None
+    jsonParseError = False
+    o = None
     try:
-        p = Popen(s, shell=True, stdout=PIPE, stderr=PIPE, universal_newlines=True, encoding="utf-8")
-        o, err = p.communicate()
-        status = p.wait()
-        if (not (not err)) or (status != 0):
-            print(f"Call '{s}' failed with status {status}, error: {str(err)}")
-            return None
-        if (not err) and (not o):
-            return {}
+        o = TaskHelper.CMD(s)
+        jsonParseError = False
         return json.loads(o)
     except Exception as e:
         pass
         if showErrors:
-            if err is not None:
-                print(f"Call '{s}' failed with error: {str(err)}")
+            if jsonParseError:
+                print(f"CMD '{s}' failed to parse output: '{str(o)}', error: {str(e)}")
             else:
-                print(f"Call '{s}' failed to parse output: '{str(o)}', error: {str(err)}")
+                print(f"ERROR: CMD {str(e)}")
         return None
 
-def callProcessRawTrue(s, q, showErrors):
-    err = None
-    try:
-        p = Popen(s, shell=True, stdout=PIPE, stderr=PIPE, universal_newlines=True, encoding="utf-8")
-        o, err = p.communicate()
-        status = p.wait()
-        if (not (not err)) or (status != 0):
-            print(f"Call '{s}' failed with status {status}, error: {str(err)}")
-            o = None
-        if not err and not o:
-            o = True
-        if q is not None:
-            q.put(o)
-        time.sleep(1) # rate limiting protection
-        return o
-    except Exception as e:
-        pass
-        if showErrors:
-            if err is not None:
-                print(f"Call '{s}' failed with error: {str(err)}")
-            else:
-                print(f"Call '{s}' failed during output parsing: {str(err)}")
-        if q is not None:
-            q.put(o)
-        return None
-
-def callRetryTrue(s, timeout, retry, delay, showErrors):
-    i = retry
-    result = None
-    while i >= 0 and (result is None):
-        i = i - 1
-        try:
-            mq = multiprocessing.Queue()
-            mp = multiprocessing.Process(target = callProcessRawTrue, args=(s,mq,showErrors,))
-            mp.start()
-            mp.join(timeout=timeout)
-            alive = mp.is_alive()
-            if not alive:
-                result = mq.get()
-            else:
-                mp.terminate()
-        except:
-            pass
-        if result is None:
-            time.sleep(int(delay))
-        else:
-            break 
-
-    return result
+def callTryRetry(s, timeout, retry, delay, showErrors):
+    return TaskHelper.TryRetryCMD(s, timeout, retry, delay, showErrors)
 
 def ConfigureDefaultKey(chain_id, key_name):
-    return False if (not callRawTrue(f"rly ch edit {chain_id} key {key_name}",True)) else True
+    return False if (None == callRaw(f"rly ch edit {chain_id} key {key_name}",True)) else True
 
 def ChainDelete(chain_id):
-    return False if (not callRawTrue(f"rly chains delete {chain_id}",True)) else True
+    return False if (None == callRaw(f"rly chains delete {chain_id}",True)) else True
 
 def AddChainFromFile(chain_info_path):
-    return False if (not callRawTrue(f"rly ch add -f {chain_info_path}",True)) else True
+    return False if (None == callRaw(f"rly ch add -f {chain_info_path}",True)) else True
 
 def DeleteLiteClient(chain_id):
-    return False if (not callRawTrue(f"rly lite delete {chain_id}",True)) else True
+    return False if (None == callRaw(f"rly lite delete {chain_id}",True)) else True
 
 def InitLiteClient(chain_id):
-    return False if (not callRawTrue(f"rly lite init {chain_id} -f",True)) else True
+    return False if (None == callRaw(f"rly lite init {chain_id} -f",True)) else True
 
 def InitLiteClient_Process(chain_id, timeout, retry, delay):
-    return False if (not callRetryTrue(f"rly lite init {chain_id} -f",timeout,retry,delay,True)) else True
+    return False if (None == callTryRetry(f"rly lite init {chain_id} -f",timeout,retry,delay,True)) else True
 
 def UpdateLiteClient(chain_id):
-    return False if (not callRawTrue(f"rly lite update {chain_id}",True)) else True
+    return False if (None == callRaw(f"rly lite update {chain_id}",True)) else True
 
 def UpdateLiteClient_Process(chain_id, timeout, retry, delay):
-    return False if (not callRetryTrue(f"rly lite update {chain_id}",timeout,retry,delay,True)) else True
+    return False if (None == callTryRetry(f"rly lite update {chain_id}",timeout,retry,delay,True)) else True
 
 def QueryLiteClientHeader(chain_id):
-    header=callJson(f"rly lite header {chain_id}",True)
-    return None if (not header) else header
+    out = callJson(f"rly lite header {chain_id}",True)
+    return None if ((None != out) and len(out) <= 0) else out
 
 def RequestTokens(chain_id):
-    return False if (not callRawTrue(f"rly testnets request {chain_id}",True)) else True
+    return False if (None == callRaw(f"rly testnets request {chain_id}",True)) else True
 
 def RequestTokens_Process(chain_id, timeout, retry, delay):
-    return False if (not callRetryTrue(f"rly testnets request {chain_id}", timeout, retry, delay,True)) else True
+    return False if (None == callTryRetry(f"rly testnets request {chain_id}", timeout, retry, delay,True)) else True
 
 def TransferTokens(src_chain_id, dst_chain_id, amount, dst_chain_addr): # rly tx transfer hashquarkchain kira-1 1quark true $(rly ch addr kira-1)
-    return False if (not callRawTrue(f"rly tx transfer {src_chain_id} {dst_chain_id} {amount} true {dst_chain_addr}",True)) else True
+    return False if (None == callRaw(f"rly tx transfer {src_chain_id} {dst_chain_id} {amount} true {dst_chain_addr}",True)) else True
 
-def QueryBalance(chain_id):
-    balance=callJson(f"rly q bal {chain_id} -j",True)
-    if (not (not balance)) and (len(balance) <= 0):
-        return []
-    else:
-        return None if (not balance) else balance
+def TryQueryBalance(chain_id):
+    balance=callJson(f"rly q bal {chain_id} -j", False)
+    return None if ((None != balance) and (len(balance) <= 0)) else balance
 
 def DeletePath(path):
-    return False if (not callRawTrue(f"rly pth delete {path}",True)) else True
+    return False if (None == callRaw(f"rly pth delete {path}",True)) else True
 
 def GeneratePath(chain_id_src, chain_id_dst, path):
-    out=callRawTrue(f"rly pth gen {chain_id_src} transfer {chain_id_dst} transfer {path}",True)
-    return False if (not out) else True
+    out=callRaw(f"rly pth gen {chain_id_src} transfer {chain_id_dst} transfer {path}",True)
+    return False if (None == out) else True
 
 def QueryChainAddress(chain_id):
-    addr=callRawTrue(f"rly ch addr {chain_id}",True)
-    return None if (not addr) else addr
+    out=callRaw(f"rly ch addr {chain_id}",True)
+    return None if ((None != out) and len(out) <= 0) else out
 
 def QueryPath(path):
     out=callJson(f"rly pth show {path} -j",True)
-    return None if (not out) else out
+    return None if ((None != out) and len(out) <= 0) else out
 
 def TransactClients(path):
-    out=callRawTrue(f"rly transact clients {path}",True)
-    return None if (not out) else out
+    return False if (None == callRaw(f"rly transact clients {path}",True)) else True
 
 def TransactConnection(path, timeout):
-    out=callRawTrue(f"rly transact connection {path} --timeout {timeout}s",True)
-    return None if (not out) else out
+    return False if (None == callRaw(f"rly transact connection {path} --timeout {timeout}s",True)) else True
 
 def TransactChannel(path, timeout):
-    out=callRawTrue(f"rly transact channel {path} --timeout {timeout}s",True)
-    return None if (not out) else out
+    return False if (None == callRaw(f"rly transact channel {path} --timeout {timeout}s",True)) else True
 
 def TransactLink(path, timeout):
-    out=callRawTrue(f"rly transact link {path} --timeout {timeout}s",True)
-    return None if (not out) else out
+    return False if (None == callRaw(f"rly transact link {path} --timeout {timeout}s",True)) else True
 
 # relay any packets that remain to be relayed on a given path, in both directions
 def TransactRelay(path): # rly tx rly kira-alpha_isillienchain
-    out=callRawTrue(f"rly transact relay {path}",True)
-    return None if (not out) else out
+    return True if (None == callRaw(f"rly transact relay {path}",True)) else False
 
 def GetAmountByDenom(balances, denom):
     amount = 0
@@ -194,20 +124,32 @@ def GetAmountByDenom(balances, denom):
                 amount = int(balance["amount"])
     return amount
 
-def DeleteKey(chain_id, key_name):
-    return False if (not callRawTrue(f"rly keys delete {chain_id} {key_name}",False)) else True
+def KeyExists(chain_id, key_name): # rly keys show kira-1 chain_key_kira-1
+    out = callRaw(f"rly keys show {chain_id} {key_name}", False)
+    return True if (None == out) else False
+
+def ShowKey(chain_id, key_name): # rly keys show kira-1 chain_key_kira-1
+    out = callRaw(f"rly keys show {chain_id} {key_name}", True)
+    return None if (None == out) else out
+
+# if key exists - deletes key, else returns true if key is already gone
+def DeleteKey(chain_id, key_name): # rly keys delete kira-1 chain_key_kira-1
+    if KeyExists(chain_id, key_name):
+        return None != callRaw(f"rly keys delete {chain_id} {key_name}", True)
+    else:
+        return True
 
 def RestoreKey(chain_id, key_name, mnemonic):
-    return None if (not callRawTrue(f"rly keys restore {chain_id} {key_name} '{mnemonic}'",True)) else True
+    return None if (None == callRaw(f"rly keys restore {chain_id} {key_name} '{mnemonic}'",True)) else True
 
 def UpsertKey(chain_id, key_name):
-    return callRawTrue(f"rly keys add {chain_id} {key_name}",True)
+    return callRaw(f"rly keys add {chain_id} {key_name}",True)
 
 def DownloadKey(bucket, s3_key_path, output_file):
-    key_exists=callRawTrue(f"AWSHelper s3 object-exists --bucket='{bucket}' --path='{s3_key_path}' --throw-if-not-found=true",True)
-    if key_exists:
-        downloaded = callRawTrue(f"AWSHelper s3 download-object --bucket='{bucket}' --path='{s3_key_path}' --output={output_file}",True)
-        if downloaded and os.path.isfile(output_file):
+    key_exists=callRaw(f"AWSHelper s3 object-exists --bucket='{bucket}' --path='{s3_key_path}' --throw-if-not-found=true",True)
+    if None != key_exists:
+        downloaded = callRaw(f"AWSHelper s3 download-object --bucket='{bucket}' --path='{s3_key_path}' --output={output_file}",True)
+        if (None != downloaded) and os.path.isfile(output_file):
             return json.load(open(output_file))
     return { "mnemonic":None,"address":None }
 

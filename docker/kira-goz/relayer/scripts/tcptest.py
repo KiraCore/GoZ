@@ -15,8 +15,8 @@ import socket
 # python3 tcptest.py
 
 
-#host="alpha.kiraex.com"
-host="35.230.14.56"
+host="alpha.kiraex.com"
+#host="35.230.14.56"
 #host="34.82.233.123"
 #host="34.83.182.199"
 #host="google.com"
