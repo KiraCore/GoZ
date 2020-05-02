@@ -15,6 +15,7 @@ NODE_KEY_PATH=$GAIAD_CONFIG/node_key.json
 
 INIT_START_FILE=$HOME/init_started
 INIT_END_FILE=$HOME/init_ended
+MAINTENANCE_FILE=$HOME/maintenence
 GAIACLI_HOME=$HOME/.gaiacli
 
 # external variables: P2P_PROXY_PORT, RPC_PROXY_PORT, LCD_PROXY_PORT, RLY_PROXY_PORT
@@ -23,7 +24,11 @@ RPC_LOCAL_PORT=26657
 LCD_LOCAL_PORT=1317
 NODE_ADDESS="tcp://localhost:$RPC_LOCAL_PORT"
 
-SEEDS="tcp://ef71392a1658182a9207985807100bb3d106dce6@35.233.155.199:26656"
+# set default parameters if not specified
+[ -z "$SEEDS" ] && SEEDS="tcp://ef71392a1658182a9207985807100bb3d106dce6@35.233.155.199:26656"
+[ -z "$MIN_GAS_VALUE" ] && MIN_GAS_VALUE="0.10"
+[ -z "$MONIKER" ] && MONIKER="Kira Core | Asmodat | Cosmos | Sentry"
+[ -z "$PEX" ] && PEX="true"
 
 cd
 
@@ -54,6 +59,12 @@ if [ -f "$INIT_END_FILE" ]; then
    
    while true
    do
+       if [ "${MAINTENANCE_MODE}" = "true"  ] || [ -f "$MAINTENANCE_FILE" ] ; then
+            echo "Entering maitenance mode!"
+            /bin/bash
+            exit 0
+       fi
+
        if [ "${STATUS_GAIA}" = "active" ] && [ "${STATUS_LCD}" = "active" ] && [ "${STATUS_NGINX}" = "active" ] ; then
            echo "Logs lookup..."
            tail -n 2 /var/log/journal/gaiad.service.log
@@ -88,19 +99,20 @@ cat $SENTRY_CONFIGS/genesis.json > $GAIAD_CONFIG_GENESIS
 
 chmod -v -R 777 $GAIAD_HOME
 DENOM=$(python -c "import sys, json; print(json.load(open('$GAIAD_CONFIG_GENESIS'))['app_state']['mint']['params']['mint_denom'])")
-MIN_GAS="0.10$DENOM"
+MIN_GAS="${MIN_GAS_VALUE}${DENOM}"
 CHAIN_ID=$(python -c "import sys, json; print(json.load(open('$GAIAD_CONFIG_GENESIS'))['chain_id'])")
 
-gaiad init "Kira Core | Asmodat | Cosmos | Sentry" --home $GAIAD_HOME
+gaiad init $MONIKER --home $GAIAD_HOME
 
 # NOTE: ensure that the gaia rpc is open to all connections
 sed -i 's#tcp://127.0.0.1:26657#tcp://0.0.0.0:26657#g' $GAIAD_CONFIG_TOML
 #sed -i 's/pruning = "syncable"/pruning = "nothing"/g' $GAIAD_APP_TOML
 CDHelper text replace --old="seeds = \"\"" --new="seeds = \"$SEEDS\"" --input=$GAIAD_CONFIG
-CDHelper text replace --old="pex = false" --new="pex = true" --input=$GAIAD_CONFIG
+CDHelper text replace --old="pex = false" --new="pex = $PEX" --input=$GAIAD_CONFIG
 CDHelper text replace --old="addr_book_strict = true" --new="addr_book_strict = false" --input=$GAIAD_CONFIG
-# CDHelper text replace --old="persistent_peers = \"\"" --new="persistent_peers = \"$PEERS\"" --input=$GAIAD_CONFIG
-# CDHelper text replace --old="private_peer_ids = \"\"" --new="private_peer_ids = \"$VALIDATORS\"" --input=$GAIAD_CONFIG
+
+[ -n "$PEERS" ] && CDHelper text replace --old="persistent_peers = \"\"" --new="persistent_peers = \"$PEERS\"" --input=$GAIAD_CONFIG
+[ -n "$VALIDATORS" ] && CDHelper text replace --old="private_peer_ids = \"\"" --new="private_peer_ids = \"$VALIDATORS\"" --input=$GAIAD_CONFIG
 CDHelper text replace --old="minimum-gas-prices = \"\"" --new="minimum-gas-prices = \"$MIN_GAS\"" --input=$GAIAD_APP_CONFIG
 
 
@@ -112,18 +124,9 @@ gaiacli config node $NODE_ADDESS --home $GAIAD_HOME
 # NOTE: external variables: NODE_ID, NODE_KEY, VALIDATOR_KEY
 # setup node key and unescape
 # NOTE: to create new key delete $NODE_KEY_PATH and run gaiad start 
-# rm -f -v $NODE_KEY_PATH && \
-# echo $NODE_KEY > $NODE_KEY_PATH && \
-# sed -i 's/\\\"/\"/g' $NODE_KEY_PATH
-
-# OR
-
-# TODO: SETUP CUSTOM NODE KEY - FROM SECRETS
-#echo "Updating node_key..."
-#echo $(gaiacli status | jq -r '.node_info.id')
-#AWSHelper sm get-secret --name=$SECRET_KEY_NAME --key="sentry_node_key" --force=true --output=$NODE_KEY_PATH --silent=true
-#echo $(gaiacli status | jq -r '.node_info.id')
-
+ rm -f -v $NODE_KEY_PATH && \
+ echo $NODE_KEY > $NODE_KEY_PATH && \
+ sed -i 's/\\\"/\"/g' $NODE_KEY_PATH
 
 echo ${PASSPHRASE} | gaiacli keys list
 
