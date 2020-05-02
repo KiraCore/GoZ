@@ -34,5 +34,4 @@ RUN LC_ALL=C DEBIAN_FRONTEND=noninteractive ${BUILD_SCRIPT}
 
 RUN printenv 
 
-CMD [ "/bin/bash", "${START_SCRIPT}" ]
-
+CMD ["sh", "-c", "/bin/bash ${START_SCRIPT}"]

@@ -58,16 +58,9 @@ Private Public:
 > Kira Relayer container: 
  * Alpha: `docker exec -it $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-alpha-relayer) bash`
  * GoZ: `docker exec -it $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-goz-relayer) bash`
-* 
-## If container is NOT running
 
-> Kira Validator container:
- * Alpha: `docker run -it -d $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-alpha-validator) /bin/bash`
- * GoZ:`docker run -it -d $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-goz-validator) /bin/bash`
-
-> Kira Relayer container:
- * Alpha: `docker run -it -d $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-alpha-relayer) /bin/bash`
- * GoZ: `docker run -it -d $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-goz-relayer) /bin/bash`
+> Kira Sentry container: 
+ * GoZ: `docker exec -it $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-alpha-relayer) bash`
 
 ## Checking container error logs
 
@@ -84,6 +77,16 @@ Private Public:
 > Kira Relayer container (TAIL): 
  * Alpha: `docker logs --tail 50 --follow --timestamps $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-alpha-relayer)`
  * GoZ: `docker logs --tail 50 --follow --timestamps $(docker ps -a -q  --filter ancestor=kiracore/goz:goz-alpha-relayer)`
+
+## If container is NOT running
+
+> Kira Validator container:
+ * Alpha: `docker run -it -d $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-alpha-validator) /bin/bash`
+ * GoZ:`docker run -it -d $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-goz-validator) /bin/bash`
+
+> Kira Relayer container:
+ * Alpha: `docker run -it -d $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-alpha-relayer) /bin/bash`
+ * GoZ: `docker run -it -d $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-goz-relayer) /bin/bash`
 
 # Relayer Commands
 
