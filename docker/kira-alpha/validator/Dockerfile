@@ -1,22 +1,29 @@
 FROM kiracore/goz:relayer-alpha
-COPY ./deployment.sh /tmp/build.sh
-COPY ./start.sh /root/start.sh
-COPY ./validator.key /root/validator.key
+
+ENV VALIDATOR_HOME=/root/valiator
+ENV VALIDATOR_SCRIPS=${VALIDATOR_HOME}/scripts
+ENV VALIDATOR_CONFIGS=${VALIDATOR_HOME}/configs
+ENV CONTAINER_SCRIPTS=${VALIDATOR_HOME}/container
+
+ENV START_SCRIPT=${CONTAINER_SCRIPTS}/start.sh
+ENV BUILD_SCRIPT=${CONTAINER_SCRIPTS}/deployment.sh
+ENV VALIDATOR_SELF_KEY_PATH=${VALIDATOR_CONFIGS}/validator.key
 
 ENV DENOM=ukex
 ENV CHAINID=kira-alpha
 ENV DOMAIN=alpha.kiraex.com
 ENV RLYKEY=faucet
-ENV VALIDATOR_SELF_KEY_PATH=/root/validator.key
 
-RUN chmod +x /tmp/build.sh
-RUN chmod +x /root/start.sh
-RUN chmod 777 /root/validator.key
+#ADD ./scripts ${VALIDATOR_SCRIPS}
+ADD ./configs ${VALIDATOR_CONFIGS}
+ADD ./container ${CONTAINER_SCRIPTS}
+
+RUN chmod 777 -R ${VALIDATOR_HOME}
 
 ARG DEBIAN_FRONTEND=noninteractive
-RUN LC_ALL=C DEBIAN_FRONTEND=noninteractive /tmp/build.sh
+RUN LC_ALL=C DEBIAN_FRONTEND=noninteractive ${BUILD_SCRIPT}
 
 RUN printenv 
 
-CMD [ "/bin/bash","/root/start.sh" ]
+CMD [ "/bin/bash", ${START_SCRIPT} ]
 

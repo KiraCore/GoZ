@@ -1,18 +1,21 @@
 FROM kiracore/goz:gaia-ibc-alpha
 
-ENV SENTRY_SCRIPS=/root/scripts/sentry
-ENV SENTRY_CONFIGS=/root/configs/sentry
-ENV START_SCRIPT=${SENTRY_SCRIPS}/start.sh
+ENV SENTRY_HOME=/root/sentry
+ENV SENTRY_SCRIPS=${SENTRY_HOME}/scripts
+ENV SENTRY_CONFIGS=${SENTRY_HOME}/configs
+ENV CONTAINER_SCRIPTS=${SENTRY_HOME}/container
 
-ADD ./scripts ${SENTRY_SCRIPS}
+ENV START_SCRIPT=${CONTAINER_SCRIPTS}/start.sh
+ENV BUILD_SCRIPT=${CONTAINER_SCRIPTS}/deployment.sh
+
+#ADD ./scripts ${SENTRY_SCRIPS}
 ADD ./configs ${SENTRY_CONFIGS}
+ADD ./container ${CONTAINER_SCRIPTS}
 
-RUN chmod 777 /root/validator.key
-RUN chmod 777 -R ${SENTRY_SCRIPS}
-RUN chmod 777 -R ${SENTRY_CONFIGS}
+RUN chmod 777 -R ${SENTRY_HOME}
 
 ARG DEBIAN_FRONTEND=noninteractive
-RUN LC_ALL=C DEBIAN_FRONTEND=noninteractive /tmp/build.sh
+RUN LC_ALL=C DEBIAN_FRONTEND=noninteractive ${BUILD_SCRIPT}
 
 RUN printenv 
 
