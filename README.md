@@ -1,7 +1,7 @@
 # GoZ
 Game of Zones
 
-Node Address: `goz.kiraex.com` 
+Validator Address: `goz.kiraex.com` 
 Node Info: `curl goz.kiraex.com:10002/node_info`
 Status: `curl goz.kiraex.com:10001/status`
 
@@ -12,7 +12,7 @@ IP Address Whitelist:
 
 # Cosmos Alpha 
 
-Node Address: `alpha.kiraex.com` 
+Validator Address: `alpha.kiraex.com` 
 Node Info: `curl alpha.kiraex.com:10002/node_info`
 Status: `curl alpha.kiraex.com:10001/status`
 
@@ -24,7 +24,7 @@ Status: `curl alpha.kiraex.com:10001/status`
 > Relayer: `kiracore/goz:relayer-alpha`
 > Validator: `kiracore/goz:kira-1-validator`
 
-# Cosmos Hub 
+# GoZ Hub 
 
 RPC Address: `http://35.233.155.199:26657`
 Node Address: `tcp://ef71392a1658182a9207985807100bb3d106dce6@35.233.155.199:26656`
@@ -33,6 +33,16 @@ Wallet: `cosmos1efzs6x9244z9hjz6pcrsam4muxxms74wz98h7c`
   * Amount: `10000000000`
   * Genesis:`http://35.233.155.199:26657/genesis`
 Staking Token: `stake`
+
+Private Sentry:
+  * Node Address (P2P seed): `tcp://c5a16d35506b3052d9d6f684881ced8016d42e76@goz-sentry-private.kiraex.com:10000`
+  * Node Info: `curl goz-sentry-private.kiraex.com:10002/node_info`
+  * Node Status: `curl goz-sentry-private.kiraex.com:10001/status`
+
+Private Public:
+  * Node Address (P2P seed): `tcp://c65d517ed3784605c96fb6be5a16c4d577e35bb3@goz-sentry-public.kiraex.com:10000`
+  * Node Info: `curl goz-sentry-public.kiraex.com:10002/node_info`
+  * Node Status: `curl goz-sentry-public.kiraex.com:10001/status`
 
 
 ## Accessing Images with SSH console
@@ -75,15 +85,6 @@ Staking Token: `stake`
  * Alpha: `docker logs --tail 50 --follow --timestamps $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-alpha-relayer)`
  * GoZ: `docker logs --tail 50 --follow --timestamps $(docker ps -a -q  --filter ancestor=kiracore/goz:goz-alpha-relayer)`
 
-## Docker Commands
-
-> List containers: `docker ps`
-
-# Google Cloud
-
-> Agent Logs: `sudo journalctl -u konlet-startup`
-> Instance Metadata: `curl -H "Metadata-Flavor: Google" http://metadata/computeMetadata/v1/instance/`
-
 # Relayer Commands
 
 > Address Lookup: `rly ch addr kira-alpha`
@@ -111,3 +112,16 @@ Staking Token: `stake`
 > Check Balances: `rly q bal kira-1 -j`
 > Update Connection: `rly tx raw update-client {src_chain_id} {dst_chain_id} {client-id}`
 
+# Gaia Commands
+
+> Default Node Key Location: `$HOME/.gaiad/config/node_key.json`
+> Node Key ID Lookup: `gaiad tendermint show-node-id`
+
+# Docker Commands
+
+> List containers: `docker ps`
+
+# Google Cloud
+
+> Agent Logs: `sudo journalctl -u konlet-startup`
+> Instance Metadata: `curl -H "Metadata-Flavor: Google" http://metadata/computeMetadata/v1/instance/`
