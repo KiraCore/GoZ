@@ -1,7 +1,6 @@
 
 import IBCHelper
 import RelayerHelper
-import FaucetHelper
 import StringHelper
 import ArrayHelper
 import subprocess

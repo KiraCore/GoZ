@@ -1,5 +1,4 @@
 import TaskHelper
-import FaucetHelper
 import StringHelper
 import multiprocessing
 import ArrayHelper
