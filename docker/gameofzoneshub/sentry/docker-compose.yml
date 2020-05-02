@@ -1,0 +1,5 @@
+version: '3.8'
+services:
+  sentry:
+    container_name: sentry-image
+    network_mode: host

@@ -13,24 +13,23 @@ import time
 from joblib import Parallel, delayed
 
 # console args
-DESTINATION_RLYS_DIR=sys.argv[1]
-
-# env variables
-RLYKEY_MNEMONIC = os.getenv('RLYKEY_MNEMONIC')
-BASECHAIN_JSON_PATH = os.getenv('BASECHAIN_JSON_PATH')
-BUCKET = os.getenv('BUCKET')
+SOURCE_JSON_PATH=sys.argv[1]
+SRC_MNEMONIC=sys.argv[2]
+DESTINATION_RLYS_DIR=sys.argv[3]
+DST_MNEMONIC=sys.argv[4]
+BUCKET=sys.argv[5]
 
 # constants
 connect_timeout = 60
 
 # Startup Example:
-# python3 $RELAY_SCRIPS/relay.py "$RLYS_HOME"
+# python3 $RELAY_SCRIPS/relay.py $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $RLYS_HOME "$RLYKEY_MNEMONIC" $BUCKET
 
 for filename in os.listdir(DESTINATION_RLYS_DIR):
-    src_json_dir = BASECHAIN_JSON_PATH
+    src_json_dir = SOURCE_JSON_PATH
     dst_json_dir = f"{DESTINATION_RLYS_DIR}/{filename}"
 
-    connection = IBCHelper.ConnectWithJson(src_json_dir, RLYKEY_MNEMONIC, dst_json_dir, RLYKEY_MNEMONIC, BUCKET, connect_timeout)
+    connection = IBCHelper.ConnectWithJson(src_json_dir, SRC_MNEMONIC, dst_json_dir, DST_MNEMONIC, BUCKET, connect_timeout)
     connected = False if (not connection) else connection["success"]
     path = None if (not connection) else connection["path"]
     

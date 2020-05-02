@@ -4,7 +4,9 @@ COPY ./start.sh /root/start.sh
 
 ENV RELAY_SCRIPS=/root/scripts/relay
 ENV RELAY_CONFIGS=/root/configs/relay
-ENV BASECHAIN_JSON_PATH=${RELAY_CONFIGS}/kira-1.json
+ENV TESTCHAIN_JSON_PATH=${RELAY_CONFIGS}/kira-alpha.json
+ENV GOZCHAIN_JSON_PATH=${RELAY_CONFIGS}/kira-1.json
+ENV HUBCHAIN_JSON_PATH=${RELAY_CONFIGS}/goz-hub.json
 ENV RLYS_HOME=/root/relayers
 ENV BUCKET="kira-core-goz"
 

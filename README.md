@@ -24,6 +24,17 @@ Status: `curl alpha.kiraex.com:10001/status`
 > Relayer: `kiracore/goz:relayer-alpha`
 > Validator: `kiracore/goz:kira-1-validator`
 
+# Cosmos Hub 
+
+RPC Address: `http://35.233.155.199:26657`
+Node Address: `tcp://ef71392a1658182a9207985807100bb3d106dce6@35.233.155.199:26656`
+Wallet: `cosmos1efzs6x9244z9hjz6pcrsam4muxxms74wz98h7c`
+  * Tokens: `doubloons`
+  * Amount: `10000000000`
+  * Genesis:`http://35.233.155.199:26657/genesis`
+Staking Token: `stake`
+
+
 ## Accessing Images with SSH console
 
 > Base container: `docker exec -it $(docker ps -a -q  --filter ancestor=kiracore/goz:base-image-v0.0.1) bash`
@@ -38,7 +49,7 @@ Status: `curl alpha.kiraex.com:10001/status`
  * Alpha: `docker exec -it $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-alpha-relayer) bash`
  * GoZ: `docker exec -it $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-goz-relayer) bash`
 * 
-## If container is not running
+## If container is NOT running
 
 > Kira Validator container:
  * Alpha: `docker run -it -d $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-alpha-validator) /bin/bash`

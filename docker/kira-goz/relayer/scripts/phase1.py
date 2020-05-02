@@ -14,16 +14,14 @@ from joblib import Parallel, delayed
 
 
 # Startup example: 26657
-# python3 $RELAY_SCRIPS/phase1.py "$BASECHAIN_JSON_PATH" "$RLYKEY_MNEMONIC" "$GOZCHAIN_JSON_PATH" "$RLYKEY_MNEMONIC"
+# python3 $RELAY_SCRIPS/phase1.py "$BASECHAIN_JSON_PATH" "$RLYKEY_MNEMONIC" "$GOZCHAIN_JSON_PATH" "$RLYKEY_MNEMONIC" $BUCKET
 
 # console args
 SRC_JSON_DIR=sys.argv[1]
 SRC_MNEMONIC=sys.argv[2]
 DST_JSON_DIR=sys.argv[3]
 DST_MNEMONIC=sys.argv[4]
-
-# env variables
-BUCKET = os.getenv('BUCKET')
+BUCKET=sys.argv[5]
 
 # constants 
 connect_timeout = 60
@@ -43,4 +41,3 @@ src_balance = src_chain_info["balance"]
 dst_balance = src_chain_info["balance"]
 
 print(f"Success connection between {src_id} and {dst_id} was established, path: '{path}'")
-
