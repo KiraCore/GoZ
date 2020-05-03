@@ -13,6 +13,7 @@ ENV DENOM=ukex
 ENV CHAINID=kira-1
 ENV DOMAIN=goz.kiraex.com
 ENV RLYKEY=faucet
+ENV RLYTRUSTING="330h"
 
 #ADD ./scripts ${VALIDATOR_SCRIPS}
 ADD ./configs ${VALIDATOR_CONFIGS}

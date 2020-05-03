@@ -10,7 +10,7 @@ IP Address Whitelist:
  * `34.82.233.123`
  * `34.83.182.199`
 
-# Cosmos Alpha 
+# Kira Alpha 
 
 Validator Address: `alpha.kiraex.com` 
 Node Info: `curl alpha.kiraex.com:10002/node_info`
@@ -44,7 +44,7 @@ Private Sentry:
 
 SEEDS: 
 ```
-tcp://6e4e0fad3d152b4086e24fd84602f71c6815832d@35.233.155.199:26656,tcp://c65d517ed3784605c96fb6be5a16c4d577e35bb3@goz-sentry-public.kiraex.com:10000
+tcp://6e4e0fad3d152b4086e24fd84602f71c6815832d@goz-trust-alias.kiraex.com:26656,tcp://c65d517ed3784605c96fb6be5a16c4d577e35bb3@goz-sentry-public.kiraex.com:10000
 ```
 
 Public Sentry:
@@ -54,7 +54,7 @@ Public Sentry:
 
 SEEDS: 
 ```
-tcp://6e4e0fad3d152b4086e24fd84602f71c6815832d@35.233.155.199:26656,tcp://c5a16d35506b3052d9d6f684881ced8016d42e76@goz-sentry-private.kiraex.com:10000
+tcp://6e4e0fad3d152b4086e24fd84602f71c6815832d@goz-trust-alias.kiraex.com:26656,tcp://c5a16d35506b3052d9d6f684881ced8016d42e76@goz-sentry-private.kiraex.com:10000
 ```
 
 # Localhost

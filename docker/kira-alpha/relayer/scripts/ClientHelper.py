@@ -10,6 +10,8 @@ import os.path
 import time
 from joblib import Parallel, delayed
 
+# Update: (rm $RELAY_SCRIPS/ClientHelper.py || true) && nano $RELAY_SCRIPS/ClientHelper.py 
+
 def ShutdownClient(chain_info):
     chain_id = chain_info["chain-id"]
     key_name = f"chain_key_{chain_id}"
@@ -26,14 +28,9 @@ def InitializeClientWithMnemonic(chain_info, mnemonic, bucket, timeout):
     retry = 3 # 3x
     delay = 5 # 5s
 
-    # rly chains show gameofzoneshub-1 
-    if not RelayerHelper.QueryLiteClientHeader(chain_id):
-        if not RelayerHelper.AddChainFromFile(chain_info_path): # rly chains add -f $BASECHAIN_JSON_PATH
-            print(f"Failed adding new chain from '{chain_info_path}' file :(")
-            return chain_info
-        print(f"SUCCESS: Chain {chain_id} was added from file {chain_info_path}")
-        
+    def UpdateKeyIfNotSetAndConfigure():
         if not RelayerHelper.KeyExists(chain_id, key_name):
+            print(f"WARNING: Key {key_name} of the {chain_id} chain does not exist, restoring...")
             if mnemonic: # restore old key
                 RelayerHelper.RestoreKey(chain_id, key_name, mnemonic) # rly keys restore kira-alpha chain_key_kira-alpha "$RLYKEY_MNEMONIC"
             else: # add new key
@@ -41,16 +38,37 @@ def InitializeClientWithMnemonic(chain_info, mnemonic, bucket, timeout):
                 key = RelayerHelper.UpsertKey(chain_id, key_name)
                 StringHelper.WriteToFile(key,tmp_file)
                 RelayerHelper.callRawTrue(f"AWSHelper s3 upload-object --bucket='{bucket}' --path='{s3_key_path}' --input='{tmp_file}'",True)
-            print(f"SUCCESS: Key {key_name} was added to chain {chain_id}")
-    
-        if not RelayerHelper.ConfigureDefaultKey(chain_id, key_name): # rly ch edit kira-alpha key chain_key_kira-alpha
-            print(f"WARNING: Failed to configure chain {chain_id} to use {key_name} key by default")
+
+            if not RelayerHelper.KeyExists(chain_id, key_name):
+                print(f"ERROR: Failed to restore key {key_name} of the chain {chain_id}")
+            else:
+                print(f"SUCCESS: Key {key_name} of the chain {chain_id} was restored")
+        else:
+            print(f"INFO: Key {key_name} of the {chain_id} already exists.")
+        
+        if not RelayerHelper.IsKeyConfigured(chain_id):
+            if not RelayerHelper.ConfigureDefaultKey(chain_id, key_name): # rly ch edit kira-alpha key chain_key_kira-alpha
+                print(f"WARNING: Failed to configure chain {chain_id} to use {key_name} key by default")
+            else:
+                print(f"SUCCESS: Key {key_name} was configured as default of the chain {chain_id}")
+
+    if not RelayerHelper.QueryLiteClientHeader(chain_id): # rly lite header kira-alpha
+        if not RelayerHelper.UpsertChainFromFile(chain_info_path): # rly chains add -f $TESTCHAIN_JSON_PATH
+            print(f"ERROR: Failed adding new chain from '{chain_info_path}' file :(")
+            return chain_info
+
+        print(f"SUCCESS: Chain {chain_id} was added from file {chain_info_path}")
+        UpdateKeyIfNotSetAndConfigure()
 
         if not RelayerHelper.InitLiteClient_Process(chain_id, timeout, retry, delay): # rly lite init kira-alpha -f
             print(f"ERROR: Failed lite client init of the '{chain_id}' chain :(")
             return chain_info
+
         print(f"SUCCESS: Lite client of the chain '{chain_id}' was initialized")
     else: # update
+        print(f"SUCCESS: Lite client header of the chain '{chain_id}' was found")
+        UpdateKeyIfNotSetAndConfigure()
+
         if not RelayerHelper.UpdateLiteClient_Process(chain_id, timeout, retry, delay): 
             print(f"ERROR: Failed updating lite client of the '{chain_id}' chain :(")
             return chain_info

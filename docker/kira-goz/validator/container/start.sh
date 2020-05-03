@@ -87,7 +87,7 @@ fi
 
 #  NOTE: external variables RLYKEY_ADDRESS, RLYKEY_MNEMONIC
 rly config init
-echo "{\"key\":\"$RLYKEY\",\"chain-id\":\"$CHAINID\",\"rpc-addr\":\"http://$DOMAIN:$RPC_LOCAL_PORT\",\"account-prefix\":\"cosmos\",\"gas\":200000,\"gas-prices\":\"0.025$DENOM\",\"default-denom\":\"$DENOM\",\"trusting-period\":\"330h\"}" > $CHAINID.json
+echo "{\"key\":\"$RLYKEY\",\"chain-id\":\"$CHAINID\",\"rpc-addr\":\"http://$DOMAIN:$RPC_LOCAL_PORT\",\"account-prefix\":\"cosmos\",\"gas\":200000,\"gas-prices\":\"0.025$DENOM\",\"default-denom\":\"$DENOM\",\"trusting-period\":\"$RLYTRUSTING\"}" > $CHAINID.json
 # NOTE: you will want to save the content from this JSON file
 rly chains add -f $CHAINID.json
 rly keys restore $CHAINID $RLYKEY "$RLYKEY_MNEMONIC"

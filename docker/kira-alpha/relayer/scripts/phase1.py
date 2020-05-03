@@ -10,11 +10,14 @@ import sys
 import os
 import time
 from joblib import Parallel, delayed
+from datetime import timedelta
 
 
 # Startup example: 26657
 # python3 $RELAY_SCRIPS/phase1.py "$TESTCHAIN_JSON_PATH" "$RLYKEY_MNEMONIC" "$GOZCHAIN_JSON_PATH" "$RLYKEY_MNEMONIC" $BUCKET
 # python3 $RELAY_SCRIPS/phase1.py $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $HUBCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $BUCKET
+
+# Update: (rm $RELAY_SCRIPS/phase1.py || true) && nano $RELAY_SCRIPS/phase1.py 
 
 # console args
 SRC_JSON_DIR=sys.argv[1]
@@ -31,18 +34,29 @@ connected = False if (not connection) else connection["success"]
 path = None if (not connection) else connection["path"]
 
 if (not connected):
-   print(f"Failed to establish connection using {SRC_JSON_DIR} and {DST_JSON_DIR}")
+   print(f"ERROR: Failed to establish connection using {SRC_JSON_DIR} and {DST_JSON_DIR}")
    exit(1)
 
 src_chain_info = connection["src"]
 dst_chain_info = connection["dst"]
 src_id = src_chain_info["chain-id"]
 dst_id = dst_chain_info["chain-id"]
-src_balance = src_chain_info["balance"]
-dst_balance = src_chain_info["balance"]
 
-print(f"Success connection between {src_id} and {dst_id} was established, path: '{path}'")
+print(f"SUCCESS: connection between {src_id} and {dst_id} was established, path: '{path}'")
 
+print(f"INFO: Entering connection sustainably mode")
+time_start = time.time()
+
+while True:
+    if not IBCHelper.TestConnection(connection):
+        break;
+    elapsed = time.time() - time_start
+    print(f"INFO: Connection duration: {timedelta(seconds=elapsed)}")
+    time.sleep(float(5))
+
+elapsed = time.time() - time_start
+print(f"ERROR: Failed to maitain connection between {src_id} and {dst_id}, Uptime: {timedelta(seconds=elapsed)}")
+exit(1)
 
 #if(len(src_balance) <= 0) and (len(src_balance) < 0)
 

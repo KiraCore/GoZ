@@ -1,7 +1,6 @@
 
 import IBCHelper
 import RelayerHelper
-import FaucetHelper
 import StringHelper
 import ArrayHelper
 import subprocess
@@ -11,6 +10,8 @@ import sys
 import os
 import time
 from joblib import Parallel, delayed
+
+# Update: (rm $RELAY_SCRIPS/relay.py || true) && nano $RELAY_SCRIPS/relay.py 
 
 # console args
 SOURCE_JSON_PATH=sys.argv[1]

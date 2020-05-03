@@ -12,12 +12,18 @@ import time
 from joblib import Parallel, delayed
 from subprocess import Popen, PIPE
 
+# Update: (rm $RELAY_SCRIPS/RelayerHelper.py || true) && nano $RELAY_SCRIPS/RelayerHelper.py 
+
 def callRaw(s, showErrors):
     err = None
     try:
+        #print(f"callRaw => Input: {s}") # debug only
         o = TaskHelper.CMD(s)
+        #print(f"callRaw => Output: {o}") # debug only
+        return o
     except Exception as e:
         pass
+        #print(f"callRaw => Error: {str(e)}") # debug only
         if showErrors:
             print(f"ERROR: CMD {str(e)}")
         return None
@@ -41,14 +47,37 @@ def callJson(s, showErrors):
 def callTryRetry(s, timeout, retry, delay, showErrors):
     return TaskHelper.TryRetryCMD(s, timeout, retry, delay, showErrors)
 
-def ConfigureDefaultKey(chain_id, key_name):
-    return False if (None == callRaw(f"rly ch edit {chain_id} key {key_name}",True)) else True
+def ConfigureDefaultKey(chain_id, key_name): # rly ch edit kira-1 key chain_key_kira-1
+    return False if (None == callRaw(f"rly ch edit {chain_id} key {key_name}",True)) else True 
 
 def ChainDelete(chain_id):
     return False if (None == callRaw(f"rly chains delete {chain_id}",True)) else True
 
+def TryShowChain(chain_id):
+    chain_info = callJson(f"rly ch show {chain_id} -j", False)
+    return None if ((not chain_info) or (len(chain_info) <= 0)) else chain_info
+
+def TryQueryChainAddress(chain_id):
+    out = callRaw(f"rly ch address {chain_id}", False)
+    return None if ((not out) or (len(out) <= 0)) else out
+
+ def IsKeyConfigured(chain_id):
+    out = TryQueryChainAddress(chain_id)
+    return False if ((not out) or (len(out) <= 0)) else True
+
 def AddChainFromFile(chain_info_path):
     return False if (None == callRaw(f"rly ch add -f {chain_info_path}",True)) else True
+
+def UpsertChainFromFile(chain_info_path):
+    chain_info = json.load(open(chain_info_path))
+    chain_id = chain_info["chain-id"]
+    if None == callRaw(f"rly ch add -f {chain_info_path}", False):
+        print(f"WARNING: Chain {chain_id} was already present in the relay and will be updated")
+        if not ChainDelete(chain_id):
+            print(f"WARNING: Failed to remove {chain_id}")
+        else:
+            print(f"INFO: Chain {chain_id} was removed the relay and will be updated")
+    return AddChainFromFile(chain_info_path)
 
 def DeleteLiteClient(chain_id):
     return False if (None == callRaw(f"rly lite delete {chain_id}",True)) else True
@@ -123,9 +152,9 @@ def GetAmountByDenom(balances, denom):
                 amount = int(balance["amount"])
     return amount
 
-def KeyExists(chain_id, key_name): # rly keys show kira-1 chain_key_kira-1
+def KeyExists(chain_id, key_name): # rly keys show kira-alpha chain_key_kira-alpha
     out = callRaw(f"rly keys show {chain_id} {key_name}", False)
-    return True if (None == out) else False
+    return False if (None == out) else True
 
 def ShowKey(chain_id, key_name): # rly keys show kira-1 chain_key_kira-1
     out = callRaw(f"rly keys show {chain_id} {key_name}", True)
@@ -142,7 +171,7 @@ def RestoreKey(chain_id, key_name, mnemonic):
     return None if (None == callRaw(f"rly keys restore {chain_id} {key_name} '{mnemonic}'",True)) else True
 
 def UpsertKey(chain_id, key_name):
-    return callRaw(f"rly keys add {chain_id} {key_name}",True)
+    return callRaw(f"rly keys add {chain_id} {key_name}",True) # rly keys add kira-alpha chain_key_kira-alpha
 
 def DownloadKey(bucket, s3_key_path, output_file):
     key_exists=callRaw(f"AWSHelper s3 object-exists --bucket='{bucket}' --path='{s3_key_path}' --throw-if-not-found=true",True)
