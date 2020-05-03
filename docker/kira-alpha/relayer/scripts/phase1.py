@@ -72,6 +72,8 @@ while True:
     print(f"INFO: Connection duration: {timedelta(seconds=elapsed)}")
     time.sleep(float(5))
 
+    # UpdateClientConnection
+
 elapsed = time.time() - time_start
 print(f"ERROR: Failed to maitain connection between {src_id} and {dst_id}, Uptime: {timedelta(seconds=elapsed)}")
 print(f"INFO: Script Failed (2)")

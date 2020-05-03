@@ -100,7 +100,7 @@ def InitializeClientWithBucket(chain_info, timeout):
     s3_key_path = chain_info["s3-path"]
     tmp_file=chain_info["tmp-path"]
     
-    key = RelayerHelper.DownloadKey(bucket, s3_key_path, tmp_file)
+    key = StateHelper.DownloadKey(bucket, s3_key_path, tmp_file)
     mnemonic=key["mnemonic"]
     return InitializeClientWithMnemonic(chain_info, mnemonic, timeout)
 

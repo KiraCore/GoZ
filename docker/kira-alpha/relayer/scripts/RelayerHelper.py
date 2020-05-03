@@ -174,16 +174,6 @@ def RestoreKey(chain_id, key_name, mnemonic):
 def UpsertKey(chain_id, key_name):
     return callRaw(f"rly keys add {chain_id} {key_name}",True) # rly keys add kira-alpha prefix_kira-alpha
 
-def DownloadKey(bucket, s3_key_path, output_file):
-    key_exists=callRaw(f"AWSHelper s3 object-exists --bucket='{bucket}' --path='{s3_key_path}' --throw-if-not-found=true",True)
-    if None != key_exists:
-        downloaded = callRaw(f"AWSHelper s3 download-object --bucket='{bucket}' --path='{s3_key_path}' --output={output_file}",True)
-        if (None != downloaded) and os.path.isfile(output_file):
-            return json.load(open(output_file))
-    return { "mnemonic":None,"address":None }
-
-
-
 # Usage: rly transact raw update-client [src-chain-id] [dst-chain-id] [client-id] [flags]
 def UpdateClientConnection(connection):
     src_chain_info = connection["src"]
@@ -205,20 +195,11 @@ def UpdateClientConnection(connection):
         print(f"ERROR: Could not update client connection because path {path} does not have established connection")
         return False
 
-    src_client_id = chains["src"]["client-id"]
-    src_client_id = chains["dst"]["client-id"]
+    src_chain_id = src_chain_info["chain-id"]
+    dst_chain_id = dst_chain_info["chain-id"]
+    dst_client_id = chains["dst"]["client-id"]
 
-    
-    src_id = src_chain_info["chain-id"]
-    dst_id = dst_chain_info["chain-id"]
+    out = callRaw(f"rly transact raw update-client {src_chain_id} {dst_chain_id} {dst_client_id}", True)
+    print(f"INFO: update-client output: {out}")
 
-    out = callRaw(f" rly transact raw update-client {src_id} {dst_id} {src_client_id}", False)
-    
-    return None if (None == out) else out
-
-    
-
-#  rly tx raw update-client
-
-
-
+    return False if (None == out) else True
