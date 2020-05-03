@@ -27,11 +27,14 @@ Status: `curl alpha.kiraex.com:10001/status`
 # GoZ Hub 
 
 RPC Address: `http://35.233.155.199:26657`
-Node Address: `tcp://6e4e0fad3d152b4086e24fd84602f71c6815832d@35.233.155.199:26656`
+A Record: `goz-trust-ip.kiraex.com -> 35.233.155.199`
+CNAME Record: `goz-trust-alias.kiraex.com -> goz-trust-ip.kiraex.com`
+
+Node Address: `tcp://6e4e0fad3d152b4086e24fd84602f71c6815832d@goz-trust-alias.kiraex.com:26656`
 Wallet: `cosmos1efzs6x9244z9hjz6pcrsam4muxxms74wz98h7c`
   * Tokens: `doubloons`
   * Amount: `10000000000`
-  * Genesis:`http://35.233.155.199:26657/genesis`
+  * Genesis:`http://goz-trust-alias.kiraex.com:26657/genesis`
 Staking Token: `stake`
 
 Private Sentry:
