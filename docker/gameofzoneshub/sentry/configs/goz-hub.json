@@ -1,6 +1,6 @@
 {
   "key": "faucet",
-  "chain-id": "gameofzoneshub-1",
+  "chain-id": "gameofzoneshub-1a",
   "rpc-addr": "http://goz-trust-alias.kiraex.com:26657",
   "account-prefix": "cosmos",
   "gas": 200000,

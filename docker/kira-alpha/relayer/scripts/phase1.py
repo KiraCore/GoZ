@@ -1,6 +1,7 @@
 
 import IBCHelper
 import RelayerHelper
+import StateHelper
 import StringHelper
 import ArrayHelper
 import subprocess
@@ -38,12 +39,40 @@ PATH = None if ((not PATH) or (len(PATH) <= 1)) else PATH
 KEY_PREFIX = "chain_key" if ((not KEY_PREFIX) or (len(KEY_PREFIX) <= 1)) else KEY_PREFIX
    
 
+
+
 # constants 
 connect_timeout = 60
 
 connection = IBCHelper.ConnectWithJson(SRC_JSON_DIR, SRC_MNEMONIC, DST_JSON_DIR, DST_MNEMONIC, BUCKET, PATH, KEY_PREFIX, connect_timeout)
-path = None if (not connection) else connection.get("path", None)
-connected = False if ((not connection) or (not path)) else connection["success"]
+connection = {} if not connection else connection
+path = None if (not connection) else connection.get("path", PATH)
+prefix = None if (not connection) else connection.get("key-prefix", KEY_PREFIX)
+connected = False if ((not connection) or (not path) or (not prefix)) else connection.get("success", False)
+state_file = $"relayer/{path}/{prefix}/state.json"
+
+state_file_txt = StateHelper.S3ReadText(BUCKET,state_file)
+state_file = {}
+old_last_update = 0 # the last time node was connected or updated
+old_upload_time = 0 # last time state file was updated
+time_start = time.time()
+
+if None == state_file_txt:
+   print(f"ERROR: Failed to download state file or access s3")
+   print(f"INFO: Script Failed (1)")
+   exit(1)
+elif None != state_file_txt and (not state_file_txt):
+    print(f"WARNING: State file was not present in s3")
+    connection["last-update"] = 0
+    connection["upload-time"] = time_start
+    StateHelper.S3WriteText(connection,BUCKET,state_file);
+else:
+    state_file = json.loads(state_file_txt)
+    old_last_update = state_file["last-update"]
+    old_upload_time = state_file["upload-time"]
+    connection["last-update"]=old_last_update
+    print(f"INFO: Last successfull update: {timedelta(seconds=(time.time() - old_last_update))}")
+    print(f"INFO: Last state upload: {timedelta(seconds=(time.time() - old_upload_time))}")
 
 if not connected:
     print(f"ERROR: Failed to establish connection using {SRC_JSON_DIR} and {DST_JSON_DIR}")
@@ -52,8 +81,10 @@ if not connected:
         IBCHelper.ShutdownConnection(connection)
     else:
         print(f"INFO: Connection will NOT be shutdown")
-    print(f"INFO: Script Failed (1)")
-    exit(1)
+    state_file["upload-time"] = time_start
+    StateHelper.S3WriteText(connection,BUCKET,state_file);
+    print(f"INFO: Script Failed (2)")
+    exit(2)
 
 src_chain_info = connection["src"]
 dst_chain_info = connection["dst"]
@@ -61,9 +92,7 @@ src_id = src_chain_info["chain-id"]
 dst_id = dst_chain_info["chain-id"]
 
 print(f"SUCCESS: connection between {src_id} and {dst_id} was established, path: '{path}'")
-
 print(f"INFO: Entering connection sustainably mode")
-time_start = time.time()
 
 while True:
     if not IBCHelper.TestConnection(connection):
@@ -76,8 +105,8 @@ while True:
 
 elapsed = time.time() - time_start
 print(f"ERROR: Failed to maitain connection between {src_id} and {dst_id}, Uptime: {timedelta(seconds=elapsed)}")
-print(f"INFO: Script Failed (2)")
-exit(2)
+print(f"INFO: Script Failed (3)")
+exit(3)
 
 #if(len(src_balance) <= 0) and (len(src_balance) < 0)
 

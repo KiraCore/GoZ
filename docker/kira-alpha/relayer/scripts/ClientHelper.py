@@ -25,7 +25,6 @@ def InitializeClientWithMnemonic(chain_info, mnemonic, timeout):
     key_name = chain_info["key-name"]
     bucket = chain_info["bucket"]
     s3_key_path = chain_info["s3-path"]
-    tmp_file=chain_info["tmp-path"]
 
     retry = 3 # 3x
     delay = 5 # 5s
@@ -36,10 +35,11 @@ def InitializeClientWithMnemonic(chain_info, mnemonic, timeout):
             if mnemonic: # restore old key
                 RelayerHelper.RestoreKey(chain_id, key_name, mnemonic) # rly keys restore kira-alpha prefix_kira-alpha "$RLYKEY_MNEMONIC"
             else: # add new key
-                print(f"Saving new key '{chain_id}' '{key_name}' to '{tmp_file}'...")
                 key = RelayerHelper.UpsertKey(chain_id, key_name)
-                StringHelper.WriteToFile(key,tmp_file)
-                RelayerHelper.callRawTrue(f"AWSHelper s3 upload-object --bucket='{bucket}' --path='{s3_key_path}' --input='{tmp_file}'",True)
+                if not StateHelper.S3WriteText(key, bucket, s3_key_path):
+                     print(f"ERROR: Failed to save {key_name} in S3")
+                else:
+                    print(f"SUCCESS: Key {key_name} was saved in S3")
 
             if not RelayerHelper.KeyExists(chain_id, key_name):
                 print(f"ERROR: Failed to restore key {key_name} of the chain {chain_id}")
@@ -98,9 +98,8 @@ def InitializeClientWithBucket(chain_info, timeout):
     bucket = chain_info["bucket"]
     key_name = chain_info["key-name"]
     s3_key_path = chain_info["s3-path"]
-    tmp_file=chain_info["tmp-path"]
     
-    key = StateHelper.DownloadKey(bucket, s3_key_path, tmp_file)
+    key = StateHelper.DownloadKey(bucket, s3_key_path)
     mnemonic=key["mnemonic"]
     return InitializeClientWithMnemonic(chain_info, mnemonic, timeout)
 

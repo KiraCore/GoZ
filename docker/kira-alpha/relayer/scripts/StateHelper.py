@@ -10,14 +10,48 @@ import os
 import os.path
 import time
 from joblib import Parallel, delayed
+import uuid
 
 # Update: (rm $RELAY_SCRIPS/StateHelper.py || true) && nano $RELAY_SCRIPS/StateHelper.py 
 
-def DownloadKey(bucket, s3_key_path, output_file):
-    key_exists=RelayerHelper.callRaw(f"AWSHelper s3 object-exists --bucket='{bucket}' --path='{s3_key_path}' --throw-if-not-found=true",True)
-    if None != key_exists:
-        downloaded = RelayerHelper.callRaw(f"AWSHelper s3 download-object --bucket='{bucket}' --path='{s3_key_path}' --output={output_file}",True)
-        if (None != downloaded) and os.path.isfile(output_file):
-            return json.load(open(output_file))
-    return { "mnemonic":None,"address":None }
+def S3WriteText(text, bucket, s3_key_path):
+    tmp_file=$"/tmp/{str(uuid.uuid4())}"
+    StringHelper.WriteToFile(text,tmp_file)
+    print(f"INFO: Writing {tmp_file} to {bucket}/{s3_key_path} file in S3...")
+    result = False if None != RelayerHelper.callRawTrue(f"AWSHelper s3 upload-object --bucket='{bucket}' --path='{s3_key_path}' --input='{tmp_file}'",True) else True
+    if not result:
+        print(f"ERROR: Failed to upload {tmp_file} into {bucket}/{s3_key_path} path on S3.")
+    else: # remove tmp files only if success
+        os.remove(tmp_file)
+    return result
 
+def S3ReadText(bucket, s3_key_path):
+    tmp_file=$"/tmp/{str(uuid.uuid4())}"
+    key_exists=RelayerHelper.callRaw(f"AWSHelper s3 object-exists --bucket='{bucket}' --path='{s3_key_path}' --throw-if-not-found=true",True)
+    if not key_exists:
+        print(f"WARNING: File {bucket}/{s3_key_path} is not present in S3")
+        return None if key_exists == None else ""
+    else:
+        print(f"SUCCESS: Found {bucket}/{s3_key_path} file in S3, reading...")
+
+    downloaded = RelayerHelper.callRaw(f"AWSHelper s3 download-object --bucket='{bucket}' --path='{s3_key_path}' --output={tmp_file}",True)
+
+    if None == downloaded:
+        print(f"ERROR: Failed to read {bucket}/{s3_key_path} file from S3")
+        return None
+
+    if not os.path.isfile(tmp_file):
+        print(f"ERROR: Failed to read {bucket}/{s3_key_path} from tmp directory {tmp_file}")
+        return None
+
+    file = open(tmp_file,mode='r')
+    text_output = file.read()
+    file.close()
+    text_output = "" if not text_output else text_output
+    print(f"SUCCESS: Read all {len(text_output)} characters from {bucket}/{s3_key_path} path in S3")
+    return text_output
+
+
+def DownloadKey(bucket, s3_key_path):
+    text = S3ReadText(bucket, s3_key_path)
+    return { "mnemonic":None, "address":None } if  not test else json.loads(text)
