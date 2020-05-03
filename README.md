@@ -27,7 +27,7 @@ Status: `curl alpha.kiraex.com:10001/status`
 # GoZ Hub 
 
 RPC Address: `http://35.233.155.199:26657`
-Node Address: `tcp://ef71392a1658182a9207985807100bb3d106dce6@35.233.155.199:26656`
+Node Address: `tcp://6e4e0fad3d152b4086e24fd84602f71c6815832d@35.233.155.199:26656`
 Wallet: `cosmos1efzs6x9244z9hjz6pcrsam4muxxms74wz98h7c`
   * Tokens: `doubloons`
   * Amount: `10000000000`
@@ -41,7 +41,7 @@ Private Sentry:
 
 SEEDS: 
 ```
-tcp://ef71392a1658182a9207985807100bb3d106dce6@35.233.155.199:26656,tcp://c65d517ed3784605c96fb6be5a16c4d577e35bb3@goz-sentry-public.kiraex.com:10000
+tcp://6e4e0fad3d152b4086e24fd84602f71c6815832d@35.233.155.199:26656,tcp://c65d517ed3784605c96fb6be5a16c4d577e35bb3@goz-sentry-public.kiraex.com:10000
 ```
 
 Public Sentry:
@@ -51,9 +51,12 @@ Public Sentry:
 
 SEEDS: 
 ```
-tcp://ef71392a1658182a9207985807100bb3d106dce6@35.233.155.199:26656,tcp://c5a16d35506b3052d9d6f684881ced8016d42e76@goz-sentry-private.kiraex.com:10000
+tcp://6e4e0fad3d152b4086e24fd84602f71c6815832d@35.233.155.199:26656,tcp://c5a16d35506b3052d9d6f684881ced8016d42e76@goz-sentry-private.kiraex.com:10000
 ```
 
+# Localhost
+ * Node Info: `curl 127.0.0.1:10002/node_info`
+ * Node Status: `curl 127.0.0.1:10001/status`
 
 ## Accessing Images with SSH console
 
@@ -91,7 +94,7 @@ tcp://ef71392a1658182a9207985807100bb3d106dce6@35.233.155.199:26656,tcp://c5a16d
 > Kira Sentry container  (HEAD): 
  * GoZ: `docker logs --follow $(docker ps -a -q  --filter ancestor=kiracore/goz:goz-hub-sentry)`
 > Kira Sentry container  (TAIL): 
- * GoZ:  `docker logs --tail 50 --follow --timestamps $(docker ps -a -q  --filter ancestor=kiracore/goz:goz-hub-sentry)`
+ * GoZ:  `docker logs --tail 50 --follow --timestamps $(docker ps -a -q --filter ancestor=kiracore/goz:goz-hub-sentry)`
   
 ## If container is NOT running
 

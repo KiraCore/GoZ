@@ -4,8 +4,8 @@ ENV RELAYER="${GOPATH}/src/github.com/iqlusioninc/relayer"
 ENV RLY_BIN="${GOBIN}/rly"
 
 ARG REPO="https://github.com/iqlusioninc/relayer"
-ARG BRANCH="v0.3.1"
-ARG CHECKOUT=""
+ARG BRANCH=""
+ARG CHECKOUT="g6685579"
 
 RUN ${SCRIPTS_DIR}/git-pull-v0.0.1.sh "${REPO}" "${BRANCH}" "${CHECKOUT}" "${RELAYER}"
 
