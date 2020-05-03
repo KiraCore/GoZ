@@ -20,7 +20,8 @@ from datetime import timedelta
 # python3 $RELAY_SCRIPS/phase1.py $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $GOZCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $BUCKET True
 # python3 $RELAY_SCRIPS/phase1.py $GOZCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $BUCKET True
 # rly pth show kira-alpha_gameofzoneshub-1
-# python3 $RELAY_SCRIPS/phase1.py $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $HUBCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $BUCKET
+# python3 $RELAY_SCRIPS/phase1.py $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $HUBCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $BUCKET False "alpha_goz" "test_key"
+# python3 $RELAY_SCRIPS/phase1.py $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $HUBCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $BUCKET False "alpha_goz" "test_key"
 
 # Update: (rm $RELAY_SCRIPS/phase1.py || true) && nano $RELAY_SCRIPS/phase1.py 
  
@@ -34,7 +35,7 @@ SHUTDOWN=sys.argv[6]
 PATH=sys.argv[7]
 KEY_PREFIX=sys.argv[8]
 PATH = None if ((not PATH) or (len(PATH) <= 1)) else PATH
-KEY_PREFIX = None if ((not KEY_PREFIX) or (len(KEY_PREFIX) <= 1)) else KEY_PREFIX
+KEY_PREFIX = "chain_key" if ((not KEY_PREFIX) or (len(KEY_PREFIX) <= 1)) else KEY_PREFIX
    
 
 # constants 
