@@ -11,7 +11,7 @@ import os.path
 import time
 from joblib import Parallel, delayed
 
-
+# Update: (rm $RELAY_SCRIPS/StateHelper.py || true) && nano $RELAY_SCRIPS/StateHelper.py 
 
 def DownloadKey(bucket, s3_key_path, output_file):
     key_exists=RelayerHelper.callRaw(f"AWSHelper s3 object-exists --bucket='{bucket}' --path='{s3_key_path}' --throw-if-not-found=true",True)
