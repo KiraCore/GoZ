@@ -9,13 +9,19 @@ import time
 from joblib import Parallel, delayed
 from subprocess import Popen, PIPE
 
+# Update: (rm $RELAY_SCRIPS/TaskHelper.py || true) && nano $RELAY_SCRIPS/TaskHelper.py 
+
 # runs utf-8 shell commands
 def CMD(s):
     p = Popen(s, shell=True, stdout=PIPE, stderr=PIPE, universal_newlines=True, encoding="utf-8")
+    #print(f"CMD => Input: {s}") # debug only
     o, err = p.communicate()
+    #print(f"CMD => Output: {o}") # debug only
+    #print(f"CMD => Error: {str(err)}") # debug only
     status = f"{p.wait()}"
+    #print(f"CMD => Status: {status}") # debug only
     if status != "0":
-        if len(status) < len(s)
+        if len(status) < len(s):
            status=f"{status} => Command: {s}"
         if not err:
             raise Exception(f"Status: {status}")
@@ -23,12 +29,9 @@ def CMD(s):
             raise Exception(f"Status: {status} => Error: {StringHelper.Trim(str(err))}")
     if o == None:
         return ""
-    return StringHelper.Trim(o)
-
-    def IsString(s):
-        return isinstance(data, (string))
-
-def IsSafeJson(data):
+    o = StringHelper.Trim(o)
+    #print(f"CMD => Result: {o}") # debug only
+    return "" if o == None else o
 
 def Process(func, args, q, showErrors):
     err = None

@@ -31,9 +31,9 @@ rly cfg init || true
 #GOZCHAIN_ID=$(cat $GOZCHAIN_JSON_PATH | jq -r '."chain-id"')
 ## connect directly and claim goz tokens
 #rly ch add -f $GOZCHAIN_JSON_PATH
-#rly keys restore $GOZCHAIN_ID chain_key_$GOZCHAIN_ID "$RLYKEY_MNEMONIC"
+#rly keys restore $GOZCHAIN_ID prefix_$GOZCHAIN_ID "$RLYKEY_MNEMONIC"
 #rly lite init $GOZCHAIN_ID -f
-#rly tst request $GOZCHAIN_ID chain_key_$GOZCHAIN_ID
+#rly tst request $GOZCHAIN_ID prefix_$GOZCHAIN_ID
 #rly q bal $CHAIN_ID
 #rly q bal $GOZCHAIN_ID
 ## connect 2 chains

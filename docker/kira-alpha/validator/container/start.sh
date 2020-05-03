@@ -21,6 +21,8 @@ LCD_LOCAL_PORT=1317
 RLY_LOCAL_PORT=8000
 NODE_ADDESS="tcp://localhost:$RPC_LOCAL_PORT"
 
+[ -z "$IMPORT_VALIDATOR_KEY" ] && IMPORT_VALIDATOR_KEY="False"
+
 cd
 
 if [ -f "$INIT_END_FILE" ]; then
@@ -104,9 +106,14 @@ rm -f -v $NODE_KEY_PATH && \
 
 # setup validator signing key and unescape
 # NOTE: to create new key delete $VALIDATOR_KEY_PATH and run gaiad start 
-rm -f -v $VALIDATOR_KEY_PATH && \
- echo $VALIDATOR_KEY > $VALIDATOR_KEY_PATH && \
- sed -i 's/\\\"/\"/g' $VALIDATOR_KEY_PATH
+if [ "$IMPORT_VALIDATOR_KEY" == "True" ]; then
+   echo "Validator key will be imported"
+   rm -f -v $VALIDATOR_KEY_PATH 
+   echo $VALIDATOR_KEY > $VALIDATOR_KEY_PATH
+   sed -i 's/\\\"/\"/g' $VALIDATOR_KEY_PATH
+else
+   echo "Validator key will NOT be imported"
+fi
 
 # NOTE: ensure that the gaia rpc is open to all connections
 sed -i 's#tcp://127.0.0.1:26657#tcp://0.0.0.0:26657#g' $CONFIG_TOML_PATH

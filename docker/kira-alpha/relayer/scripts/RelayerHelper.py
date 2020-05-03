@@ -1,4 +1,5 @@
 import TaskHelper
+import IBCHelper
 import StringHelper
 import multiprocessing
 import ArrayHelper
@@ -47,7 +48,7 @@ def callJson(s, showErrors):
 def callTryRetry(s, timeout, retry, delay, showErrors):
     return TaskHelper.TryRetryCMD(s, timeout, retry, delay, showErrors)
 
-def ConfigureDefaultKey(chain_id, key_name): # rly ch edit kira-1 key chain_key_kira-1
+def ConfigureDefaultKey(chain_id, key_name): # rly ch edit kira-1 key prefix_kira-1
     return False if (None == callRaw(f"rly ch edit {chain_id} key {key_name}",True)) else True 
 
 def ChainDelete(chain_id):
@@ -61,7 +62,7 @@ def TryQueryChainAddress(chain_id):
     out = callRaw(f"rly ch address {chain_id}", False)
     return None if ((not out) or (len(out) <= 0)) else out
 
- def IsKeyConfigured(chain_id):
+def IsKeyConfigured(chain_id):
     out = TryQueryChainAddress(chain_id)
     return False if ((not out) or (len(out) <= 0)) else True
 
@@ -152,16 +153,16 @@ def GetAmountByDenom(balances, denom):
                 amount = int(balance["amount"])
     return amount
 
-def KeyExists(chain_id, key_name): # rly keys show kira-alpha chain_key_kira-alpha
+def KeyExists(chain_id, key_name): # rly keys show kira-alpha prefix_kira-alpha
     out = callRaw(f"rly keys show {chain_id} {key_name}", False)
     return False if (None == out) else True
 
-def ShowKey(chain_id, key_name): # rly keys show kira-1 chain_key_kira-1
+def ShowKey(chain_id, key_name): # rly keys show kira-1 prefix_kira-1
     out = callRaw(f"rly keys show {chain_id} {key_name}", True)
     return None if (None == out) else out
 
 # if key exists - deletes key, else returns true if key is already gone
-def DeleteKey(chain_id, key_name): # rly keys delete kira-1 chain_key_kira-1
+def DeleteKey(chain_id, key_name): # rly keys delete kira-1 prefix_kira-1
     if KeyExists(chain_id, key_name):
         return None != callRaw(f"rly keys delete {chain_id} {key_name}", True)
     else:
@@ -171,7 +172,7 @@ def RestoreKey(chain_id, key_name, mnemonic):
     return None if (None == callRaw(f"rly keys restore {chain_id} {key_name} '{mnemonic}'",True)) else True
 
 def UpsertKey(chain_id, key_name):
-    return callRaw(f"rly keys add {chain_id} {key_name}",True) # rly keys add kira-alpha chain_key_kira-alpha
+    return callRaw(f"rly keys add {chain_id} {key_name}",True) # rly keys add kira-alpha prefix_kira-alpha
 
 def DownloadKey(bucket, s3_key_path, output_file):
     key_exists=callRaw(f"AWSHelper s3 object-exists --bucket='{bucket}' --path='{s3_key_path}' --throw-if-not-found=true",True)
@@ -183,7 +184,41 @@ def DownloadKey(bucket, s3_key_path, output_file):
 
 
 
+# Usage: rly transact raw update-client [src-chain-id] [dst-chain-id] [client-id] [flags]
+def UpdateClientConnection(connection):
+    src_chain_info = connection["src"]
+    dst_chain_info = connection["dst"]
+    path = connection["path"]
+    
+    info = RelayerHelper.QueryPath(path) # rly pth show kira-alpha_kira-1 -j
 
+    if not info or (not info["chains"]) or (not info["status"]):
+        print(f"ERROR: Could not correctly query path {path}, chain or status information is missing from the response")
+        return False
+
+    chains = info["chains"]
+    status = info["status"]
+
+    is_connected = IBCHelper.TestStatus(status)
+
+    if not is_connected:
+        print(f"ERROR: Could not update client connection because path {path} does not have established connection")
+        return False
+
+    src_client_id = chains["src"]["client-id"]
+    src_client_id = chains["dst"]["client-id"]
+
+    
+    src_id = src_chain_info["chain-id"]
+    dst_id = dst_chain_info["chain-id"]
+
+    out = callRaw(f" rly transact raw update-client {src_id} {dst_id} {src_client_id}", False)
+    
+    return None if (None == out) else out
+
+    
+
+#  rly tx raw update-client
 
 
 

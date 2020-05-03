@@ -1,7 +1,6 @@
 
 import IBCHelper
 import RelayerHelper
-import FaucetHelper
 import StringHelper
 import ArrayHelper
 import subprocess
@@ -11,39 +10,71 @@ import sys
 import os
 import time
 from joblib import Parallel, delayed
+from datetime import timedelta
 
 
 # Startup example: 26657
-# python3 $RELAY_SCRIPS/phase1.py "$TESTCHAIN_JSON_PATH" "$RLYKEY_MNEMONIC" "$GOZCHAIN_JSON_PATH" "$RLYKEY_MNEMONIC" $BUCKET
+# rly pth show kira-alpha_kira-1
+# python3 $RELAY_SCRIPS/phase1.py $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $GOZCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $BUCKET False "test" "test_key"
+# python3 $RELAY_SCRIPS/phase1.py $GOZCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $BUCKET False "conn1"
+# python3 $RELAY_SCRIPS/phase1.py $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $GOZCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $BUCKET True
+# python3 $RELAY_SCRIPS/phase1.py $GOZCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $BUCKET True
+# rly pth show kira-alpha_gameofzoneshub-1
 # python3 $RELAY_SCRIPS/phase1.py $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $HUBCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $BUCKET
 
+# Update: (rm $RELAY_SCRIPS/phase1.py || true) && nano $RELAY_SCRIPS/phase1.py 
+ 
 # console args
 SRC_JSON_DIR=sys.argv[1]
 SRC_MNEMONIC=sys.argv[2]
 DST_JSON_DIR=sys.argv[3]
 DST_MNEMONIC=sys.argv[4]
 BUCKET=sys.argv[5]
+SHUTDOWN=sys.argv[6]
+PATH=sys.argv[7]
+KEY_PREFIX=sys.argv[8]
+PATH = None if ((not PATH) or (len(PATH) <= 1)) else PATH
+KEY_PREFIX = None if ((not KEY_PREFIX) or (len(KEY_PREFIX) <= 1)) else KEY_PREFIX
+   
 
 # constants 
 connect_timeout = 60
 
-connection = IBCHelper.ConnectWithJson(SRC_JSON_DIR, SRC_MNEMONIC, DST_JSON_DIR, DST_MNEMONIC, BUCKET, connect_timeout)
-connected = False if (not connection) else connection["success"]
-path = None if (not connection) else connection["path"]
+connection = IBCHelper.ConnectWithJson(SRC_JSON_DIR, SRC_MNEMONIC, DST_JSON_DIR, DST_MNEMONIC, BUCKET, PATH, KEY_PREFIX, connect_timeout)
+path = None if (not connection) else connection.get("path", None)
+connected = False if ((not connection) or (not path)) else connection["success"]
 
-if (not connected):
-   print(f"Failed to establish connection using {SRC_JSON_DIR} and {DST_JSON_DIR}")
-   exit(1)
+if not connected:
+    print(f"ERROR: Failed to establish connection using {SRC_JSON_DIR} and {DST_JSON_DIR}")
+    if f"{SHUTDOWN}" == "True":
+        print(f"INFO: Connection will be permanently shutdown")
+        IBCHelper.ShutdownConnection(connection)
+    else:
+        print(f"INFO: Connection will NOT be shutdown")
+    print(f"INFO: Script Failed (1)")
+    exit(1)
 
 src_chain_info = connection["src"]
 dst_chain_info = connection["dst"]
 src_id = src_chain_info["chain-id"]
 dst_id = dst_chain_info["chain-id"]
-src_balance = src_chain_info["balance"]
-dst_balance = src_chain_info["balance"]
 
-print(f"Success connection between {src_id} and {dst_id} was established, path: '{path}'")
+print(f"SUCCESS: connection between {src_id} and {dst_id} was established, path: '{path}'")
 
+print(f"INFO: Entering connection sustainably mode")
+time_start = time.time()
+
+while True:
+    if not IBCHelper.TestConnection(connection):
+        break;
+    elapsed = time.time() - time_start
+    print(f"INFO: Connection duration: {timedelta(seconds=elapsed)}")
+    time.sleep(float(5))
+
+elapsed = time.time() - time_start
+print(f"ERROR: Failed to maitain connection between {src_id} and {dst_id}, Uptime: {timedelta(seconds=elapsed)}")
+print(f"INFO: Script Failed (2)")
+exit(2)
 
 #if(len(src_balance) <= 0) and (len(src_balance) < 0)
 

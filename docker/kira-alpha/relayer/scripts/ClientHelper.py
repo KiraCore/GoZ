@@ -11,20 +11,22 @@ import time
 from joblib import Parallel, delayed
 
 # Update: (rm $RELAY_SCRIPS/ClientHelper.py || true) && nano $RELAY_SCRIPS/ClientHelper.py 
-
+# rm $HOME/.relayer/config/config.yaml
 def ShutdownClient(chain_info):
     chain_id = chain_info["chain-id"]
-    key_name = f"chain_key_{chain_id}"
-    RelayerHelper.DeleteLiteClient(chain_id) # rly lite delete kira-1
-    RelayerHelper.DeleteKey(chain_id, key_name) # rly keys delete kira-1 chain_key_kira-1
-    RelayerHelper.ChainDelete(chain_id) # rly chains delete kira-1
+    key_name = chain_info["key-name"]
+    RelayerHelper.DeleteKey(chain_id, key_name) # rly keys delete kira-alpha prefix_kira-alpha
+    RelayerHelper.DeleteLiteClient(chain_id) # rly lite delete kira-alpha
+    RelayerHelper.ChainDelete(chain_id) # rly chains delete kira-alpha
 
-def InitializeClientWithMnemonic(chain_info, mnemonic, bucket, timeout):
+def InitializeClientWithMnemonic(chain_info, mnemonic, timeout):
     chain_id = chain_info["chain-id"]
     chain_info_path = chain_info["file-path"]
-    key_name = f"chain_key_{chain_id}"
-    s3_key_path = f"{chain_id}/key.json"
-    tmp_file=f"/tmp/{chain_id}_key.json"
+    key_name = chain_info["key-name"]
+    bucket = chain_info["bucket"]
+    s3_key_path = chain_info["s3-path"]
+    tmp_file=chain_info["tmp-path"]
+
     retry = 3 # 3x
     delay = 5 # 5s
 
@@ -32,7 +34,7 @@ def InitializeClientWithMnemonic(chain_info, mnemonic, bucket, timeout):
         if not RelayerHelper.KeyExists(chain_id, key_name):
             print(f"WARNING: Key {key_name} of the {chain_id} chain does not exist, restoring...")
             if mnemonic: # restore old key
-                RelayerHelper.RestoreKey(chain_id, key_name, mnemonic) # rly keys restore kira-alpha chain_key_kira-alpha "$RLYKEY_MNEMONIC"
+                RelayerHelper.RestoreKey(chain_id, key_name, mnemonic) # rly keys restore kira-alpha prefix_kira-alpha "$RLYKEY_MNEMONIC"
             else: # add new key
                 print(f"Saving new key '{chain_id}' '{key_name}' to '{tmp_file}'...")
                 key = RelayerHelper.UpsertKey(chain_id, key_name)
@@ -47,7 +49,7 @@ def InitializeClientWithMnemonic(chain_info, mnemonic, bucket, timeout):
             print(f"INFO: Key {key_name} of the {chain_id} already exists.")
         
         if not RelayerHelper.IsKeyConfigured(chain_id):
-            if not RelayerHelper.ConfigureDefaultKey(chain_id, key_name): # rly ch edit kira-alpha key chain_key_kira-alpha
+            if not RelayerHelper.ConfigureDefaultKey(chain_id, key_name): # rly ch edit kira-alpha key prefix_kira-alpha
                 print(f"WARNING: Failed to configure chain {chain_id} to use {key_name} key by default")
             else:
                 print(f"SUCCESS: Key {key_name} was configured as default of the chain {chain_id}")
@@ -90,30 +92,43 @@ def InitializeClientWithMnemonic(chain_info, mnemonic, bucket, timeout):
     chain_info["balance"] = balance
     return chain_info
 
-def InitializeClientWithBucket(chain_info, bucket, timeout):
+def InitializeClientWithBucket(chain_info, timeout):
     chain_id = chain_info["chain-id"]
     chain_info_path = chain_info["file-path"]
-    s3_key_path = f"{chain_id}/key.json"
-    tmp_file=f"/tmp/{chain_id}_key.json"
+    bucket = chain_info["bucket"]
+    key_name = chain_info["key-name"]
+    s3_key_path = chain_info["s3-path"]
+    tmp_file=chain_info["tmp-path"]
+    
     key = RelayerHelper.DownloadKey(bucket, s3_key_path, tmp_file)
     mnemonic=key["mnemonic"]
-    return InitializeClientWithMnemonic(chain_info, mnemonic, bucket, timeout)
+    return InitializeClientWithMnemonic(chain_info, mnemonic, timeout)
 
-def InitializeClient(chain_info, mnemonic, bucket, timeout):
+def InitializeClient(chain_info, key_prefix, mnemonic, timeout):
     chain_info["balance"] = None
     chain_info["address"] = None
+
+    key_prefix = "chain_key" if not key_prefix else key_prefix
+    chain_id = chain_info["chain-id"]
+    key_name = f"{key_prefix}_{chain_id}"
+
+    chain_info["key-prefix"] = key_prefix
+    chain_info["key-name"] = key_name
+    chain_info["s3-path"] = f"{chain_id}/{key_name}.json"
+    chain_info["tmp-path"] = "/tmp/{chain_id}_{key_name}.json"
+
     if mnemonic:
-        return InitializeClientWithMnemonic(chain_info, mnemonic, bucket, timeout)
+        return InitializeClientWithMnemonic(chain_info, mnemonic, timeout)
     elif bucket:
-        return InitializeClientWithBucket(chain_info, bucket, timeout)
+        return InitializeClientWithBucket(chain_info, timeout)
     else:
         raise Exception(f"bucket or mnemonic was not specified, failed to initialize client")
 
-def InitializeClientWithJsonFile(json_path, mnemonic, bucket, timeout):
+def InitializeClientWithJsonFile(json_path, key_prefix, mnemonic, bucket, timeout):
     chain_info = json.load(open(json_path))
     chain_info["file-path"] = json_path
-    return InitializeClient(chain_info, mnemonic, bucket, timeout)
-
+    chain_info["bucket"] = bucket
+    return InitializeClient(chain_info, key_prefix, mnemonic, timeout)
 
 def QueryFeeTokenBalance(chain_info):
     chain_id = chain_info["chain-id"]
