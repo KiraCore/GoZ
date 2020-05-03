@@ -5,7 +5,7 @@ ENV RLY_BIN="${GOBIN}/rly"
 
 ARG REPO="https://github.com/iqlusioninc/relayer"
 ARG BRANCH=""
-ARG CHECKOUT="g6685579"
+ARG CHECKOUT="6685579"
 
 RUN ${SCRIPTS_DIR}/git-pull-v0.0.1.sh "${REPO}" "${BRANCH}" "${CHECKOUT}" "${RELAYER}"
 
