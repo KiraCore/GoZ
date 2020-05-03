@@ -64,7 +64,7 @@ connected = False if ((not connection) or (not path) or (not prefix)) else conne
 state_file_path = $"relayer/{path}/{prefix}/state.json"
 
 state_file_txt = StateHelper.S3ReadText(BUCKET,state_file_path)
-old_last_update = 0 # the last time node was connected or updated
+old_connection_update = 0 # the last time node was connected or updated
 old_upload_time = 0 # last time state file was updated
 old_total_uptime = 0 # sum of the connection uptime
 time_start = time.time()
@@ -80,15 +80,15 @@ elif None != state_file_txt and (not state_file_txt): # empty state file
     connection["total-uptime"] = 0
 else: # status exists, extract state file from json
     state_file = json.loads(state_file_txt)
-    old_last_update = state_file["last-update"]
-    old_upload_time = state_file["upload-time"]
+    old_connection_update = state_file["last-update"]
+    old_state_upload = state_file["upload-time"]
     old_total_uptime = state_file["total-uptime"]
     connection["total-uptime"]=old_total_uptime
-    connection["last-update"]=old_last_update
-    connection["upload-time"]=old_upload_time
+    connection["last-update"]=old_connection_update
+    connection["upload-time"]=old_state_upload
     
-    print(f"INFO: Last successfull update: {timedelta(seconds=(time.time() - old_last_update))}")
-    print(f"INFO: Last state upload: {timedelta(seconds=(time.time() - old_upload_time))}")
+    print(f"INFO: Last connection update: {timedelta(seconds=(time.time() - old_connection_update))}")
+    print(f"INFO: Last state upload: {timedelta(seconds=(time.time() - old_state_upload))}")
 
 if not connected:
     print(f"ERROR: Failed to establish connection using {SRC_JSON_DIR} and {DST_JSON_DIR}")
@@ -115,7 +115,7 @@ while True:
         connection["success"] = False
         break;
     elapsed = time.time() - time_start
-    elpased_update = time.time() - old_last_update
+    elpased_update = time.time() - old_connection_update
     
     total_uptime = old_total_uptime + elapsed
     connection["total-uptime"]=total_uptime
@@ -136,16 +136,16 @@ while True:
         if not StateHelper.S3WriteText(connection,BUCKET,state_file_path):
             print(f"ERROR: Failed to upload state file.")
         else:
-            old_upload_time = time_start
+            old_state_upload = time_start
 
-    elapsed_upload = time.time() - old_upload_time
+    elapsed_upload = time.time() - old_state_upload
     if elapsed_upload < upload_period:
         print(f"INFO: Elapsed minmum upload period of {timedelta(seconds=upload_period)}")
         connection["upload-time"] = time.time()
         if not StateHelper.S3WriteText(connection,BUCKET,state_file_path):
             print(f"ERROR: Failed to upload state file.")
         else:
-            old_upload_time = time_start
+            old_state_upload = time_start
 
     time.sleep(float(5))
 
