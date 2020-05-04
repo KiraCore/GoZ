@@ -98,7 +98,6 @@ EOF
 
 gaiad collect-gentxs
 
-# rly dev gaia "root" "/usr/local" > gaiad.service && mv -v gaiad.service /etc/systemd/system/gaiad.service
 cat > /etc/systemd/system/gaiad.service << EOL
 [Unit]
 Description=gaiad
@@ -130,7 +129,6 @@ LimitNOFILE=4096
 WantedBy=default.target
 EOL
 
-# rly dev faucet "root" "/usr/local" $CHAINID $RLYKEY 100000$DENOM > faucet.service && mv -v faucet.service /etc/systemd/system/faucet.service
 cat > /etc/systemd/system/faucet.service << EOL
 [Unit]
 Description=faucet

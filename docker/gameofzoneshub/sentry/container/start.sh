@@ -10,10 +10,10 @@ echo "Container STARTED"
 [ -z "$UPDATE_BRANCH" ] && UPDATE_BRANCH="master"
 [ -z "$UPDATE_CHECKOUT" ] && UPDATE_CHECKOUT=""
 
-echo "Updating automated execution repo..."
-rm -r -f $SELF_UPDATE/tmp
-${SELF_SCRIPS}/git-pull-v0.0.1.sh "${UPDATE_REPO}" "${UPDATE_BRANCH}" "${UPDATE_CHECKOUT}" "${SELF_UPDATE}/tmp"
-mv $SELF_UPDATE/tmp/* $SELF_UPDATE
+echo "Updating automated execution repo..." 
+rm -r -f $SELF_UPDATE_TMP
+${SELF_SCRIPS}/git-pull-v0.0.1.sh "${UPDATE_REPO}" "${UPDATE_BRANCH}" "${UPDATE_CHECKOUT}" "${SELF_UPDATE_TMP}"
+rsync -ra $SELF_UPDATE_TMP/* $SELF_UPDATE
 chmod -R 777 $SELF_UPDATE
 
 # Rate Limit

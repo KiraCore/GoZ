@@ -70,7 +70,6 @@ echo ${PASSPHRASE} | gaiacli keys list
 
 # TODO: SETUP SOME DEFAULT TEST ACCOUNT
 
-# rly dev gaia "root" "/usr/local" > gaiad.service && mv -v gaiad.service /etc/systemd/system/gaiad.service
 cat > /etc/systemd/system/gaiad.service << EOL
 [Unit]
 Description=gaiad
