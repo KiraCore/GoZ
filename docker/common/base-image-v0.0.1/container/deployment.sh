@@ -63,6 +63,7 @@ apt-get install -y --allow-unauthenticated --allow-downgrades --allow-remove-ess
     python3 \
     python3-pip \
     rename \
+    rsync \
     socat \
     sshfs \
     stunnel \
