@@ -1,6 +1,7 @@
 
 import IBCHelper
 import RelayerHelper
+import StateHelper
 import StringHelper
 import ArrayHelper
 import subprocess
@@ -15,15 +16,18 @@ from datetime import timedelta
 
 # Startup example: 26657
 # rly pth show kira-alpha_kira-1
-# python3 $RELAY_SCRIPS/phase1.py $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $GOZCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $BUCKET False "test" "test_key"
+# python3 $RELAY_SCRIPS/phase1.py $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $GOZCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $BUCKET False "test" "test_key" 10
 # python3 $RELAY_SCRIPS/phase1.py $GOZCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $BUCKET False "conn1"
 # python3 $RELAY_SCRIPS/phase1.py $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $GOZCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $BUCKET True
 # python3 $RELAY_SCRIPS/phase1.py $GOZCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $BUCKET True
 # rly pth show kira-alpha_gameofzoneshub-1
-# python3 $RELAY_SCRIPS/phase1.py $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $HUBCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $BUCKET
+# python3 $RELAY_SCRIPS/phase1.py $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $HUBCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $BUCKET False "alpha_goz" "test_key"
+# python3 $RELAY_SCRIPS/phase1.py $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $HUBCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $BUCKET False "alpha_goz" "test_key"
 
+
+# python3 $RELAY_SCRIPS/phase1.py $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $HUBCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $BUCKET False "test-goz" "test_key" 10
 # Update: (rm $RELAY_SCRIPS/phase1.py || true) && nano $RELAY_SCRIPS/phase1.py 
- 
+
 # console args
 SRC_JSON_DIR=sys.argv[1]
 SRC_MNEMONIC=sys.argv[2]
@@ -33,16 +37,60 @@ BUCKET=sys.argv[5]
 SHUTDOWN=sys.argv[6]
 PATH=sys.argv[7]
 KEY_PREFIX=sys.argv[8]
+TRUST_UPDATE_PERIOD=sys.argv[9]
 PATH = None if ((not PATH) or (len(PATH) <= 1)) else PATH
-KEY_PREFIX = None if ((not KEY_PREFIX) or (len(KEY_PREFIX) <= 1)) else KEY_PREFIX
+KEY_PREFIX = "chain_key" if ((not KEY_PREFIX) or (len(KEY_PREFIX) <= 1)) else KEY_PREFIX
    
-
 # constants 
 connect_timeout = 60
+update_period = int(TRUST_UPDATE_PERIOD)*60
+upload_period = 60*5
+
+print(f" _________________________________")
+print(f"|     STARTING RELAYER v0.0.1     |")
+print(f"|---------------------------------|")
+print(f"| INFO: Connection Path:          - {PATH}")
+print(f"| INFO: Key Prefix:               - {KEY_PREFIX}")
+print(f"| INFO: S3 Bucket:                - {BUCKET}")
+print(f"| INFO: Source Chain File:        - {SRC_JSON_DIR}")
+print(f"| INFO: Destination Chain File:   - {DST_JSON_DIR}")
+print(f"| INFO: Connection Update Period: - {timedelta(seconds=update_period)}")
+print(f"| INFO: State Upload Period:      - {timedelta(seconds=upload_period)}")
+print(f"|_________________________________|")
 
 connection = IBCHelper.ConnectWithJson(SRC_JSON_DIR, SRC_MNEMONIC, DST_JSON_DIR, DST_MNEMONIC, BUCKET, PATH, KEY_PREFIX, connect_timeout)
-path = None if (not connection) else connection.get("path", None)
-connected = False if ((not connection) or (not path)) else connection["success"]
+connection = {} if not connection else connection
+path = None if (not connection) else connection.get("path", PATH)
+prefix = None if (not connection) else connection.get("key-prefix", KEY_PREFIX)
+connected = False if ((not connection) or (not path) or (not prefix)) else connection.get("success", False)
+state_file_path = f"relayer/{path}/{prefix}/state.json"
+
+state_file_txt = StateHelper.S3ReadText(BUCKET,state_file_path)
+old_connection_update = 0 # the last time node was connected or updated
+old_state_upload = 0 # last time state file was updated
+old_total_uptime = 0 # sum of the connection uptime
+time_start = time.time()
+
+if None == state_file_txt: # error when fetching state file
+   print(f"ERROR: Failed to download state file or access s3")
+   print(f"INFO: Script Failed (1)")
+   exit(1)
+elif None != state_file_txt and (not state_file_txt): # empty state file
+    print(f"WARNING: State file was not present in s3")
+    connection["last-update"] = 0
+    connection["upload-time"] = time_start
+    connection["total-uptime"] = 0
+else: # status exists, extract state file from json
+    state_file = json.loads(state_file_txt)
+    old_connection_update = state_file["last-update"]
+    old_state_upload = state_file["upload-time"]
+    old_total_uptime = state_file["total-uptime"]
+    connection["total-uptime"]=old_total_uptime
+    connection["last-update"]=old_connection_update
+    connection["upload-time"]=old_state_upload
+    
+    print(f"INFO: Last connection update: {timedelta(seconds=(time.time() - old_connection_update))}")
+    print(f"INFO: Last state upload: {timedelta(seconds=(time.time() - old_state_upload))}")
 
 if not connected:
     print(f"ERROR: Failed to establish connection using {SRC_JSON_DIR} and {DST_JSON_DIR}")
@@ -51,8 +99,10 @@ if not connected:
         IBCHelper.ShutdownConnection(connection)
     else:
         print(f"INFO: Connection will NOT be shutdown")
-    print(f"INFO: Script Failed (1)")
-    exit(1)
+    connection["upload-time"] = time_start
+    StateHelper.S3WriteText(connection,BUCKET,state_file_path);
+    print(f"INFO: Script Failed (2)")
+    exit(2)
 
 src_chain_info = connection["src"]
 dst_chain_info = connection["dst"]
@@ -60,76 +110,50 @@ src_id = src_chain_info["chain-id"]
 dst_id = dst_chain_info["chain-id"]
 
 print(f"SUCCESS: connection between {src_id} and {dst_id} was established, path: '{path}'")
-
 print(f"INFO: Entering connection sustainably mode")
-time_start = time.time()
 
 while True:
     if not IBCHelper.TestConnection(connection):
+        connection["success"] = False
         break;
     elapsed = time.time() - time_start
-    print(f"INFO: Connection duration: {timedelta(seconds=elapsed)}")
-    time.sleep(float(5))
+    elpased_connection_update = time.time() - old_connection_update
+    elapsed_state_upload = time.time() - old_state_upload
+
+    total_uptime = old_total_uptime + elapsed
+    connection["total-uptime"]=total_uptime
+    print(f"INFO: Current Connection: {timedelta(seconds=elapsed)}")
+    print(f"INFO: Total uptime: {timedelta(seconds=total_uptime)}")
+    print(f"INFO: Next connection update: {max(0,int(update_period - elpased_connection_update))}s")
+    print(f"INFO: Next state update: {max(0,int(upload_period-elapsed_state_upload))}s")
+    
+    if update_period <= elpased_connection_update:
+        print(f"INFO: Elapsed minmum trust period of {timedelta(seconds=update_period)}, updating client connection...")
+        last_update=time.time() # time has to be measured before the function is called
+        if RelayerHelper.UpdateClientConnection(connection):
+            print(f"SUCCESS: Connection was updated!")
+            connection["last-update"]=last_update
+            old_connection_update=last_update
+        else:
+            print(f"ERROR: Failed to update connection :(")
+
+        old_state_upload = time.time()
+        connection["upload-time"] = old_state_upload
+        if not StateHelper.S3WriteText(connection,BUCKET,state_file_path):
+            print(f"ERROR: Failed to upload state file.")
+
+    elif upload_period <= elapsed_state_upload:
+        print(f"INFO: Elapsed minmum upload period of {timedelta(seconds=upload_period)}")
+        old_state_upload = time.time()
+        connection["upload-time"] = old_state_upload
+        if not StateHelper.S3WriteText(connection,BUCKET,state_file_path):
+            print(f"ERROR: Failed to upload state file.")
+
+    time.sleep(float(15))
 
 elapsed = time.time() - time_start
 print(f"ERROR: Failed to maitain connection between {src_id} and {dst_id}, Uptime: {timedelta(seconds=elapsed)}")
-print(f"INFO: Script Failed (2)")
-exit(2)
-
-#if(len(src_balance) <= 0) and (len(src_balance) < 0)
-
-#RelayerHelper.TransferTokens(src_chain_id, dst_chain_id, amount, dst_chain_addr)
-
-# rly pth delete kira-alpha_hashquarkchain
-    # rly pth gen kira-alpha transfer hashquarkchain transfer kira-alpha_hashquarkchain
-    # rly transact link kira-alpha_kira-1
-    # rly transact clients kira-alpha_kira-1 --debug # clients connect
-    # rly transact connection kira-alpha_kira-1 --debug # clients connection
-    # rly transact channel kira-alpha_kira-1 --debug # channel connect
-
-# rly pth delete kira-alpha_hashquarkchain
-# rly pth gen kira-alpha transfer hashquarkchain transfer kira-alpha_hashquarkchain
-# rly transact link kira-alpha_hashquarkchain --debug
-# rly transact clients kira-alpha_hashquarkchain --debug # clients connect
-# rly transact connection kira-alpha_hashquarkchain --debug # clients connection
-# rly transact channel kira-alpha_hashquarkchain --debug # channel connect
-
-
-# rly pth delete kira-alpha_hashquarkchain
-# rly pth gen kira-alpha transfer hashquarkchain transfer kira-alpha_hashquarkchain
-# rly transact clients kira-alpha_hashquarkchain --debug # clients connect
-# rly transact connection kira-alpha_hashquarkchain --debug # clients connection
-# rly transact channel kira-alpha_hashquarkchain --debug # channel connect
-# rly transact link kira-alpha_hashquarkchain --debug
-
-# rly transact channel-close kira-alpha_hashquarkchain
-# rly tx channel-close kira-alpha_hashquarkchain --timeout 10s
-
-
-
-#status = None if (not path_info) else path_info["status"]
-#connected = None if (not status) else (status["chains"] and status["clients"] and status["connection"] and status["channel"])
-
-
-# rly transact connection kira-alpha_kava-ibc
-# rly pth show kira-alpha_kava-ibc
-
-# rly transact channel-close kira-alpha_nibiru-ibc
-# rly pth delete kira-alpha_nibiru-ibc
-# rly pth gen kira-alpha transfer nibiru-ibc transfer kira-alpha_nibiru-ibc
-# rly transact link kira-alpha_nibiru-ibc --debug
-# rly transact channel kira-alpha_nibiru-ibc --debug 
-
-
-
-######################################### rly paths add kira-1 hashquarkchain kira-1_hashquarkchain
-### rly pth gen kira-1 transfer hashquarkchain transfer kira-1_hashquarkchain
-## rly tx link kira-1_hashquarkchain
-#
-## rly q bal kira-1 -j
-## rly q bal hashquarkchain -j
-#
-##rly ch addr hashquarkchain
-#
-## rly tx transfer hashquarkchain kira-1 1quark true $(rly ch addr kira-1)
-## rly tx transfer kira-1 hashquarkchain 1ukex true $(rly ch addr hashquarkchain)
+connection["upload-time"] = time.time()
+StateHelper.S3WriteText(connection,BUCKET,state_file_path)
+print(f"INFO: Script Failed (3)")
+exit(3)

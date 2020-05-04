@@ -49,9 +49,10 @@ def TryRetryCMD(s, timeout, retry, delay, showErrors):
 
 # e.g. TryRetry(foo, [arg1, arg2, ... ], 60, 3, 0.1, True)
 def TryRetry(func, args, timeout, retry, delay, showErrors):
-    i = int(retry)
-    while i >= 0:
-        i = i - 1
+    retry = int(retry) + 1
+    i = 0
+    while i < retry:
+        i = i + 1
         try:
             q = multiprocessing.Queue()
             mp = multiprocessing.Process(target = Process, args=(func, args, q, showErrors))
@@ -73,9 +74,7 @@ def TryRetry(func, args, timeout, retry, delay, showErrors):
         except Exception as e:
             pass
             if showErrors:
-                failures = (retry - i)
-                print(f"ERROR({failures}/{retry}): {str(e)}")
+                print(f"ERROR({i}/{retry}): {str(e)}")
             time.sleep(float(delay))
-        if i <= 0:
-            break
+        
     return None

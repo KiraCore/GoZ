@@ -27,20 +27,16 @@ def IsConnected(path):
     status = QueryStatus(path)
     return TestStatus(status)
 
-def UpdateLiteClients(connection, timeout, retry, delay):
+def RestartLiteClients(connection):
     chain_info_src=connection["src"]
     chain_info_dst=connection["dst"]
     chain_id_src = chain_info_src["chain-id"]
     chain_id_dst = chain_info_dst["chain-id"]
-    print(f"INFO: Updating {chain_id_src} and {chain_id_dst} lite clients...")
-    # Update the light options:
-    #    1. providing a new root of trust as a --hash/-x and --height
-    #    2. via --url/-u where trust options can be found
-    #    3. updating from the configured node by passing (no flags) - CURRENT
-    if not RelayerHelper.UpdateLiteClient_Process(chain_id_src, timeout, retry, delay): # rly lite update kira-alpha
+    print(f"INFO: Restarting {chain_id_src} and {chain_id_dst} lite clients...")
+    if not RelayerHelper.RestartLiteClient(chain_id_src):
         print(f"ERROR: Failed to update {chain_id_src} lite client")
         return False
-    if not RelayerHelper.UpdateLiteClient_Process(chain_id_dst, timeout, retry, delay): # rly lite update kira-1
+    if not RelayerHelper.RestartLiteClient(chain_id_dst):
         print(f"ERROR: Failed to update {chain_id_dst} lite client")
         return False
     return True
@@ -170,11 +166,12 @@ def ReConnect(connection, timeout):
     return Connect(connection, timeout)
 
 def ConnectWithJson(src_json_path, scr_mnemonic, dst_json_path, dst_mnemonic, bucket, path, key_prefix, timeout):
+    print(f"INFO: Started => ConnectWithJson({src_json_path},{dst_json_path})")
     lc_update_retry = 3 # 3x
     lc_update_delay = 5 # 5s
     connection = { "success": False }
 
-    src_chain_info = ClientHelper.InitializeClientWithJsonFile(src_json_path, key_prefix, scr_mnemonic, bucket, timeout)
+    src_chain_info = ClientHelper.InitializeClientWithJsonFile(src_json_path, key_prefix, scr_mnemonic, bucket)
     src_chain_id = src_chain_info["chain-id"]
     src_denom = src_chain_info["default-denom"]
     src_address = src_chain_info["address"]
@@ -191,7 +188,7 @@ def ConnectWithJson(src_json_path, scr_mnemonic, dst_json_path, dst_mnemonic, bu
     
     print(f"SUCCESS: Source client {src_chain_id} was initalized")
     
-    dst_chain_info = ClientHelper.InitializeClientWithJsonFile(dst_json_path, key_prefix, dst_mnemonic, bucket, timeout)
+    dst_chain_info = ClientHelper.InitializeClientWithJsonFile(dst_json_path, key_prefix, dst_mnemonic, bucket)
     dst_chain_id = dst_chain_info["chain-id"]
     dst_denom = dst_chain_info["default-denom"]
     dst_address = dst_chain_info["address"]
@@ -217,9 +214,9 @@ def ConnectWithJson(src_json_path, scr_mnemonic, dst_json_path, dst_mnemonic, bu
     connection["path"] = path
     
     if not IsConnected(path):
-        print(f"INFO: Updating  {src_chain_id} and {dst_chain_id} lite clients...")
-        if not UpdateLiteClients(connection, timeout, lc_update_retry, lc_update_delay):
-            print(f"Failed to update lite clients, aborting connection...")
+        print(f"INFO: Updating {src_chain_id} and {dst_chain_id} lite clients...")
+        if not RestartLiteClients(connection):
+            print(f"Failed to restart lite clients, aborting connection...")
             return connection
         print(f"SUCCESS: Lite clients {src_chain_id} and {dst_chain_id} were updated.")
     
@@ -268,6 +265,10 @@ def TestConnection(connection):
     dst_id = dst_chain_info["chain-id"]
     path = connection["path"]
 
+    RelayerHelper.InitLiteClient(src_id)
+    RelayerHelper.InitLiteClient(dst_id)
+    src_header = RelayerHelper.QueryLiteClientHeader(src_id)
+    dst_header = RelayerHelper.QueryLiteClientHeader(dst_id)
     status = QueryStatus(path)
     is_connected = TestStatus(status)
 
