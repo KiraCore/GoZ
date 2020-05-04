@@ -72,11 +72,11 @@ tcp://6e4e0fad3d152b4086e24fd84602f71c6815832d@goz-trust-alias.kiraex.com:26656,
  * GoZ: `docker exec -it $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-goz-validator) bash`
 
 > Kira Relayer container: 
- * Alpha: `docker exec -it $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-alpha-relayer) bash`
- * GoZ: `docker exec -it $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-goz-relayer) bash`
+ * Alpha: `docker exec -it $(docker ps -a -q --filter ancestor=kiracore/goz:kira-alpha-relayer) bash`
+ * GoZ: `docker exec -it $(docker ps -a -q --filter ancestor=kiracore/goz:kira-goz-relayer) bash`
 
 > Kira Sentry container: 
- * GoZ: `docker exec -it $(docker ps -a -q  --filter ancestor=kiracore/goz:goz-hub-sentry) bash`
+ * GoZ: `docker exec -it $(docker ps -a -q --filter ancestor=kiracore/goz:goz-hub-sentry) bash`
 
 ## Checking container error logs
 
@@ -109,6 +109,9 @@ tcp://6e4e0fad3d152b4086e24fd84602f71c6815832d@goz-trust-alias.kiraex.com:26656,
  * Alpha: `docker run -it -d $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-alpha-relayer) /bin/bash`
  * GoZ: `docker run -it -d $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-goz-relayer) /bin/bash`
 
+> Kira Sentry container: 
+ * GoZ: `docker run -it -d $(docker ps -a -q  --filter ancestor=kiracore/goz:goz-hub-sentry) /bin/bash`
+  
 # Relayer Commands
 
 > Address Lookup: `rly ch addr kira-alpha`

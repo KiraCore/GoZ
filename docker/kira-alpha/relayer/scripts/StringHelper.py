@@ -33,7 +33,7 @@ def Trim(s):
           oldLen = newLen
     
 def IsString(s):
-    return isinstance(data, (str))
+    return isinstance(s, (str))
 
 def IsSafeJson(data):
     if data is None:

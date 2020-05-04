@@ -33,58 +33,9 @@ NODE_ADDESS="tcp://localhost:$RPC_LOCAL_PORT"
 cd
 
 if [ -f "$INIT_END_FILE" ]; then
-   echo "Sentry node was setup successfully, starting services..."
-
-   systemctl2 restart gaiad
-
-   echo "Fetching external IP of the current instance"
-   EXTERNAL_IP=$(curl -H "Metadata-Flavor: Google" http://metadata/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/external-ip 2>/dev/null)
-   
-   # external variables: ROUTE53_RECORD_NAME, ROUTE53_ZONE, EXTERNAL_IP, ROUTE53_TTY
-   echo "Assigning $ROUTE53_RECORD_NAME DNS in the zone $ROUTE53_ZONE to $EXTERNAL_IP with ${ROUTE53_TTY}s TTY"
-   AWSHelper route53 upsert-a-record --name="$ROUTE53_RECORD_NAME" --zone=$ROUTE53_ZONE --value="$EXTERNAL_IP" --ttl=$ROUTE53_TTY
-
-   echo "Waiting for record to be updated..."
-   sleep 30
-   
-   systemctl2 restart lcd
-   systemctl2 restart nginx
-
-   sleep 10
-   
-   STATUS_GAIA="$(systemctl2 is-active gaiad.service)"
-   STATUS_LCD="$(systemctl2 is-active lcd.service)"
-   STATUS_NGINX="$(systemctl2 is-active nginx.service)"
-   
-   while true
-   do
-       if [ "${MAINTENANCE_MODE}" = "true"  ] || [ -f "$MAINTENANCE_FILE" ] ; then
-            echo "Entering maitenance mode!"
-            /bin/bash
-            exit 0
-       fi
-
-       if [ "${STATUS_GAIA}" = "active" ] && [ "${STATUS_LCD}" = "active" ] && [ "${STATUS_NGINX}" = "active" ] ; then
-           echo "Logs lookup..."
-           tail -n 2 /var/log/journal/gaiad.service.log
-           tail -n 1 /var/log/journal/lcd.service.log
-           tail -n 1 /var/log/journal/nginx.service.log
-           sleep 7
-       else 
-           echo "Gaia Service ($STATUS_GAIA), LCD Service ($STATUS_LCD) or NGINX Service ($STATUS_NGINX) is not active."
-           echo ">> Gaia log:"
-           tail -n 100 /var/log/journal/gaiad.service.log
-           echo ">> LCD log:"
-           tail -n 100 /var/log/journal/lcd.service.log
-           echo ">> NGINX log:"
-           tail -n 100 /var/log/journal/nginx.service.log
-           echo ">> Stopping services..."
-           systemctl2 stop gaiad
-           systemctl2 stop lcd
-           systemctl2 stop nginx
-           exit 1  
-       fi
-   done
+   echo "Sentry node was setup successfully"
+   /bin/bash
+   exit 0
 elif [ -f "$INIT_START_FILE" ]; then
    echo "Node setup failed :("
    /bin/bash
@@ -93,6 +44,13 @@ else
    echo "Starting node setup..."
    touch $INIT_START_FILE
 fi
+
+echo "Fetching external IP of the current instance"
+EXTERNAL_IP=$(curl -H "Metadata-Flavor: Google" http://metadata/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/external-ip 2>/dev/null)
+   
+# external variables: ROUTE53_RECORD_NAME, ROUTE53_ZONE, EXTERNAL_IP, ROUTE53_TTY
+echo "Assigning $ROUTE53_RECORD_NAME DNS in the zone $ROUTE53_ZONE to $EXTERNAL_IP with ${ROUTE53_TTY}s TTY"
+AWSHelper route53 upsert-a-record --name="$ROUTE53_RECORD_NAME" --zone=$ROUTE53_ZONE --value="$EXTERNAL_IP" --ttl=$ROUTE53_TTY
 
 gaiad init "$MONIKER" --home $GAIAD_HOME
 
@@ -116,7 +74,6 @@ CDHelper text replace --old="addr_book_strict = true" --new="addr_book_strict = 
 [ -n "$VALIDATORS" ] && CDHelper text replace --old="private_peer_ids = \"\"" --new="private_peer_ids = \"$VALIDATORS\"" --input=$GAIAD_CONFIG_TOML
 CDHelper text replace --old="minimum-gas-prices = \"\"" --new="minimum-gas-prices = \"$MIN_GAS\"" --input=$GAIAD_APP_TOML
 
-
 gaiacli config trust-node true --home $GAIAD_HOME
 gaiacli config chain-id $(cat $GAIAD_CONFIG_GENESIS | jq -r '.chain_id') --home $GAIAD_HOME
 gaiacli config node $NODE_ADDESS --home $GAIAD_HOME
@@ -132,7 +89,6 @@ gaiacli config node $NODE_ADDESS --home $GAIAD_HOME
 echo ${PASSPHRASE} | gaiacli keys list
 
 # TODO: SETUP SOME DEFAULT TEST ACCOUNT
-
 
 # rly dev gaia "root" "/usr/local" > gaiad.service && mv -v gaiad.service /etc/systemd/system/gaiad.service
 cat > /etc/systemd/system/gaiad.service << EOL
@@ -187,6 +143,13 @@ aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY"
 
 aws configure list
 
+echo "Starting services..."
+systemctl2 restart gaiad
+systemctl2 restart lcd
+systemctl2 restart nginx
+
 touch $INIT_END_FILE
 echo "Sentry node setup setup ended."
 
+/bin/bash
+exit 0

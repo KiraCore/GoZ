@@ -19,5 +19,7 @@ RUN LC_ALL=C DEBIAN_FRONTEND=noninteractive ${BUILD_SCRIPT}
 
 RUN printenv 
 
+HEALTHCHECK --interval=5s --timeout=3600s --start-period=300s --retries=3 CMD /root/sentry/container/healthcheck.sh
+
 CMD ["sh", "-c", "/bin/bash ${START_SCRIPT}"]
 

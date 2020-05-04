@@ -77,7 +77,7 @@ def UpsertChainFromFile(chain_info_path):
         if not ChainDelete(chain_id):
             print(f"WARNING: Failed to remove {chain_id}")
         else:
-            print(f"INFO: Chain {chain_id} was removed the relay and will be updated")
+            print(f"INFO: Chain {chain_id} was removed from the relay and will be updated")
     return AddChainFromFile(chain_info_path)
 
 def DeleteLiteClient(chain_id):
@@ -86,16 +86,11 @@ def DeleteLiteClient(chain_id):
 def InitLiteClient(chain_id):
     return False if (None == callRaw(f"rly lite init {chain_id} -f",True)) else True
 
-def InitLiteClient_Process(chain_id, timeout, retry, delay):
-    return False if (None == callTryRetry(f"rly lite init {chain_id} -f",timeout,retry,delay,True)) else True
-
 def UpdateLiteClient(chain_id):
     return False if (None == callRaw(f"rly lite update {chain_id}",True)) else True
 
-def UpdateLiteClient_Process(chain_id, timeout, retry, delay):
-    return False if (None == callTryRetry(f"rly lite update {chain_id}",timeout,retry,delay,True)) else True
-
 def QueryLiteClientHeader(chain_id):
+    callRaw(f"rly lite update {chain_id}",False) # lite must be updated before the query
     out = callJson(f"rly lite header {chain_id}",True)
     return None if ((None != out) and len(out) <= 0) else out
 
@@ -116,6 +111,8 @@ def DeletePath(path):
     return False if (None == callRaw(f"rly pth delete {path}",True)) else True
 
 def GeneratePath(chain_id_src, chain_id_dst, path):
+    if None != callRaw(f"rly pth show {path} -j",False):
+        return True #path was already created
     out=callRaw(f"rly pth gen {chain_id_src} transfer {chain_id_dst} transfer {path}",True)
     return False if (None == out) else True
 
@@ -153,7 +150,7 @@ def GetAmountByDenom(balances, denom):
                 amount = int(balance["amount"])
     return amount
 
-def KeyExists(chain_id, key_name): # rly keys show kira-alpha prefix_kira-alpha
+def KeyExists(chain_id, key_name): # rly keys show kira-alpha test_key_kira-alpha
     out = callRaw(f"rly keys show {chain_id} {key_name}", False)
     return False if (None == out) else True
 
@@ -161,12 +158,13 @@ def ShowKey(chain_id, key_name): # rly keys show kira-1 prefix_kira-1
     out = callRaw(f"rly keys show {chain_id} {key_name}", True)
     return None if (None == out) else out
 
-# if key exists - deletes key, else returns true if key is already gone
-def DeleteKey(chain_id, key_name): # rly keys delete kira-1 prefix_kira-1
+# if key exists - deletes key, else returns true and try delete if key is already gone
+def DeleteKey(chain_id, key_name): # rly keys delete kira-alpha test_key_kira-alpha
     if KeyExists(chain_id, key_name):
-        return None != callRaw(f"rly keys delete {chain_id} {key_name}", True)
+        callRaw(f"rly keys delete {chain_id} {key_name}", True)
     else:
-        return True
+        callRaw(f"rly keys delete {chain_id} {key_name}", False) # just to be sure try kill the key
+    return KeyExists(chain_id, key_name)
 
 def RestoreKey(chain_id, key_name, mnemonic):
     return None if (None == callRaw(f"rly keys restore {chain_id} {key_name} '{mnemonic}'",True)) else True
@@ -180,7 +178,7 @@ def UpdateClientConnection(connection):
     dst_chain_info = connection["dst"]
     path = connection["path"]
     
-    info = RelayerHelper.QueryPath(path) # rly pth show kira-alpha_kira-1 -j
+    info = QueryPath(path) # rly pth show kira-alpha_kira-1 -j
 
     if not info or (not info["chains"]) or (not info["status"]):
         print(f"ERROR: Could not correctly query path {path}, chain or status information is missing from the response")
@@ -201,5 +199,12 @@ def UpdateClientConnection(connection):
 
     out = callRaw(f"rly transact raw update-client {src_chain_id} {dst_chain_id} {dst_client_id}", True)
     print(f"INFO: update-client output: {out}")
-
     return False if (None == out) else True
+
+def RestartLiteClient(chain_id):
+    DeleteLiteClient(chain_id) # rly lite delete kira-1
+    InitLiteClient(chain_id) # rly lite init kira-1 -f
+    UpdateLiteClient(chain_id) # rly lite update kira-1
+    out = QueryLiteClientHeader(chain_id) #rly lite header kira-1
+    return False if not out else True
+

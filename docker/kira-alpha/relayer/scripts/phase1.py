@@ -16,7 +16,7 @@ from datetime import timedelta
 
 # Startup example: 26657
 # rly pth show kira-alpha_kira-1
-# python3 $RELAY_SCRIPS/phase1.py $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $GOZCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $BUCKET False "test" "test_key" 5
+# python3 $RELAY_SCRIPS/phase1.py $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $GOZCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $BUCKET False "test" "test_key" 10
 # python3 $RELAY_SCRIPS/phase1.py $GOZCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $BUCKET False "conn1"
 # python3 $RELAY_SCRIPS/phase1.py $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $GOZCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $BUCKET True
 # python3 $RELAY_SCRIPS/phase1.py $GOZCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $BUCKET True
@@ -24,8 +24,10 @@ from datetime import timedelta
 # python3 $RELAY_SCRIPS/phase1.py $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $HUBCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $BUCKET False "alpha_goz" "test_key"
 # python3 $RELAY_SCRIPS/phase1.py $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $HUBCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $BUCKET False "alpha_goz" "test_key"
 
+
+# python3 $RELAY_SCRIPS/phase1.py $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $HUBCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $BUCKET False "test-goz" "test_key" 10
 # Update: (rm $RELAY_SCRIPS/phase1.py || true) && nano $RELAY_SCRIPS/phase1.py 
- 
+
 # console args
 SRC_JSON_DIR=sys.argv[1]
 SRC_MNEMONIC=sys.argv[2]
@@ -61,11 +63,11 @@ connection = {} if not connection else connection
 path = None if (not connection) else connection.get("path", PATH)
 prefix = None if (not connection) else connection.get("key-prefix", KEY_PREFIX)
 connected = False if ((not connection) or (not path) or (not prefix)) else connection.get("success", False)
-state_file_path = $"relayer/{path}/{prefix}/state.json"
+state_file_path = f"relayer/{path}/{prefix}/state.json"
 
 state_file_txt = StateHelper.S3ReadText(BUCKET,state_file_path)
 old_connection_update = 0 # the last time node was connected or updated
-old_upload_time = 0 # last time state file was updated
+old_state_upload = 0 # last time state file was updated
 old_total_uptime = 0 # sum of the connection uptime
 time_start = time.time()
 
@@ -115,39 +117,39 @@ while True:
         connection["success"] = False
         break;
     elapsed = time.time() - time_start
-    elpased_update = time.time() - old_connection_update
-    
+    elpased_connection_update = time.time() - old_connection_update
+    elapsed_state_upload = time.time() - old_state_upload
+
     total_uptime = old_total_uptime + elapsed
     connection["total-uptime"]=total_uptime
     print(f"INFO: Current Connection: {timedelta(seconds=elapsed)}")
     print(f"INFO: Total uptime: {timedelta(seconds=total_uptime)}")
-    print(f"INFO: Elapsed since last update: {timedelta(seconds=elpased_update)}")
+    print(f"INFO: Next connection update: {max(0,int(update_period - elpased_connection_update))}s")
+    print(f"INFO: Next state update: {max(0,int(upload_period-elapsed_state_upload))}s")
     
-    if update_period < elpased_update:
+    if update_period <= elpased_connection_update:
         print(f"INFO: Elapsed minmum trust period of {timedelta(seconds=update_period)}, updating client connection...")
         last_update=time.time() # time has to be measured before the function is called
         if RelayerHelper.UpdateClientConnection(connection):
             print(f"SUCCESS: Connection was updated!")
             connection["last-update"]=last_update
+            old_connection_update=last_update
         else:
             print(f"ERROR: Failed to update connection :(")
 
-        connection["upload-time"] = time.time()
+        old_state_upload = time.time()
+        connection["upload-time"] = old_state_upload
         if not StateHelper.S3WriteText(connection,BUCKET,state_file_path):
             print(f"ERROR: Failed to upload state file.")
-        else:
-            old_state_upload = time_start
 
-    elapsed_upload = time.time() - old_state_upload
-    if elapsed_upload < upload_period:
+    elif upload_period <= elapsed_state_upload:
         print(f"INFO: Elapsed minmum upload period of {timedelta(seconds=upload_period)}")
-        connection["upload-time"] = time.time()
+        old_state_upload = time.time()
+        connection["upload-time"] = old_state_upload
         if not StateHelper.S3WriteText(connection,BUCKET,state_file_path):
             print(f"ERROR: Failed to upload state file.")
-        else:
-            old_state_upload = time_start
 
-    time.sleep(float(5))
+    time.sleep(float(15))
 
 elapsed = time.time() - time_start
 print(f"ERROR: Failed to maitain connection between {src_id} and {dst_id}, Uptime: {timedelta(seconds=elapsed)}")

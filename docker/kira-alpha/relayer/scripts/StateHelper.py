@@ -15,22 +15,25 @@ import uuid
 # Update: (rm $RELAY_SCRIPS/StateHelper.py || true) && nano $RELAY_SCRIPS/StateHelper.py 
 
 def S3WriteText(text, bucket, s3_key_path):
-    tmp_file=$"/tmp/{str(uuid.uuid4())}"
+    tmp_file=f"/tmp/{str(uuid.uuid4())}"
     StringHelper.WriteToFile(text,tmp_file)
     print(f"INFO: Writing {tmp_file} to {bucket}/{s3_key_path} file in S3...")
-    result = False if None != RelayerHelper.callRawTrue(f"AWSHelper s3 upload-object --bucket='{bucket}' --path='{s3_key_path}' --input='{tmp_file}'",True) else True
+    result = False if None == RelayerHelper.callRaw(f"AWSHelper s3 upload-object --bucket='{bucket}' --path='{s3_key_path}' --input='{tmp_file}'",True) else True
     if not result:
         print(f"ERROR: Failed to upload {tmp_file} into {bucket}/{s3_key_path} path on S3.")
     else: # remove tmp files only if success
         os.remove(tmp_file)
     return result
 
+def S3FileExists(bucket, s3_key_path):
+    out=RelayerHelper.callRaw(f"AWSHelper s3 object-exists --bucket='{bucket}' --path='{s3_key_path}' --throw-if-not-found=True",False)
+    return False if None == out else True
+
 def S3ReadText(bucket, s3_key_path):
-    tmp_file=$"/tmp/{str(uuid.uuid4())}"
-    key_exists=RelayerHelper.callRaw(f"AWSHelper s3 object-exists --bucket='{bucket}' --path='{s3_key_path}' --throw-if-not-found=true",True)
-    if not key_exists:
+    tmp_file=f"/tmp/{str(uuid.uuid4())}"
+    if not S3FileExists(bucket, s3_key_path):
         print(f"WARNING: File {bucket}/{s3_key_path} is not present in S3")
-        return None if key_exists == None else ""
+        return ""
     else:
         print(f"SUCCESS: Found {bucket}/{s3_key_path} file in S3, reading...")
 
