@@ -4,13 +4,10 @@ exec 2>&1
 set -e
 set -x
 
-echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+apt-get -y update
+apt-get install -y apt-transport-https ca-certificates gnupg curl
 
-apt-get update
-
-apt-get install -y apt-transport-https ca-certificates gnupg gnupg2 curl
-
-curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
+curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 
 echo "APT Update, Upfrade and Intall..."
 apt-get update
@@ -34,6 +31,7 @@ apt-get install -y --allow-unauthenticated --allow-downgrades --allow-remove-ess
     g++ \
     git \
     google-cloud-sdk \
+    gnupg2 \
     groff \
     htop \
     imagemagick \

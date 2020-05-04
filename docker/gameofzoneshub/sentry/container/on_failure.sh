@@ -12,6 +12,14 @@ systemctl2 stop nginx
 
 # TODO: send email fail to init notification
 
+INSTANCE_NAME=$(curl -H "Metadata-Flavor: Google" http://metadata/computeMetadata/v1/instance/name 2>/dev/null)
 
-#AWSHelper email send --from "noreply@kiracore.com" --to="asmodat@gmail.com"
+AWSHelper email send \
+ --from "noreply@kiracore.com" \
+ --to="asmodat@gmail.com" \
+ --subject="[GoZ] $INSTANCE_NAME Failed to Initalize" \
+ --body="This is a test" \
+ --html="false" \
+ --recursive="true" \
+ --attachments=""
 
