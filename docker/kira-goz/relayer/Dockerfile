@@ -1,28 +1,16 @@
 FROM kiracore/goz:relayer-alpha
 
-ENV RELAY_HOME=/root/relay
-ENV RLYS_HOME=${RELAY_HOME}/relayers
-ENV RELAY_SCRIPS=${RELAY_HOME}/scripts
-ENV RELAY_CONFIGS=${RELAY_HOME}/configs
-ENV CONTAINER_SCRIPTS=${RELAY_HOME}/container
-ENV BUILD_SCRIPT=${CONTAINER_SCRIPTS}/deployment.sh
-ENV START_SCRIPT=${CONTAINER_SCRIPTS}/start.sh
-ENV TESTCHAIN_JSON_PATH=${RELAY_CONFIGS}/kira-alpha.json
-ENV GOZCHAIN_JSON_PATH=${RELAY_CONFIGS}/kira-1.json
-ENV HUBCHAIN_JSON_PATH=${RELAY_CONFIGS}/goz-hub.json
-ENV BUCKET="kira-core-goz"
+#ADD ./scripts ${SELF_SCRIPS}
+#ADD ./configs ${SELF_CONFIGS}
+ADD ./container ${SELF_CONTAINER}
 
-ADD ./container ${CONTAINER_SCRIPTS}
-ADD ./scripts ${RELAY_SCRIPS}
-ADD ./configs ${RELAY_CONFIGS}
-
-RUN mkdir -p -v ${RLYS_HOME}
-RUN chmod 777 -R ${RELAY_HOME}
+RUN chmod 777 -R ${SELF_HOME}
 
 ARG DEBIAN_FRONTEND=noninteractive
 RUN LC_ALL=C DEBIAN_FRONTEND=noninteractive ${BUILD_SCRIPT}
 
-RUN printenv 
+RUN printenv
+
+HEALTHCHECK --interval=60s --timeout=300s --start-period=300s --retries=3 CMD ${HEALTHCHECK_SCRIPT}
 
 CMD ["sh", "-c", "/bin/bash ${START_SCRIPT}"]
-

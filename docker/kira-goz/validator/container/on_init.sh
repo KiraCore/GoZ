@@ -108,8 +108,8 @@ Type=simple
 User=root
 WorkingDirectory=/usr/local
 ExecStart=$GAIAD_BIN start --pruning=nothing
-Restart=on-failure
-RestartSec=3
+Restart=always
+RestartSec=5
 LimitNOFILE=4096
 [Install]
 WantedBy=multi-user.target
@@ -141,7 +141,7 @@ User=root
 WorkingDirectory=/usr/local
 ExecStart=$RLY_BIN testnets faucet $CHAINID $RLYKEY 100000$DENOM
 Restart=always
-RestartSec=3
+RestartSec=5
 LimitNOFILE=4096
 [Install]
 WantedBy=multi-user.target

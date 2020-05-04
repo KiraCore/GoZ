@@ -9,7 +9,9 @@ RUN chmod 777 -R ${SELF_HOME}
 ARG DEBIAN_FRONTEND=noninteractive
 RUN LC_ALL=C DEBIAN_FRONTEND=noninteractive ${BUILD_SCRIPT}
 
-RUN printenv 
+RUN printenv
+
+HEALTHCHECK --interval=60s --timeout=300s --start-period=300s --retries=3 CMD ${HEALTHCHECK_SCRIPT}
 
 CMD ["sh", "-c", "/bin/bash ${START_SCRIPT}"]
 
