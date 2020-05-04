@@ -36,7 +36,7 @@ gaiad init "$MONIKER" --home $GAIAD_HOME
 mkdir -p $GAIAD_CONFIG
 chmod -v -R 777 $GAIAD_HOME
 
-cat $SELF_CONFIGS/genesis.json > $GAIAD_CONFIG_GENESIS
+cat $SELF_UPDATE/common/configs/genesis.json > $GAIAD_CONFIG_GENESIS
 
 DENOM=$(python -c "import sys, json; print(json.load(open('$GAIAD_CONFIG_GENESIS'))['app_state']['mint']['params']['mint_denom'])")
 MIN_GAS="${MIN_GAS_VALUE}${DENOM}"

@@ -4,4 +4,4 @@ exec 2>&1
 set -e
 set -x
 
-echo "Building sentry..."
+echo "deployment => START"
