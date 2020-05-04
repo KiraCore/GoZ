@@ -23,20 +23,21 @@ GAIACLI_HOME=$HOME/.gaiacli
 P2P_LOCAL_PORT=26656
 RPC_LOCAL_PORT=26657
 LCD_LOCAL_PORT=1317
-NODE_ADDESS="tcp://localhost:$RPC_LOCAL_PORT"
 
 # set default parameters if not specified
 [ -z "$SEEDS" ] && SEEDS="tcp://ef71392a1658182a9207985807100bb3d106dce6@35.233.155.199:26656"
 [ -z "$MIN_GAS_VALUE" ] && MIN_GAS_VALUE="0.10"
 [ -z "$MONIKER" ] && MONIKER="Kira Core | Asmodat | Cosmos | Sentry"
 [ -z "$PEX" ] && PEX="true"
+[ -z "$GENESIS_PATH" ] && GENESIS_PATH="$SELF_UPDATE/common/configs/genesis.json"
+[ -z "$NODE_ADDESS" ] && NODE_ADDESS="tcp://localhost:$RPC_LOCAL_PORT"
 
 gaiad init "$MONIKER" --home $GAIAD_HOME
 
 mkdir -p $GAIAD_CONFIG
 chmod -v -R 777 $GAIAD_HOME
 
-cat $SELF_UPDATE/common/configs/genesis.json > $GAIAD_CONFIG_GENESIS
+cat $GENESIS_PATH > $GAIAD_CONFIG_GENESIS
 
 DENOM=$(python -c "import sys, json; print(json.load(open('$GAIAD_CONFIG_GENESIS'))['app_state']['mint']['params']['mint_denom'])")
 MIN_GAS="${MIN_GAS_VALUE}${DENOM}"
@@ -114,18 +115,25 @@ ${SCRIPTS_DIR}/local-cors-proxy-v0.0.1.sh $LCD_PROXY_PORT http://127.0.0.1:$LCD_
 ${SCRIPTS_DIR}/local-cors-proxy-v0.0.1.sh $P2P_PROXY_PORT http://127.0.0.1:$P2P_LOCAL_PORT; wait
 
 echo "AWS Account Setup..."
-
 aws configure set output $AWS_OUTPUT
 aws configure set region $AWS_REGION
 aws configure set aws_access_key_id "$AWS_ACCESS_KEY_ID"
 aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY"
-
 aws configure list
 
 echo "Starting services..."
 systemctl2 restart gaiad
 systemctl2 restart lcd
 systemctl2 restart nginx
+
+CDHelper email send \
+ --from="noreply@kiracore.com" \
+ --to="asmodat@gmail.com" \
+ --subject="[GoZ] $(curl -H 'Metadata-Flavor: Google' http://metadata/computeMetadata/v1/instance/name 2>/dev/null) Was Initalized Sucessfully" \
+ --body="[$(date)] Attached $(find $SELF_LOGS -type f | wc -l) Log Files" \
+ --html="false" \
+ --recursive="true" \
+ --attachments="$SELF_LOGS,/var/log/journal"
 
 
 

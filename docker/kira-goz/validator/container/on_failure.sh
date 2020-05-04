@@ -6,6 +6,7 @@ set -x
 
 touch $MAINTENANCE_FILE # notify entire environment to halt
 
+systemctl2 stop faucet
 systemctl2 stop gaiad
 systemctl2 stop lcd
 systemctl2 stop nginx
