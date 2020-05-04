@@ -12,7 +12,7 @@ echo "Container STARTED"
 
 echo "Updating automated execution repo..."
 rm -r -f $SELF_UPDATE/tmp
-${SCRIPTS_DIR}/git-pull-v0.0.1.sh "${UPDATE_REPO}" "${UPDATE_BRANCH}" "${UPDATE_CHECKOUT}" "${SELF_UPDATE}/tmp"
+${SELF_SCRIPS}/git-pull-v0.0.1.sh "${UPDATE_REPO}" "${UPDATE_BRANCH}" "${UPDATE_CHECKOUT}" "${SELF_UPDATE}/tmp"
 mv $SELF_UPDATE/tmp/* $SELF_UPDATE
 chmod -R 777 $SELF_UPDATE
 

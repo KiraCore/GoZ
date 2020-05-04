@@ -7,6 +7,7 @@ ENV RELAY_CONFIGS=${RELAY_HOME}/configs
 ENV CONTAINER_SCRIPTS=${RELAY_HOME}/container
 ENV BUILD_SCRIPT=${CONTAINER_SCRIPTS}/deployment.sh
 ENV START_SCRIPT=${CONTAINER_SCRIPTS}/start.sh
+
 ENV TESTCHAIN_JSON_PATH=${RELAY_CONFIGS}/kira-alpha.json
 ENV GOZCHAIN_JSON_PATH=${RELAY_CONFIGS}/kira-1.json
 ENV HUBCHAIN_JSON_PATH=${RELAY_CONFIGS}/goz-hub.json
@@ -23,7 +24,7 @@ ADD ./configs ${RELAY_CONFIGS}
 ADD ./container ${CONTAINER_SCRIPTS}
 
 # store the repo content to acquire json files
-RUN ${SCRIPTS_DIR}/git-pull-v0.0.1.sh "${RLY_REPO}" "${RLY_BRANCH}" "${RLY_CHECKOUT}" "${RLY_OUTPUT}"
+RUN ${SELF_SCRIPS}/git-pull-v0.0.1.sh "${RLY_REPO}" "${RLY_BRANCH}" "${RLY_CHECKOUT}" "${RLY_OUTPUT}"
 
 RUN rm -rfv $RLYS_HOME && cp -avr $RLYS_SOURCE $RLYS_HOME
 
