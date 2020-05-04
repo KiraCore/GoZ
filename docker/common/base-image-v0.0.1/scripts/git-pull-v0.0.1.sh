@@ -10,12 +10,12 @@ CHECKOUT=$3
 OUTPUT=$4
 
 echo "------------------------------------------------"
-echo " STARTED: GIT PULL v0.0.1"
+echo "|         STARTED: GIT PULL v0.0.1             |"
 echo "------------------------------------------------"
-echo "REPO: $REPO"
-echo "BRANCH: $BRANCH"
-echo "CHECKOUT: $CHECKOUT"
-echo "OUTPUT": $OUTPUT
+echo "|  REPO:       $REPO"
+echo "|  BRANCH:     $BRANCH"
+echo "|  CHECKOUT:   $CHECKOUT"
+echo "|  OUTPUT:     $OUTPUT"
 echo "------------------------------------------------"
 
 mkdir -p $(dirname $OUTPUT)
@@ -38,5 +38,5 @@ git describe --tags || true
 git describe --all
 
 echo "------------------------------------------------"
-echo " FINISHED: GIT PULL v0.0.1"
+echo "|         FINISHED: GIT PULL v0.0.1            |"
 echo "------------------------------------------------"
