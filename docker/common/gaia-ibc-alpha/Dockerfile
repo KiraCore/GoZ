@@ -7,7 +7,6 @@ ARG REPO="https://github.com/cosmos/gaia"
 ARG BRANCH=""
 ARG CHECKOUT="9f47782"
 
-RUN ${SCRIPTS_DIR}/git-pull-v0.0.1.sh "${REPO}" "${BRANCH}" "${CHECKOUT}" "${GAIA}"
+RUN ${SELF_SCRIPS}/git-pull-v0.0.1.sh "${REPO}" "${BRANCH}" "${CHECKOUT}" "${GAIA}"
 RUN cd ${GAIA} && make install
-
 RUN gaiad version --long

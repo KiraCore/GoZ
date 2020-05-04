@@ -6,7 +6,9 @@ set -x
 
 echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
 
-apt-get install -y apt-transport-https ca-certificates gnupg curl
+apt-get update
+
+apt-get install -y apt-transport-https ca-certificates gnupg gnupg2 curl
 
 curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
 
@@ -117,11 +119,13 @@ apt-get install -y --allow-unauthenticated --force-yes \
     xz-utils \
     zlib1g-dev
 
-echo "Creating GIT simlink"
+echo "Creating GIT simlink and global setup"
 ln -s /usr/bin/git /bin/git
 
 which git
 /usr/bin/git --version
+
+git config --global url.https://github.com/.insteadOf git://github.com/
 
 echo "Installing .NET"
 wget -q https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
@@ -134,6 +138,8 @@ apt-get install -y dotnet-sdk-3.1
 echo "Installing latest go version $GO_VERSION https://golang.org/doc/install ..."
 wget https://dl.google.com/go/go$GO_VERSION.linux-amd64.tar.gz
 tar -C /usr/local -xvf go$GO_VERSION.linux-amd64.tar.gz
+go version
+go env
 
 echo "Installing custom systemctl..."
 wget https://raw.githubusercontent.com/gdraheim/docker-systemctl-replacement/master/files/docker/systemctl.py -O /usr/local/bin/systemctl2
@@ -157,3 +163,20 @@ printf "[Service]\nExecStartPost=/bin/sleep 0.1\n" > $NGINX_SERVICED_PATH/overri
 
 systemctl2 enable nginx.service
 
+echo "NPM Install..."
+npm install -g @angular/cli
+npm install -g web3 --unsafe-perm=true --allow-root
+
+
+echo "Rust Install..."
+curl https://sh.rustup.rs -sSf | bash -s -- -y
+cargo --version 
+
+echo "Install Asmodat Automation helper tools"
+${SELF_SCRIPS}/awshelper-update-v0.0.1.sh "v0.12.0"
+AWSHelper version
+
+${SELF_SCRIPS}/cdhelper-update-v0.0.1.sh "v0.6.0"
+CDHelper version
+
+printenv

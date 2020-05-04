@@ -1,7 +1,4 @@
 FROM ubuntu:18.04
-COPY ./deployment.sh /tmp/build.sh
-
-RUN apt-get update && apt-get install -y gnupg2
 
 ENV PROFILE_PATH="/etc/profile"
 ENV BASHRC_PATH="/root/.bashrc"
@@ -16,7 +13,6 @@ ENV RUSTFLAGS="-Ctarget-feature=+aes,+ssse3"
 ENV GO111MODULE=on
 ENV NGINX_CONFIG="/etc/nginx/nginx.conf"
 ENV NGINX_SERVICED_PATH="/etc/systemd/system/nginx.service.d"
-ENV SCRIPTS_DIR=/root/scripts
 
 # Env necessary for the individual child container setup
 ENV SELF_HOME=/self/home
@@ -39,40 +35,15 @@ ENV SUCCESS_START_FILE=${SELF_HOME}/success_start
 ENV SUCCESS_END_FILE=${SELF_HOME}/success_end
 ENV MAINTENANCE_FILE=${SELF_HOME}/maintenence
 
-RUN mkdir -p ${SELF_HOME} ${SELF_SCRIPS} ${SELF_CONFIGS} ${SELF_UPDATE} ${SELF_UPDATE_TMP} ${SELF_CONTAINER} ${GOPATH}/src ${GOPATH}/bin ${SCRIPTS_DIR}
-
-# TODO: Remove - Legacy Dir
-ADD ./scripts ${SCRIPTS_DIR}
+RUN mkdir -p ${SELF_HOME} ${SELF_SCRIPS} ${SELF_CONFIGS} ${SELF_UPDATE} ${SELF_UPDATE_TMP} ${SELF_CONTAINER} ${GOPATH}/src ${GOPATH}/bin
 
 ADD ./scripts ${SELF_SCRIPS}
 #ADD ./configs ${SELF_CONFIGS}
 ADD ./container ${SELF_CONTAINER}
 
 # TODO: Remove - Logacy Dir
-RUN chmod -R 777 ${SELF_HOME} && chmod 777 ${PROFILE_PATH} && chmod 777 ${BASHRC_PATH} chmod -R 777 ${SCRIPTS_DIR}
+RUN chmod -R 777 ${SELF_HOME} && chmod 777 ${PROFILE_PATH} && chmod 777 ${BASHRC_PATH}
 
 ARG DEBIAN_FRONTEND=noninteractive
 RUN LC_ALL=C ${BUILD_SCRIPT} && rm -rf /var/lib/apt/lists/*
-
-RUN npm install -g @angular/cli
-RUN npm install -g web3 --unsafe-perm=true --allow-root
-
-RUN git config --global url.https://github.com/.insteadOf git://github.com/
-
-# Update new packages
-RUN apt-get update
-
-# Get Rust
-RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
-
-# Check cargo, go version and environment
-RUN printenv && cargo --version && go version && go env
-
-# Install Asmodat Helper tools
-RUN ${SELF_SCRIPS}/awshelper-update-v0.0.1.sh "v0.12.0" 
-RUN ${SELF_SCRIPS}/cdhelper-update-v0.0.1.sh "v0.6.0" 
-ENV AWSHelperVersion="v0.12.0"
-ENV CDHelperVersion="v0.6.0"
-
-
 

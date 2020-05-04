@@ -13,5 +13,5 @@ systemctl2 stop nginx
 # TODO: send email fail to init notification
 
 
-
+#AWSHelper email send --from "noreply@kiracore.com" --to="asmodat@gmail.com"
 
