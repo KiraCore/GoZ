@@ -8,7 +8,7 @@ INIT_START_FILE=$HOME/init_started
 INIT_END_FILE=$HOME/init_ended
 MAINTENANCE_FILE=$HOME/maintenence
 
-echo "Testing health status"
+echo "Healthcheck START"
 
 if [ "${MAINTENANCE_MODE}" = "true"  ] || [ -f "$MAINTENANCE_FILE" ] ; then
      echo "Entering maitenance mode!"
@@ -16,12 +16,9 @@ if [ "${MAINTENANCE_MODE}" = "true"  ] || [ -f "$MAINTENANCE_FILE" ] ; then
 fi
 
 if [ -f "$INIT_END_FILE" ]; then
-   echo "Sentry node was setup successfully"
-elif [ -f "$INIT_START_FILE" ]; then
-   echo "Node setup failed :("
-   exit 1
+   echo "INFO: Initialization was successfull"
 else
-   echo "Node setup in progress..."
+   echo "INFO: Pending initialization"
    exit 0
 fi
 
@@ -42,3 +39,5 @@ if [ "${STATUS_GAIA}" != "active" ] || [ "${STATUS_LCD}" != "active" ] || [ "${S
 else 
     echo "SUCCESS: All services are up and running!"
 fi
+
+echo "Healthcheck STOP"

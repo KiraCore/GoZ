@@ -18,7 +18,27 @@ ENV NGINX_CONFIG="/etc/nginx/nginx.conf"
 ENV NGINX_SERVICED_PATH="/etc/systemd/system/nginx.service.d"
 ENV SCRIPTS_DIR=/root/scripts
 
-RUN mkdir -p ${GOPATH}/src ${GOPATH}/bin ${SCRIPTS_DIR}
+# Env necessary for the individual child container setup
+ENV SELF_HOME=/self/home
+ENV SELF_SCRIPS=${SELF_HOME}/scripts
+ENV SELF_CONFIGS=${SELF_HOME}/configs
+ENV SELF_UPDATE=${SELF_HOME}/update
+ENV SELF_CONTAINER=${SELF_HOME}/container
+ENV START_SCRIPT=${SELF_CONTAINER}/start.sh
+ENV BUILD_SCRIPT=${SELF_CONTAINER}/deployment.sh
+ENV HEALTHCHECK_SCRIPT=${SELF_CONTAINER}/healthcheck.sh
+ENV ON_FAILURE_SCRIPT=${SELF_CONTAINER}/on_failure.sh
+ENV ON_INIT_SCRIPT=${SELF_CONTAINER}/on_init.sh
+ENV ON_SUCCESS_SCRIPT=${SELF_CONTAINER}/on_success.sh
+ENV INIT_START_FILE=${SELF_HOME}/init_start
+ENV INIT_END_FILE=${SELF_HOME}/init_end
+ENV FAILURE_START_FILE=${SELF_HOME}/failure_start
+ENV FAILURE_END_FILE=${SELF_HOME}/failure_end
+ENV SUCCESS_START_FILE=${SELF_HOME}/success_start
+ENV SUCCESS_END_FILE=${SELF_HOME}/success_end
+ENV MAINTENANCE_FILE=${SELF_HOME}/maintenence
+
+RUN mkdir -p ${SELF_HOME} ${SELF_SCRIPS} ${SELF_CONFIGS} ${SELF_UPDATE} ${SELF_CONTAINER} ${GOPATH}/src ${GOPATH}/bin ${SCRIPTS_DIR}
 ADD ./scripts ${SCRIPTS_DIR}
 
 RUN chmod +x /tmp/build.sh
@@ -51,9 +71,9 @@ RUN go env
 
 # Install Asmodat Helper tools
 RUN ${SCRIPTS_DIR}/awshelper-update-v0.0.1.sh "v0.12.0" 
-RUN ${SCRIPTS_DIR}/cdhelper-update-v0.0.1.sh "v0.5.0" 
+RUN ${SCRIPTS_DIR}/cdhelper-update-v0.0.1.sh "v0.6.0" 
 ENV AWSHelperVersion="v0.12.0"
-ENV CDHelperVersion="v0.5.0"
+ENV CDHelperVersion="v0.6.0"
 
 
 
