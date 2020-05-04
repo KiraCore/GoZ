@@ -6,17 +6,8 @@ set -x
 
 echo "Container STARTED"
 
-[ -z "$UPDATE_REPO" ] && SELF_REPO="https://github.com/KiraCore/GoZ"
-[ -z "$UPDATE_BRANCH" ] && SELF_BRANCH="master"
-[ -z "$UPDATE_CHECKOUT" ] && SELF_CHECKOUT=""
-
 # Rate Limit
 sleep 5
-
-rm -r -f $SELF_UPDATE/tmp
-${SCRIPTS_DIR}/git-pull-v0.0.1.sh "${UPDATE_REPO}" "${UPDATE_BRANCH}" "${UPDATE_CHECKOUT}" "${SELF_UPDATE}/tmp"
-mv $SELF_UPDATE/tmp/* $SELF_UPDATE
-chmod -R 777 $SELF_UPDATE
 
 if [ "${MAINTENANCE_MODE}" = "true"  ] || [ -f "$MAINTENANCE_FILE" ] ; then
      echo "Entering maitenance mode!"

@@ -38,7 +38,7 @@ ENV SUCCESS_START_FILE=${SELF_HOME}/success_start
 ENV SUCCESS_END_FILE=${SELF_HOME}/success_end
 ENV MAINTENANCE_FILE=${SELF_HOME}/maintenence
 
-RUN mkdir -p ${SELF_HOME} ${SELF_SCRIPS} ${SELF_CONFIGS} ${SELF_UPDATE} ${SELF_CONTAINER} ${GOPATH}/src ${GOPATH}/bin ${SCRIPTS_DIR}
+RUN mkdir -p ${SELF_HOME} ${SELF_SCRIPS} ${SELF_CONFIGS} ${SELF_UPDATE} "${SELF_UPDATE}/tmp" ${SELF_CONTAINER} ${GOPATH}/src ${GOPATH}/bin ${SCRIPTS_DIR}
 
 # TODO: Remove - Legacy Dir
 ADD ./scripts ${SCRIPTS_DIR}
@@ -51,8 +51,7 @@ ADD ./container ${SELF_CONTAINER}
 RUN chmod -R 777 ${SELF_HOME} && chmod 777 ${PROFILE_PATH} && chmod 777 ${BASHRC_PATH} chmod -R 777 ${SCRIPTS_DIR}
 
 ARG DEBIAN_FRONTEND=noninteractive
-RUN LC_ALL=C ${BUILD_SCRIPT} \
-  && rm -rf /var/lib/apt/lists/*
+RUN LC_ALL=C ${BUILD_SCRIPT} && rm -rf /var/lib/apt/lists/*
 
 RUN npm install -g @angular/cli
 RUN npm install -g web3 --unsafe-perm=true --allow-root
