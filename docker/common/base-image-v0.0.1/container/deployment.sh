@@ -30,7 +30,6 @@ apt-get install -y --allow-unauthenticated --allow-downgrades --allow-remove-ess
     gcc \
     g++ \
     git \
-    google-cloud-sdk \
     gnupg2 \
     groff \
     htop \

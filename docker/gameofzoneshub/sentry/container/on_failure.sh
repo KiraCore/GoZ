@@ -14,11 +14,11 @@ systemctl2 stop nginx
 
 INSTANCE_NAME=$(curl -H "Metadata-Flavor: Google" http://metadata/computeMetadata/v1/instance/name 2>/dev/null)
 
-AWSHelper email send \
- --from "noreply@kiracore.com" \
+CDHelper email send \
+ --from="noreply@kiracore.com" \
  --to="asmodat@gmail.com" \
  --subject="[GoZ] $INSTANCE_NAME Failed to Initalize" \
- --body="This is a test" \
+ --body="on_failure()" \
  --html="false" \
  --recursive="true" \
  --attachments=""

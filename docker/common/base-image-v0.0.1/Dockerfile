@@ -16,6 +16,7 @@ ENV NGINX_SERVICED_PATH="/etc/systemd/system/nginx.service.d"
 
 # Env necessary for the individual child container setup
 ENV SELF_HOME=/self/home
+ENV SELF_LOGS=/self/logs
 ENV SELF_SCRIPS=${SELF_HOME}/scripts
 ENV SELF_CONFIGS=${SELF_HOME}/configs
 ENV SELF_UPDATE=${SELF_HOME}/update
@@ -35,7 +36,7 @@ ENV SUCCESS_START_FILE=${SELF_HOME}/success_start
 ENV SUCCESS_END_FILE=${SELF_HOME}/success_end
 ENV MAINTENANCE_FILE=${SELF_HOME}/maintenence
 
-RUN mkdir -p ${SELF_HOME} ${SELF_SCRIPS} ${SELF_CONFIGS} ${SELF_UPDATE} ${SELF_UPDATE_TMP} ${SELF_CONTAINER} ${GOPATH}/src ${GOPATH}/bin
+RUN mkdir -p ${SELF_HOME} ${SELF_SCRIPS} ${SELF_CONFIGS} ${SELF_UPDATE} ${SELF_UPDATE_TMP} ${SELF_LOGS} ${SELF_CONTAINER} ${GOPATH}/src ${GOPATH}/bin
 
 ADD ./scripts ${SELF_SCRIPS}
 #ADD ./configs ${SELF_CONFIGS}
