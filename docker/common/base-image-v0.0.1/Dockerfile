@@ -39,15 +39,19 @@ ENV SUCCESS_END_FILE=${SELF_HOME}/success_end
 ENV MAINTENANCE_FILE=${SELF_HOME}/maintenence
 
 RUN mkdir -p ${SELF_HOME} ${SELF_SCRIPS} ${SELF_CONFIGS} ${SELF_UPDATE} ${SELF_CONTAINER} ${GOPATH}/src ${GOPATH}/bin ${SCRIPTS_DIR}
+
+# TODO: Remove - Legacy Dir
 ADD ./scripts ${SCRIPTS_DIR}
 
-RUN chmod +x /tmp/build.sh
-RUN chmod 777 $PROFILE_PATH
-RUN chmod 777 $BASHRC_PATH
-RUN chmod -R 777 ${SCRIPTS_DIR}
+ADD ./scripts ${SELF_SCRIPS}
+#ADD ./configs ${SELF_CONFIGS}
+ADD ./container ${SELF_CONTAINER}
+
+# TODO: Remove - Logacy Dir
+RUN chmod -R 777 ${SELF_HOME} && chmod 777 ${PROFILE_PATH} && chmod 777 ${BASHRC_PATH} chmod -R 777 ${SCRIPTS_DIR}
 
 ARG DEBIAN_FRONTEND=noninteractive
-RUN LC_ALL=C /tmp/build.sh \
+RUN LC_ALL=C ${BUILD_SCRIPT} \
   && rm -rf /var/lib/apt/lists/*
 
 RUN npm install -g @angular/cli
@@ -61,17 +65,12 @@ RUN apt-get update
 # Get Rust
 RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
 
-# Check if cargo is visible
-RUN cargo --version 
-
-# Check go version and environment
-RUN echo $PATH
-RUN go version
-RUN go env
+# Check cargo, go version and environment
+RUN printenv && cargo --version && go version && go env
 
 # Install Asmodat Helper tools
-RUN ${SCRIPTS_DIR}/awshelper-update-v0.0.1.sh "v0.12.0" 
-RUN ${SCRIPTS_DIR}/cdhelper-update-v0.0.1.sh "v0.6.0" 
+RUN ${SELF_SCRIPS}/awshelper-update-v0.0.1.sh "v0.12.0" 
+RUN ${SELF_SCRIPS}/cdhelper-update-v0.0.1.sh "v0.6.0" 
 ENV AWSHelperVersion="v0.12.0"
 ENV CDHelperVersion="v0.6.0"
 
