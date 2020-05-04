@@ -34,7 +34,8 @@ then
     git checkout $CHECKOUT
 fi   
 
-git describe --tags
+git describe --tags || true
+git describe --all
 
 echo "------------------------------------------------"
 echo " FINISHED: GIT PULL v0.0.1"
