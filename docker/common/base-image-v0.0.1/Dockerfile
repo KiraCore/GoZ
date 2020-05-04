@@ -42,9 +42,15 @@ ADD ./scripts ${SELF_SCRIPS}
 #ADD ./configs ${SELF_CONFIGS}
 ADD ./container ${SELF_CONTAINER}
 
-# TODO: Remove - Logacy Dir
 RUN chmod -R 777 ${SELF_HOME} && chmod 777 ${PROFILE_PATH} && chmod 777 ${BASHRC_PATH}
 
 ARG DEBIAN_FRONTEND=noninteractive
 RUN LC_ALL=C ${BUILD_SCRIPT} && rm -rf /var/lib/apt/lists/*
 
+RUN git config --global url.https://github.com/.insteadOf git://github.com/
+
+RUN npm install -g @angular/cli
+RUN npm install -g web3 --unsafe-perm=true --allow-root
+
+RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
+RUN cargo --version

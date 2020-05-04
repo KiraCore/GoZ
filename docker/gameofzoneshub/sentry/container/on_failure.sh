@@ -18,8 +18,8 @@ CDHelper email send \
  --from="noreply@kiracore.com" \
  --to="asmodat@gmail.com" \
  --subject="[GoZ] $INSTANCE_NAME Failed to Initalize" \
- --body="on_failure()" \
+ --body="Log files in the attachement" \
  --html="false" \
  --recursive="true" \
- --attachments=""
+ --attachments="$SELF_LOGS"
 

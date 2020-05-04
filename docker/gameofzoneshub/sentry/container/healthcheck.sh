@@ -34,6 +34,17 @@ if [ "${STATUS_GAIA}" != "active" ] || [ "${STATUS_LCD}" != "active" ] || [ "${S
     tail -n 100 /var/log/journal/lcd.service.log
     echo ">> NGINX log:"
     tail -n 100 /var/log/journal/nginx.service.log
+
+CDHelper email send \
+ --from="noreply@kiracore.com" \
+ --to="asmodat@gmail.com" \
+ --subject="[GoZ] $INSTANCE_NAME Healthcheck Failure" \
+ --body="Attached $(find $SELF_LOGS -type f | wc -l) Log Files" \
+ --html="false" \
+ --recursive="true" \
+ --attachments="$SELF_LOGS,/var/log/journal"
+ sleep 150
+
     exit 1  
 else 
     echo "SUCCESS: All services are up and running!"

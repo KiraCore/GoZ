@@ -122,8 +122,6 @@ ln -s /usr/bin/git /bin/git
 which git
 /usr/bin/git --version
 
-git config --global url.https://github.com/.insteadOf git://github.com/
-
 echo "Installing .NET"
 wget -q https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
 dpkg -i packages-microsoft-prod.deb
@@ -159,15 +157,6 @@ mkdir -v $NGINX_SERVICED_PATH
 printf "[Service]\nExecStartPost=/bin/sleep 0.1\n" > $NGINX_SERVICED_PATH/override.conf
 
 systemctl2 enable nginx.service
-
-echo "NPM Install..."
-npm install -g @angular/cli
-npm install -g web3 --unsafe-perm=true --allow-root
-
-
-echo "Rust Install..."
-curl https://sh.rustup.rs -sSf | bash -s -- -y
-cargo --version 
 
 echo "Install Asmodat Automation helper tools"
 ${SELF_SCRIPS}/awshelper-update-v0.0.1.sh "v0.12.0"
