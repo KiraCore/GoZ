@@ -7,6 +7,7 @@ set -x
 EMAIL_SENT=$HOME/email_sent
 
 echo "INFO: Healthcheck => START"
+sleep 30 # rate limit
 
 if [ "${MAINTENANCE_MODE}" = "true"  ] || [ -f "$MAINTENANCE_FILE" ] ; then
      echo "INFO: Entering maitenance mode!"
@@ -23,9 +24,13 @@ fi
 STATUS_RELAYER="$(systemctl2 is-active relayer.service)" || STATUS_RELAYER="unknown"
 
 if [ "${STATUS_RELAYER}" != "active" ] ; then
-    echo "ERROR: Relayer services is NOT active: Relayer($STATUS_RELAYER)"
-    echo ">> Gaia log:"
-    tail -n 100 /var/log/journal/relayer.service.log || true
+    echo "ERROR: Relayer service is NOT active: Relayer($STATUS_RELAYER)"
+
+    if [ "${STATUS_RELAYER}" != "active" ] ; then
+        echo ">> Relayer log:"
+        tail -n 100 /var/log/journal/relayer.service.log || true
+        systemctl2 restart relayer || systemctl2 status relayer.service || echo "Failed to re-start relayer service" || true
+    fi
 
     if [ -f "$EMAIL_SENT" ]; then
         echo "Notification Email was already sent."
