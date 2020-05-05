@@ -20,7 +20,7 @@ else
    exit 0
 fi
 
-STATUS_RELAYER="$(systemctl2 is-active relayer.service && echo 'unknown')" || true
+STATUS_RELAYER="$(systemctl2 is-active relayer.service)" || STATUS_RELAYER="unknown"
 
 if [ "${STATUS_RELAYER}" != "active" ] ; then
     echo "ERROR: Relayer services is NOT active: Relayer($STATUS_RELAYER)"

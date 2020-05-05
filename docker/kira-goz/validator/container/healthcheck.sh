@@ -20,10 +20,10 @@ else
    exit 0
 fi
 
-STATUS_NGINX="$(systemctl2 is-active nginx.service && echo 'unknown')" || true
-STATUS_GAIA="$(systemctl2 is-active gaiad.service && echo 'unknown')" || true
-STATUS_LCD="$(systemctl2 is-active lcd.service && echo 'unknown')" || true
-STATUS_FAUCET="$(systemctl2 is-active faucet.service && echo 'unknown')" || true
+STATUS_NGINX="$(systemctl2 is-active nginx.service)" || STATUS_RELAYER="unknown"
+STATUS_GAIA="$(systemctl2 is-active gaiad.service)" || STATUS_GAIA="unknown"
+STATUS_LCD="$(systemctl2 is-active lcd.service)" || STATUS_LCD="unknown"
+STATUS_FAUCET="$(systemctl2 is-active faucet.service)" || STATUS_FAUCET="unknown"
 
 if [ "${STATUS_GAIA}" != "active" ] || [ "${STATUS_LCD}" != "active" ] || [ "${STATUS_NGINX}" != "active" ] ; then
     echo "ERROR: One of the services is NOT active: Gaia($STATUS_GAIA), LCD($STATUS_LCD) or NGINX($STATUS_NGINX)"

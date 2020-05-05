@@ -64,7 +64,7 @@ gaiacli config chain-id $CHAIN_ID --home $GAIAD_HOME
 gaiacli config node $NODE_ADDESS --home $GAIAD_HOME
 gaiacli config trust-node true --home $GAIAD_HOME
 # gaiacli config priv_validator_laddr $VALIDATOR_ADDRESS --home $GAIAD_HOME
-gaiacli config --home $GAIAD_HOME
+gaiacli config --home $GAIAD_HOME || true
 
 # TODO: SETUP CUSTOM NODE KEY - FROM ENV
 # NOTE: external variables: NODE_ID, NODE_KEY, VALIDATOR_KEY
@@ -109,13 +109,13 @@ LimitNOFILE=4096
 WantedBy=default.target
 EOL
 
+systemctl2 enable nginx.service
 systemctl2 enable gaiad.service
 systemctl2 enable lcd.service
-systemctl2 enable nginx.service
 
+systemctl2 status nginx.service || true
 systemctl2 status gaiad.service || true
 systemctl2 status lcd.service || true
-systemctl2 status nginx.service || true
 
 ${SELF_SCRIPS}/local-cors-proxy-v0.0.1.sh $RPC_PROXY_PORT http://127.0.0.1:$RPC_LOCAL_PORT; wait
 ${SELF_SCRIPS}/local-cors-proxy-v0.0.1.sh $LCD_PROXY_PORT http://127.0.0.1:$LCD_LOCAL_PORT; wait
