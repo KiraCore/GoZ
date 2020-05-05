@@ -7,8 +7,8 @@ set -x
 [ -z "$SRC_CHAIN_FULL_PATH" ] && SRC_CHAIN_FULL_PATH="$SELF_UPDATE/$SRC_CHAIN_PATH"
 [ -z "$DST_CHAIN_FULL_PATH" ] && DST_CHAIN_FULL_PATH="$SELF_UPDATE/$DST_CHAIN_PATH"
 
-SRC_CHAIN_ID=$(cat $SRC_CHAIN_FULL_PATH | jq -r '.chain-id')
-DST_CHAIN_ID=$(cat $DST_CHAIN_FULL_PATH | jq -r '.chain-id')
+SRC_CHAIN_ID=$(cat $SRC_CHAIN_FULL_PATH | jq -r '.["chain-id"]')
+DST_CHAIN_ID=$(cat $DST_CHAIN_FULL_PATH | jq -r '.["chain-id"]')
 
 [ -z "$RLY_PATH" ] && RLY_PATH="${SRC_CHAIN_ID}_${DST_CHAIN_ID}"
 [ -z "$RLY_KEY_PREFIX" ] && RLY_KEY_PREFIX="default"

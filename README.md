@@ -67,50 +67,26 @@ tcp://6e4e0fad3d152b4086e24fd84602f71c6815832d@goz-trust-alias.kiraex.com:26656,
 > Base Gaia container: `docker exec -it $(docker ps -a -q  --filter ancestor=kiracore/goz:gaia-ibc-alpha) bash`
 > Base Relayer container: `docker exec -it $(docker ps -a -q  --filter ancestor=kiracore/goz:relayer-alpha) bash`
 
-> Kira Validator container: 
- * Alpha: `docker exec -it $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-alpha-validator) bash`
- * GoZ: `docker exec -it $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-goz-validator) bash`
-
-> Kira Relayer container: 
- * Alpha: `docker exec -it $(docker ps -a -q --filter ancestor=kiracore/goz:kira-alpha-relayer) bash`
- * GoZ: `docker exec -it $(docker ps -a -q --filter ancestor=kiracore/goz:kira-goz-relayer) bash`
-
-> Kira Sentry container: 
- * GoZ: `docker exec -it $(docker ps -a -q --filter ancestor=kiracore/goz:goz-hub-sentry) bash`
+> Kira Validator container: `docker exec -it $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-goz-validator) bash`
+> Kira Relayer container: `docker exec -it $(docker ps -a -q --filter ancestor=kiracore/goz:kira-goz-relayer) bash`
+> Kira Sentry container: `docker exec -it $(docker ps -a -q --filter ancestor=kiracore/goz:goz-hub-sentry) bash`
 
 ## Checking container error logs
 
-> Kira Validator container (HEAD): 
- * Alpha: `docker logs --follow $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-alpha-validator)`
- * GoZ: `docker logs --follow $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-goz-validator)`
-> Kira Validator container (TAIL): 
- * Alpha: `docker logs --tail 50 --follow --timestamps $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-alpha-validator)`
- * GoZ: `docker logs --tail 50 --follow --timestamps $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-goz-validator)`
+> Kira Validator container (HEAD): `docker logs --follow $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-goz-validator)`
+> Kira Validator container (TAIL): `docker logs --tail 50 --follow --timestamps $(docker ps -a -q --filter ancestor=kiracore/goz:kira-goz-validator)`
 
-> Kira Relayer container (HEAD): 
- * Alpha: `docker logs --follow $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-alpha-relayer)`
- * GoZ: `docker logs --follow $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-goz-relayer)`
-> Kira Relayer container (TAIL): 
- * Alpha: `docker logs --tail 50 --follow --timestamps $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-alpha-relayer)`
- * GoZ: `docker logs --tail 50 --follow --timestamps $(docker ps -a -q  --filter ancestor=kiracore/goz:goz-alpha-relayer)`
+> Kira Relayer container (HEAD): `docker logs --follow $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-goz-relayer)`
+> Kira Relayer container (TAIL): `docker logs --tail 50 --follow --timestamps $(docker ps -a -q  --filter ancestor=kiracore/goz:goz-alpha-relayer)`
 
-> Kira Sentry container  (HEAD): 
- * GoZ: `docker logs --follow $(docker ps -a -q  --filter ancestor=kiracore/goz:goz-hub-sentry)`
-> Kira Sentry container  (TAIL): 
- * GoZ:  `docker logs --tail 50 --follow --timestamps $(docker ps -a -q --filter ancestor=kiracore/goz:goz-hub-sentry)`
+> Kira Sentry container  (HEAD): `docker logs --follow $(docker ps -a -q  --filter ancestor=kiracore/goz:goz-hub-sentry)`
+> Kira Sentry container  (TAIL): `docker logs --tail 50 --follow --timestamps $(docker ps -a -q --filter ancestor=kiracore/goz:goz-hub-sentry)`
   
 ## If container is NOT running
 
-> Kira Validator container:
- * Alpha: `docker run -it -d $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-alpha-validator) /bin/bash`
- * GoZ:`docker run -it -d $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-goz-validator) /bin/bash`
-
-> Kira Relayer container:
- * Alpha: `docker run -it -d $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-alpha-relayer) /bin/bash`
- * GoZ: `docker run -it -d $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-goz-relayer) /bin/bash`
-
-> Kira Sentry container: 
- * GoZ: `docker run -it -d $(docker ps -a -q  --filter ancestor=kiracore/goz:goz-hub-sentry) /bin/bash`
+> Kira Validator container: `docker run -it -d $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-goz-validator) /bin/bash`
+> Kira Relayer container: `docker run -it -d $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-goz-relayer) /bin/bash`
+> Kira Sentry container: `docker run -it -d $(docker ps -a -q  --filter ancestor=kiracore/goz:goz-hub-sentry) /bin/bash`
   
 # Relayer Commands
 

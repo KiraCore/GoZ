@@ -5,10 +5,12 @@ set -e
 set -x
 
 echo "Staring on-init script..."
-NODE_KEY_PATH=$HOME/.gaiad/config/node_key.json
-APP_TOML_PATH=$HOME/.gaiad/config/app.toml
-GENESIS_JSON_PATH=$HOME/.gaiad/config/genesis.json
-CONFIG_TOML_PATH=$HOME/.gaiad/config/config.toml
+GAIAD_HOME=$HOME/.gaiad
+GAIAD_CONFIG=$GAIAD_HOME/config
+NODE_KEY_PATH=$GAIAD_CONFIG/node_key.json
+APP_TOML_PATH=$GAIAD_CONFIG/app.toml
+GENESIS_JSON_PATH=$GAIAD_CONFIG/genesis.json
+CONFIG_TOML_PATH=$GAIAD_CONFIG/config.toml
 INIT_START_FILE=$HOME/init_started
 INIT_END_FILE=$HOME/init_ended
 GAIACLI_HOME=$HOME/.gaiacli
@@ -20,15 +22,15 @@ LCD_LOCAL_PORT=1317
 RLY_LOCAL_PORT=8000
 
 [ -z "$IMPORT_VALIDATOR_KEY" ] && IMPORT_VALIDATOR_KEY="False"
-[ -z "$VALIDATOR_KEY_PATH" ] && VALIDATOR_KEY_PATH="$HOME/.gaiad/config/priv_validator_key.json"
+[ -z "$VALIDATOR_KEY_PATH" ] && VALIDATOR_KEY_PATH="$GAIAD_CONFIG/priv_validator_key.json"
 [ -z "$NODE_ADDESS" ] && NODE_ADDESS="tcp://localhost:$RPC_LOCAL_PORT"
 [ -z "$CHAIN_JSON_FULL_PATH" ] && CHAIN_JSON_FULL_PATH="$SELF_UPDATE/$CHAIN_JSON_PATH"
 
-if [ -f "$CHAIN_JSON_PATH" ] ; then
+if [ -f "$CHAIN_JSON_FULL_PATH" ] ; then
     echo "Chain configuration file was defined, loading JSON"
     cat $CHAIN_JSON_FULL_PATH > $CHAIN_ID.json
-    CHAIN_ID=$(cat $CHAIN_JSON_FULL_PATH | jq -r '.chain-id')
-    RLYKEY=$(cat $CHAIN_JSON_FULL_PATH | jq -r '.key')
+    CHAIN_ID=$(cat $CHAIN_ID.json | jq -r '.["chain-id"]')
+    RLYKEY=$(cat $CHAIN_ID.json | jq -r '.key')
 else
     echo "Chain configuration file was NOT defined, loading ENV's"
     [ -z "$DENOM" ] && DENOM="ukex"
