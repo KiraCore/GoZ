@@ -13,6 +13,7 @@ import time
 from joblib import Parallel, delayed
 from subprocess import Popen, PIPE
 
+# (rm $SELF_SCRIPS/RelayerHelper.py || true) && nano $SELF_SCRIPS/RelayerHelper.py 
 # Update: (rm $SELF_SCRIPTS/RelayerHelper.py || true) && nano $SELF_SCRIPTS/RelayerHelper.py 
 
 def callRaw(s, showErrors):
@@ -46,6 +47,9 @@ def callJson(s, showErrors):
         return None
 
 def callTryRetry(s, timeout, retry, delay, showErrors):
+    return TaskHelper.TryRetryCMD(s, timeout, retry, delay, showErrors)
+
+def callTryRetryJson(s, timeout, retry, delay, showErrors):
     return TaskHelper.TryRetryCMD(s, timeout, retry, delay, showErrors)
 
 def ConfigureDefaultKey(chain_id, key_name): # rly ch edit kira-1 key prefix_kira-1
@@ -82,14 +86,14 @@ def DeleteLiteClient(chain_id):
     return False if (None == callRaw(f"rly lite delete {chain_id}",True)) else True
 
 def InitLiteClient(chain_id):
-    return False if (None == callRaw(f"rly lite init {chain_id} -f",True)) else True
+    return False if (None == callTryRetry(f"rly lite init {chain_id} -f",30, 0, 1,True)) else True
 
 def UpdateLiteClient(chain_id):
-    return False if (None == callRaw(f"rly lite update {chain_id}",True)) else True
+    return False if (None == callTryRetry(f"rly lite update {chain_id}",30, 0, 1,True)) else True
 
 def QueryLiteClientHeader(chain_id):
-    callRaw(f"rly lite update {chain_id}",False) # lite must be updated before the query
-    out = callJson(f"rly lite header {chain_id}",True)
+    callTryRetry(f"rly lite update {chain_id}",30, 0, 1,False) # lite must be updated before the query
+    out = callTryRetryJson(f"rly lite header {chain_id}",30, 0, 1,True)
     return None if ((None != out) and len(out) <= 0) else out
 
 def RequestTokens(chain_id):
@@ -123,16 +127,16 @@ def QueryPath(path):
     return None if ((None != out) and len(out) <= 0) else out
 
 def TransactClients(path):
-    return False if (None == callRaw(f"rly transact clients {path}",True)) else True
+    return False if (None == callTryRetry(f"rly transact clients {path}",30, 0, 1,True)) else True
 
 def TransactConnection(path, timeout):
-    return False if (None == callRaw(f"rly transact connection {path} --timeout {timeout}s",True)) else True
+    return False if (None == callTryRetry(f"rly transact connection {path} --timeout {timeout}s",30, 0, 1,True)) else True
 
 def TransactChannel(path, timeout):
-    return False if (None == callRaw(f"rly transact channel {path} --timeout {timeout}s",True)) else True
+    return False if (None == callTryRetry(f"rly transact channel {path} --timeout {timeout}s",30, 0, 1,True)) else True
 
 def TransactLink(path, timeout):
-    return False if (None == callRaw(f"rly transact link {path} --timeout {timeout}s",True)) else True
+    return False if (None == callTryRetry(f"rly transact link {path} --timeout {timeout}s",30, 0, 1,True)) else True
 
 # relay any packets that remain to be relayed on a given path, in both directions
 def TransactRelay(path): # rly tx rly kira-alpha_isillienchain

@@ -14,6 +14,7 @@ import time
 from joblib import Parallel, delayed
 from datetime import timedelta, datetime
 
+#(rm $SELF_SCRIPS/phase1.py || true) && nano $SELF_SCRIPS/phase1.py 
 # Update: (rm $SELF_SCRIPTS/phase1.py || true) && nano $SELF_SCRIPTS/phase1.py 
 
 # Startup example: 26657
@@ -37,7 +38,7 @@ KEY_PREFIX = "chain_key" if ((not KEY_PREFIX) or (len(KEY_PREFIX) <= 1)) else KE
 # constants 
 connect_timeout = 60
 update_period = int(TRUST_UPDATE_PERIOD)*60
-upload_period = 60
+upload_period = 2*60
 
 print(f" _________________________________")
 print(f"|     STARTING RELAYER v0.0.1     |")
@@ -76,6 +77,7 @@ elif None != state_file_txt and (not state_file_txt): # empty state file
     connection["total-uptime"] = 0
 else: # status exists, extract state file from json
     print(f"SUCCESS: State file was loaded")
+    print(state_file_txt)
     state_file = json.loads(state_file_txt)
     old_connection_update = state_file["last-update"]
     old_state_upload = state_file["upload-time"]
@@ -121,16 +123,17 @@ while True:
 
     total_uptime = old_total_uptime + elapsed
     connection["total-uptime"]=total_uptime
-    print(f"________________________________")
-    print(f"|      {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
-    print(f"|-------------------------------|")
-    print(f"| INFO: Current Connection:     - {timedelta(seconds=elapsed)}")
-    print(f"| INFO: Total uptime:           - {timedelta(seconds=total_uptime)}")
-    print(f"| INFO: Next connection update: - {max(0,int(update_period - elpased_connection_update))}s")
-    print(f"| INFO: Next state update:      - {max(0,int(upload_period-elapsed_state_upload))}s")
-    print(f"| INFO: Source Key  balance:    - {src_key} {ClientHelper.QueryFeeTokenBalance(src_chain_info)} {src_denom}")
-    print(f"| INFO: Key  balance:           - {dst_key} {ClientHelper.QueryFeeTokenBalance(dst_chain_info)} {dst_denom}")
-    print(f"|_______________________________|")
+    print(f"_________________________________")
+    print(f"| PATH: {path}")
+    print(f"| TIME: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
+    print(f"|--------------------------------|")
+    print(f"| INFO: Current Connection:      - {timedelta(seconds=elapsed)}")
+    print(f"| INFO: Total uptime:            - {timedelta(seconds=total_uptime)}")
+    print(f"| INFO: Next connection update:  - {max(0,int(update_period - elpased_connection_update))}s")
+    print(f"| INFO: Next state update:       - {max(0,int(upload_period-elapsed_state_upload))}s")
+    print(f"| INFO: Source Key balance:      - {src_key} {ClientHelper.QueryFeeTokenBalance(src_chain_info)} {src_denom}")
+    print(f"| INFO: Destination Key balance: - {dst_key} {ClientHelper.QueryFeeTokenBalance(dst_chain_info)} {dst_denom}")
+    print(f"|________________________________|")
     
     if update_period <= elpased_connection_update:
         print(f"INFO: Elapsed minmum trust period of {timedelta(seconds=update_period)}, updating client connection...")
@@ -154,7 +157,7 @@ while True:
         if not StateHelper.S3WriteText(connection,BUCKET,state_file_path):
             print(f"ERROR: Failed to upload state file.")
 
-    time.sleep(float(15))
+    time.sleep(float(30))
 
 elapsed = time.time() - time_start
 print(f"ERROR: Failed to maitain connection between {src_id} and {dst_id}, Uptime: {timedelta(seconds=elapsed)}")

@@ -4,7 +4,7 @@ import sys
 import os
 import os.path
 
-
+# Update: (rm $SELF_SCRIPS/StringHelper.py || true) && nano $SELF_SCRIPS/StringHelper.py
 # Update: (rm $SELF_SCRIPTS/StringHelper.py || true) && nano $SELF_SCRIPTS/StringHelper.py 
 
 def FixToAsciiN(s, c, N):
@@ -46,15 +46,10 @@ def IsSafeJson(data):
         return all(isinstance(k, str) and IsSafeJson(v) for k, v in data.items())
     return False
 
-def WriteToFile(s, path):
-    f = open(path, "w")
+def WriteJsonToFile(s, path):
+    f = open(path, "w", encoding='utf-8')
     if not s:
         f.write("")
     else:
-        if IsString(s):
-            f.write(s)
-        elif IsSafeJson(s):
-            json.dump(s, f)
-        else:
-            f.write(str(s))
+        json.dump(s,f,ensure_ascii=False, indent=4)
     f.close()

@@ -9,6 +9,7 @@ import time
 from joblib import Parallel, delayed
 from subprocess import Popen, PIPE
 
+# Update: (rm $SELF_SCRIPS/TaskHelper.py || true) && nano $SELF_SCRIPS/TaskHelper.py 
 # Update: (rm $SELF_SCRIPTS/TaskHelper.py || true) && nano $SELF_SCRIPTS/TaskHelper.py 
 
 # runs utf-8 shell commands
@@ -44,9 +45,6 @@ def Process(func, args, q, showErrors):
         if q is not None:
             q.put({ "result": None, "failed": True, "error": e})
 
-def TryRetryCMD(s, timeout, retry, delay, showErrors):
-    return TryRetry(CMD, [ s ], timeout, retry, delay, showErrors)
-
 # e.g. TryRetry(foo, [arg1, arg2, ... ], 60, 3, 0.1, True)
 def TryRetry(func, args, timeout, retry, delay, showErrors):
     retry = int(retry) + 1
@@ -78,3 +76,22 @@ def TryRetry(func, args, timeout, retry, delay, showErrors):
             time.sleep(float(delay))
         
     return None
+
+def TryRetryCMD(s, timeout, retry, delay, showErrors):
+    return TryRetry(CMD, [ s ], timeout, retry, delay, showErrors)
+
+def TryRetryJsonCMD(s, timeout, retry, delay, showErrors):
+    jsonParseError = False
+    o = None
+    try:
+        o = TryRetry(CMD, [ s ], timeout, retry, delay, showErrors)
+        jsonParseError = False
+        return json.loads(o)
+    except Exception as e:
+        pass
+        if showErrors:
+            if jsonParseError:
+                print(f"CMD '{s}' failed to parse output: '{str(o)}', error: {str(e)}")
+            else:
+                print(f"ERROR: CMD {str(e)}")
+        return None

@@ -12,11 +12,12 @@ import time
 from joblib import Parallel, delayed
 import uuid
 
+# Update: (rm $SELF_SCRIPS/StateHelper.py || true) && nano $SELF_SCRIPS/StateHelper.py 
 # Update: (rm $SELF_SCRIPTS/StateHelper.py || true) && nano $SELF_SCRIPTS/StateHelper.py 
 
 def S3WriteText(text, bucket, s3_key_path):
     tmp_file=f"/tmp/{str(uuid.uuid4())}"
-    StringHelper.WriteToFile(text,tmp_file)
+    StringHelper.WriteJsonToFile(text,tmp_file)
     print(f"INFO: Writing {tmp_file} to {bucket}/{s3_key_path} file in S3...")
     result = False if None == RelayerHelper.callRaw(f"AWSHelper s3 upload-object --bucket='{bucket}' --path='{s3_key_path}' --input='{tmp_file}'",True) else True
     if not result:
