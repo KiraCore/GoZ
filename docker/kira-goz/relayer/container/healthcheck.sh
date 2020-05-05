@@ -46,8 +46,14 @@ CDHelper email send \
 else 
     echo "SUCCESS: All services are up and running!"
     if [ -f "$EMAIL_SENT" ]; then
-        # if email was sent then remove
+        # if email was sent then remove and send new one
         rm -f $EMAIL_SENT
+CDHelper email send \
+ --from="noreply@kiracore.com" \
+ --to="asmodat@gmail.com" \
+ --subject="[GoZ] $(curl -H 'Metadata-Flavor: Google' http://metadata/computeMetadata/v1/instance/name 2>/dev/null) Healthcheck Rerovered" \
+ --body="[$(date)] Relayer($STATUS_RELAYER) suceeded" \
+ --html="false" || true
     fi
     rm -f ${SELF_LOGS}/healthcheck_script_output.txt # remove old log to save space
 fi

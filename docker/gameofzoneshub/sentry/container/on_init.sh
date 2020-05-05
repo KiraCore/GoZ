@@ -63,6 +63,7 @@ CDHelper text replace --old="addr_book_strict = true" --new="addr_book_strict = 
 gaiacli config chain-id $CHAIN_ID --home $GAIAD_HOME
 gaiacli config node $NODE_ADDESS --home $GAIAD_HOME
 gaiacli config trust-node true --home $GAIAD_HOME
+# gaiacli config priv_validator_laddr $VALIDATOR_ADDRESS --home $GAIAD_HOME
 gaiacli config --home $GAIAD_HOME
 
 # TODO: SETUP CUSTOM NODE KEY - FROM ENV
