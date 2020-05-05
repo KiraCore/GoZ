@@ -12,6 +12,10 @@ echo "Assigning $ROUTE53_RECORD_NAME DNS in the zone $ROUTE53_ZONE to $EXTERNAL_
 AWSHelper route53 upsert-a-record --name="$ROUTE53_RECORD_NAME" --zone=$ROUTE53_ZONE --value="$EXTERNAL_IP" --ttl=$ROUTE53_TTY
 
 
+systemctl2 restart nginx || systemctl2 status nginx.service || echo "Failed to re-start nginx service" || true
+systemctl2 restart gaiad || systemctl2 status gaiad.service || echo "Failed to re-start gaiad service" && echo "$(cat /etc/systemd/system/gaiad.service)" || true
+systemctl2 restart lcd || systemctl2 status lcd.service || echo "Failed to re-start lcd service" && echo "$(cat /etc/systemd/system/lcd.service)" || true
+systemctl2 restart faucet || systemctl2 status faucet.service || echo "Failed to re-start faucet service" && echo "$(cat /etc/systemd/system/faucet.service)" || true
 
 
 

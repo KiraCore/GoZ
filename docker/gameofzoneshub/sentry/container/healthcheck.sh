@@ -61,6 +61,7 @@ CDHelper email send \
  --body="[$(date)] Gaia($STATUS_GAIA), LCD($STATUS_LCD) and NGINX($STATUS_NGINX) suceeded" \
  --html="false" || true
     fi
+    sleep 60 # allow user to grab log output
     rm -f ${SELF_LOGS}/healthcheck_script_output.txt # remove old log to save space
 fi
 

@@ -6,9 +6,9 @@ set -x
 
 touch $MAINTENANCE_FILE # notify entire environment to halt
 
-systemctl2 stop gaiad
-systemctl2 stop lcd
-systemctl2 stop nginx
+systemctl2 stop gaiad || systemctl2 status gaiad || true
+systemctl2 stop lcd || systemctl2 status lcd || true
+systemctl2 stop nginx || systemctl2 status nginx || true
 
 # TODO: send email fail to init notification
 
