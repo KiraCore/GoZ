@@ -106,7 +106,7 @@ After=network.target
 Type=simple
 User=root
 WorkingDirectory=/usr/local
-ExecStart=$GAIAD_BIN start --pruning=nothing
+ExecStart=$GAIAD_BIN start --pruning=nothing --home=$GAIAD_HOME
 Restart=always
 RestartSec=5
 LimitNOFILE=4096

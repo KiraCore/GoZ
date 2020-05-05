@@ -25,12 +25,13 @@ RPC_LOCAL_PORT=26657
 LCD_LOCAL_PORT=1317
 
 # set default parameters if not specified
-[ -z "$SEEDS" ] && SEEDS="tcp://ef71392a1658182a9207985807100bb3d106dce6@35.233.155.199:26656"
+[ -z "$SEEDS" ] && SEEDS="tcp://6e4e0fad3d152b4086e24fd84602f71c6815832d@35.233.155.199:26656"
 [ -z "$MIN_GAS_VALUE" ] && MIN_GAS_VALUE="0.10"
 [ -z "$MONIKER" ] && MONIKER="Kira Core | Asmodat | Cosmos | Sentry"
 [ -z "$PEX" ] && PEX="true"
 [ -z "$GENESIS_PATH" ] && GENESIS_PATH="$SELF_UPDATE/common/configs/genesis.json"
 [ -z "$NODE_ADDESS" ] && NODE_ADDESS="tcp://localhost:$RPC_LOCAL_PORT"
+[ -z "$PRUNING" ] && PRUNING="nothing"
 
 gaiad init "$MONIKER" --home $GAIAD_HOME
 
@@ -59,9 +60,10 @@ CDHelper text replace --old="addr_book_strict = true" --new="addr_book_strict = 
 [ -n "$VALIDATORS" ] && CDHelper text replace --old="private_peer_ids = \"\"" --new="private_peer_ids = \"$VALIDATORS\"" --input=$GAIAD_CONFIG_TOML
 # CDHelper text replace --old="minimum-gas-prices = \"\"" --new="minimum-gas-prices = \"$MIN_GAS\"" --input=$GAIAD_APP_TOML
 
-gaiacli config trust-node true --home $GAIAD_HOME
 gaiacli config chain-id $CHAIN_ID --home $GAIAD_HOME
 gaiacli config node $NODE_ADDESS --home $GAIAD_HOME
+gaiacli config trust-node true --home $GAIAD_HOME
+gaiacli config --home $GAIAD_HOME
 
 # TODO: SETUP CUSTOM NODE KEY - FROM ENV
 # NOTE: external variables: NODE_ID, NODE_KEY, VALIDATOR_KEY
@@ -83,7 +85,7 @@ After=network.target
 Type=simple
 User=root
 WorkingDirectory=/usr/local
-ExecStart=$GAIAD_BIN start --pruning=nothing
+ExecStart=$GAIAD_BIN start --pruning=$PRUNING --home=$GAIAD_HOME
 Restart=always
 RestartSec=5
 LimitNOFILE=4096

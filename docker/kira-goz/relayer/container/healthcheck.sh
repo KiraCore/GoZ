@@ -20,21 +20,12 @@ else
    exit 0
 fi
 
-STATUS_GAIA="$(systemctl2 is-active gaiad.service)"
-STATUS_LCD="$(systemctl2 is-active lcd.service)"
-STATUS_NGINX="$(systemctl2 is-active nginx.service)"
-STATUS_FAUCET="$(systemctl2 is-active faucet.service)"
+STATUS_RELAYER="$(systemctl2 is-active relayer.service && echo 'unknown')" || true
 
-if [ "${STATUS_GAIA}" != "active" ] || [ "${STATUS_LCD}" != "active" ] || [ "${STATUS_NGINX}" != "active" ] ; then
-    echo "ERROR: One of the services is NOT active: Gaia($STATUS_GAIA), LCD($STATUS_LCD) or NGINX($STATUS_NGINX)"
+if [ "${STATUS_RELAYER}" != "active" ] ; then
+    echo "ERROR: Relayer services is NOT active: Relayer($STATUS_RELAYER)"
     echo ">> Gaia log:"
-    tail -n 100 /var/log/journal/gaiad.service.log
-    echo ">> LCD log:"
-    tail -n 100 /var/log/journal/lcd.service.log
-    echo ">> NGINX log:"
-    tail -n 100 /var/log/journal/nginx.service.log
-    echo ">> Faucet log:"
-    tail -n 100 /var/log/journal/faucet.service.log
+    tail -n 100 /var/log/journal/relayer.service.log || true
 
     if [ -f "$EMAIL_SENT" ]; then
         echo "Notification Email was already sent."
@@ -45,7 +36,7 @@ CDHelper email send \
  --from="noreply@kiracore.com" \
  --to="asmodat@gmail.com" \
  --subject="[GoZ] $(curl -H 'Metadata-Flavor: Google' http://metadata/computeMetadata/v1/instance/name 2>/dev/null) Healthcheck Raised" \
- --body="[$(date)] Gaia($STATUS_GAIA), Faucet($STATUS_FAUCET) LCD($STATUS_LCD) or NGINX($STATUS_NGINX) Failed => Attached $(find $SELF_LOGS -type f | wc -l) Log Files" \
+ --body="[$(date)] Relayer($STATUS_RELAYER) Failed => Attached $(find $SELF_LOGS -type f | wc -l) Log Files" \
  --html="false" \
  --recursive="true" \
  --attachments="$SELF_LOGS,/var/log/journal"
