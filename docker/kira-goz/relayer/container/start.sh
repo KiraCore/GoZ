@@ -27,18 +27,18 @@ fi
 
 if [ -f "$INIT_END_FILE" ]; then
    echo "on_success() => START" && touch $SUCCESS_START_FILE
-   $ON_SUCCESS_SCRIPT $> $SELF_LOGS/success_script_output.log
+   $ON_SUCCESS_SCRIPT $> $SELF_LOGS/success_script_output.txt
    echo "on_success() => END" && touch $SUCCESS_END_FILE
    /bin/bash # enable user to inspect container insides after successfull startup
    exit 0
 elif [ -f "$INIT_START_FILE" ]; then
    echo "on_failure() => START" && touch $FAILURE_START_FILE
-   $ON_FAILURE_SCRIPT $> $SELF_LOGS/failure_script_output.log
+   $ON_FAILURE_SCRIPT $> $SELF_LOGS/failure_script_output.txt
    echo "on_failure() => STOP" && touch $FAILURE_END_FILE
    /bin/bash # enable user to inspect container insides after failure
    exit 1
 else
    echo "on_init() => START" && touch $INIT_START_FILE
-   $ON_INIT_SCRIPT $> $SELF_LOGS/init_script_output.log
+   $ON_INIT_SCRIPT $> $SELF_LOGS/init_script_output.txt
    echo "on_init() => STOP" && touch $INIT_END_FILE
 fi

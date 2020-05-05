@@ -47,7 +47,7 @@ CDHelper email send \
  --recursive="true" \
  --attachments="$SELF_LOGS,/var/log/journal"
     fi
-
+    rm -f ${SELF_LOGS}/healthcheck_script_output.txt # remove old log to save space
     exit 1  
 else 
     echo "SUCCESS: All services are up and running!"
@@ -55,6 +55,7 @@ else
         # if email was sent then remove
         rm -f $EMAIL_SENT
     fi
+    rm -f ${SELF_LOGS}/healthcheck_script_output.txt # remove old log to save space
 fi
 
 echo "INFO: Healthcheck => STOP"
