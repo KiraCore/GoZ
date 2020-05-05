@@ -8,8 +8,6 @@ touch $MAINTENANCE_FILE # notify entire environment to halt
 
 systemctl2 stop faucet || systemctl2 status faucet || true
 
-# TODO: send email fail to init notification
-
 CDHelper email send \
  --from="noreply@kiracore.com" \
  --to="asmodat@gmail.com" \

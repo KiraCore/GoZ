@@ -6,8 +6,6 @@ set -x
 
 echo "Staring on-init script..."
 
-chmod 777 -R $RLYS_HOME
-
 rly cfg init || true
 
 cat > /etc/systemd/system/relayer.service << EOL
