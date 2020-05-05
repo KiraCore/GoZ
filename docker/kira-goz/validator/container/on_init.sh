@@ -29,16 +29,20 @@ RLY_LOCAL_PORT=8000
 if [ -f "$CHAIN_JSON_FULL_PATH" ] ; then
     echo "Chain configuration file was defined, loading JSON"
     CHAIN_ID="$(cat $CHAIN_JSON_FULL_PATH | jq -r '.["chain-id"]')"
+    DENOM="$(cat $CHAIN_JSON_FULL_PATH | jq -r '.["default-denom"]')"
     RLYKEY=$(cat $CHAIN_JSON_FULL_PATH | jq -r '.key')
-    cat $CHAIN_JSON_FULL_PATH > $CHAIN_ID.json
+    cat $CHAIN_JSON_FULL_PATH > $CHAIN_ID.json 
 else
     echo "Chain configuration file was NOT defined, loading ENV's"
     [ -z "$DENOM" ] && DENOM="ukex"
     [ -z "$CHAIN_ID" ] && CHAIN_ID="kira-0"
     [ -z "$RPC_ADDR" ] && RPC_ADDR="http://${ROUTE53_RECORD_NAME}.kiraex.com:${RPC_PROXY_PORT}"
     [ -z "$RLYKEY" ] && RLYKEY="faucet"
+    [ -z "$ACCOUNT_PREFIX" ] && ACCOUNT_PREFIX="cosmos"
+    [ -z "$GAS" ] && GAS="200000"
+    [ -z "$GAS_PRICES" ] && GAS_PRICES="0.025$DENOM"
     [ -z "$RLYTRUSTING" ] && RLYTRUSTING="90m"
-    echo "{\"key\":\"$RLYKEY\",\"chain-id\":\"$CHAIN_ID\",\"rpc-addr\":\"$RPC_ADDR\",\"account-prefix\":\"cosmos\",\"gas\":200000,\"gas-prices\":\"0.025$DENOM\",\"default-denom\":\"$DENOM\",\"trusting-period\":\"$RLYTRUSTING\"}" > $CHAIN_ID.json
+    echo "{\"key\":\"$RLYKEY\",\"chain-id\":\"$CHAIN_ID\",\"rpc-addr\":\"$RPC_ADDR\",\"account-prefix\":\"$ACCOUNT_PREFIX\",\"gas\":$GAS,\"gas-prices\":\"$GAS_PRICES\",\"default-denom\":\"$DENOM\",\"trusting-period\":\"$RLYTRUSTING\"}" > $CHAIN_ID.json
 fi
 
 [ -z "$VALIDATOR_SIGNING_KEY_PATH" ] && VALIDATOR_SIGNING_KEY_PATH="$SELF_UPDATE/common/configs/$CHAIN_ID-validator.key"
