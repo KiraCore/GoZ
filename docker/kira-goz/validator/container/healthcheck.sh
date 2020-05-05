@@ -7,7 +7,7 @@ set -x
 EMAIL_SENT=$HOME/email_sent
 
 echo "INFO: Healthcheck => START"
-sleep 30 # rate limit
+sleep 60 # rate limit
 
 if [ "${MAINTENANCE_MODE}" = "true"  ] || [ -f "$MAINTENANCE_FILE" ] ; then
      echo "INFO: Entering maitenance mode!"
@@ -21,6 +21,8 @@ else
    exit 0
 fi
 
+RPC_STATUS="$(curl 127.0.0.1:$RPC_PROXY_PORT/status 2>/dev/null)" || RPC_STATUS="{}"
+RPC_CATCHING_UP="$(echo $RPC_STATUS | jq -r '.result.sync_info.catching_up')" || RPC_CATCHING_UP="true"
 STATUS_NGINX="$(systemctl2 is-active nginx.service)" || STATUS_RELAYER="unknown"
 STATUS_GAIA="$(systemctl2 is-active gaiad.service)" || STATUS_GAIA="unknown"
 STATUS_LCD="$(systemctl2 is-active lcd.service)" || STATUS_LCD="unknown"
@@ -62,26 +64,27 @@ CDHelper email send \
  --from="noreply@kiracore.com" \
  --to="asmodat@gmail.com" \
  --subject="[GoZ] $(curl -H 'Metadata-Flavor: Google' http://metadata/computeMetadata/v1/instance/name 2>/dev/null) Healthcheck Raised" \
- --body="[$(date)] Gaia($STATUS_GAIA), Faucet($STATUS_FAUCET) LCD($STATUS_LCD) or NGINX($STATUS_NGINX) Failed => Attached $(find $SELF_LOGS -type f | wc -l) Log Files" \
+ --body="[$(date)] Gaia($STATUS_GAIA), Faucet($STATUS_FAUCET) LCD($STATUS_LCD) or NGINX($STATUS_NGINX) Failed => Attached $(find $SELF_LOGS -type f | wc -l) Log Files. RPC Status => $RPC_STATUS" \
  --html="false" \
  --recursive="true" \
  --attachments="$SELF_LOGS,/var/log/journal"
-        fi
-    rm -f ${SELF_LOGS}/healthcheck_script_output.txt # remove old log to save space
+        sleep 120 # allow user to grab log output
+        rm -f ${SELF_LOGS}/healthcheck_script_output.txt # remove old log to save space
+    fi
     exit 1  
 else 
     echo "SUCCESS: All services are up and running!"
     if [ -f "$EMAIL_SENT" ]; then
-        # if email was sent then remove and send new one
-        rm -f $EMAIL_SENT
+        echo "INFO: Sending confirmation email, that service recovered!"
+        rm -f $EMAIL_SENT # if email was sent then remove and send new one
 CDHelper email send \
  --from="noreply@kiracore.com" \
  --to="asmodat@gmail.com" \
  --subject="[GoZ] $(curl -H 'Metadata-Flavor: Google' http://metadata/computeMetadata/v1/instance/name 2>/dev/null) Healthcheck Rerovered" \
- --body="[$(date)] Gaia($STATUS_GAIA), Faucet($STATUS_FAUCET), LCD($STATUS_LCD) and NGINX($STATUS_NGINX) suceeded" \
+ --body="[$(date)] Gaia($STATUS_GAIA), Faucet($STATUS_FAUCET), LCD($STATUS_LCD) and NGINX($STATUS_NGINX) suceeded. RPC Status => $RPC_STATUS" \
  --html="false" || true
     fi
-    sleep 60 # allow user to grab log output
+    sleep 120 # allow user to grab log output
     rm -f ${SELF_LOGS}/healthcheck_script_output.txt # remove old log to save space
 fi
 

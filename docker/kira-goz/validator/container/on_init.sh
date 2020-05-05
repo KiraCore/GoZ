@@ -20,10 +20,8 @@ LCD_LOCAL_PORT=1317
 RLY_LOCAL_PORT=8000
 
 [ -z "$IMPORT_VALIDATOR_KEY" ] && IMPORT_VALIDATOR_KEY="False"
-[ -z "$VALIDATOR_KEY_PATH" ] && VALIDATOR_KEY_PATH=$HOME/.gaiad/config/priv_validator_key.json
-[ -z "$VALIDATOR_SIGNING_KEY_PATH" ] && VALIDATOR_SIGNING_KEY_PATH=$HOME/.gaiad/config/priv_validator_key.json
+[ -z "$VALIDATOR_KEY_PATH" ] && VALIDATOR_KEY_PATH="$HOME/.gaiad/config/priv_validator_key.json"
 [ -z "$NODE_ADDESS" ] && NODE_ADDESS="tcp://localhost:$RPC_LOCAL_PORT"
-
 [ -z "$CHAIN_JSON_FULL_PATH" ] && CHAIN_JSON_FULL_PATH="$SELF_UPDATE/$CHAIN_JSON_PATH"
 
 if [ -f "$CHAIN_JSON_PATH" ] ; then
@@ -40,6 +38,8 @@ else
     [ -z "$RLYTRUSTING" ] && RLYTRUSTING="90m"
     echo "{\"key\":\"$RLYKEY\",\"chain-id\":\"$CHAIN_ID\",\"rpc-addr\":\"$RPC_ADDR\",\"account-prefix\":\"cosmos\",\"gas\":200000,\"gas-prices\":\"0.025$DENOM\",\"default-denom\":\"$DENOM\",\"trusting-period\":\"$RLYTRUSTING\"}" > $CHAIN_ID.json
 fi
+
+[ -z "$VALIDATOR_SIGNING_KEY_PATH" ] && VALIDATOR_SIGNING_KEY_PATH="$SELF_UPDATE/common/configs/$CHAIN_ID-validator.key"
 
 #  NOTE: external variables RLYKEY_ADDRESS, RLYKEY_MNEMONIC
 rly config init
@@ -74,17 +74,26 @@ sed -i 's#tcp://127.0.0.1:26657#tcp://0.0.0.0:26657#g' $CONFIG_TOML_PATH
 sed -i "s/stake/$DENOM/g" $GENESIS_JSON_PATH
 sed -i 's/pruning = "syncable"/pruning = "nothing"/g' $APP_TOML_PATH
 
-#  NOTE: external variables: KEYRINGPASS, PASSPHRASE
-#  NOTE: Exporting: gaiacli keys export validator -o text
-#  NOTE: Deleting: gaiacli keys delete validator
-#  NOTE: Importing (first time requires to input keyring password twice):
-gaiacli keys import validator $VALIDATOR_SIGNING_KEY_PATH << EOF
+if [ "$VALIDATOR_SIGNING_KEY_PATH" == "True" ]; then
+   echo "Validator controller key will be imported"
+   #  NOTE: external variables: KEYRINGPASS, PASSPHRASE
+   #  NOTE: Exporting: gaiacli keys export validator -o text
+   #  NOTE: Deleting: gaiacli keys delete validator
+   #  NOTE: Importing (first time requires to input keyring password twice):
+   gaiacli keys import validator $VALIDATOR_SIGNING_KEY_PATH << EOF
 $PASSPHRASE
 $KEYRINGPASS
 $KEYRINGPASS
 EOF
+else
+   echo "Generating random validator controller key..."
+   gaiacli keys add validator << EOF
+$KEYRINGPASS
+$KEYRINGPASS
+EOF
+fi
 
-echo ${PASSPHRASE} | gaiacli keys list
+echo ${KEYRINGPASS} | gaiacli keys list
 
 echo "Creating genesis file..."
 echo ${KEYRINGPASS} | gaiad add-genesis-account $(gaiacli keys show validator -a) 100000000000$DENOM,10000000samoleans

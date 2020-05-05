@@ -7,7 +7,7 @@ set -x
 EMAIL_SENT=$HOME/email_sent
 
 echo "INFO: Healthcheck => START"
-sleep 30 # rate limit
+sleep 60 # rate limit
 
 if [ "${MAINTENANCE_MODE}" = "true"  ] || [ -f "$MAINTENANCE_FILE" ] ; then
      echo "INFO: Entering maitenance mode!"
@@ -45,14 +45,15 @@ CDHelper email send \
  --html="false" \
  --recursive="true" \
  --attachments="$SELF_LOGS,/var/log/journal"
+        sleep 120 # allow user to grab log output
+        rm -f ${SELF_LOGS}/healthcheck_script_output.txt # remove old log to save space
         fi
-    rm -f ${SELF_LOGS}/healthcheck_script_output.txt # remove old log to save space
     exit 1  
 else 
-    echo "SUCCESS: All services are up and running!"
+    echo "SUCCESS: Healthcheck PASSED"
     if [ -f "$EMAIL_SENT" ]; then
-        # if email was sent then remove and send new one
-        rm -f $EMAIL_SENT
+        echo "INFO: Sending confirmation email, that service recovered!"
+        rm -f $EMAIL_SENT # if email was sent then remove and send new one
 CDHelper email send \
  --from="noreply@kiracore.com" \
  --to="asmodat@gmail.com" \
@@ -60,7 +61,7 @@ CDHelper email send \
  --body="[$(date)] Relayer($STATUS_RELAYER) suceeded" \
  --html="false" || true
     fi
-    sleep 60 # allow user to grab log output
+    sleep 120 # allow user to grab log output
     rm -f ${SELF_LOGS}/healthcheck_script_output.txt # remove old log to save space
 fi
 

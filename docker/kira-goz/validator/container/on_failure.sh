@@ -11,8 +11,6 @@ systemctl2 stop gaiad || systemctl2 status gaiad || true
 systemctl2 stop lcd || systemctl2 status lcd || true
 systemctl2 stop nginx || systemctl2 status nginx || true
 
-# TODO: send email fail to init notification
-
 CDHelper email send \
  --from="noreply@kiracore.com" \
  --to="asmodat@gmail.com" \
