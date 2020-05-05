@@ -28,9 +28,9 @@ RLY_LOCAL_PORT=8000
 
 if [ -f "$CHAIN_JSON_FULL_PATH" ] ; then
     echo "Chain configuration file was defined, loading JSON"
+    CHAIN_ID="$(cat $CHAIN_JSON_FULL_PATH.json | jq -r '.["chain-id"]')"
+    RLYKEY=$(cat $CHAIN_JSON_FULL_PATH.json | jq -r '.key')
     cat $CHAIN_JSON_FULL_PATH > $CHAIN_ID.json
-    CHAIN_ID=$(cat $CHAIN_ID.json | jq -r '.["chain-id"]')
-    RLYKEY=$(cat $CHAIN_ID.json | jq -r '.key')
 else
     echo "Chain configuration file was NOT defined, loading ENV's"
     [ -z "$DENOM" ] && DENOM="ukex"
