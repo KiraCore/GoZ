@@ -28,28 +28,28 @@ RLY_LOCAL_PORT=8000
 
 if [ -f "$CHAIN_JSON_PATH" ] ; then
     echo "Chain configuration file was defined, loading JSON"
-    cat $CHAIN_JSON_FULL_PATH > $CHAINID.json
-    CHAINID=$(cat $CHAIN_JSON_FULL_PATH | jq -r '.chain-id')
+    cat $CHAIN_JSON_FULL_PATH > $CHAIN_ID.json
+    CHAIN_ID=$(cat $CHAIN_JSON_FULL_PATH | jq -r '.chain-id')
     RLYKEY=$(cat $CHAIN_JSON_FULL_PATH | jq -r '.key')
 else
     echo "Chain configuration file was NOT defined, loading ENV's"
     [ -z "$DENOM" ] && DENOM="ukex"
-    [ -z "$CHAINID" ] && CHAINID="kira-0"
+    [ -z "$CHAIN_ID" ] && CHAIN_ID="kira-0"
     [ -z "$RPC_ADDR" ] && RPC_ADDR="http://${ROUTE53_RECORD_NAME}.kiraex.com:${RPC_PROXY_PORT}"
     [ -z "$RLYKEY" ] && RLYKEY="faucet"
     [ -z "$RLYTRUSTING" ] && RLYTRUSTING="90m"
-    echo "{\"key\":\"$RLYKEY\",\"chain-id\":\"$CHAINID\",\"rpc-addr\":\"$RPC_ADDR\",\"account-prefix\":\"cosmos\",\"gas\":200000,\"gas-prices\":\"0.025$DENOM\",\"default-denom\":\"$DENOM\",\"trusting-period\":\"$RLYTRUSTING\"}" > $CHAINID.json
+    echo "{\"key\":\"$RLYKEY\",\"chain-id\":\"$CHAIN_ID\",\"rpc-addr\":\"$RPC_ADDR\",\"account-prefix\":\"cosmos\",\"gas\":200000,\"gas-prices\":\"0.025$DENOM\",\"default-denom\":\"$DENOM\",\"trusting-period\":\"$RLYTRUSTING\"}" > $CHAIN_ID.json
 fi
 
 #  NOTE: external variables RLYKEY_ADDRESS, RLYKEY_MNEMONIC
 rly config init
 
 # NOTE: you will want to save the content from this JSON file
-rly chains add -f $CHAINID.json
-rly keys restore $CHAINID $RLYKEY "$RLYKEY_MNEMONIC"
-rly keys list $CHAINID
+rly chains add -f $CHAIN_ID.json
+rly keys restore $CHAIN_ID $RLYKEY "$RLYKEY_MNEMONIC"
+rly keys list $CHAIN_ID
 
-gaiad init --chain-id $CHAINID $CHAINID
+gaiad init --chain-id $CHAIN_ID $CHAIN_ID
 
 # NOTE: external variables: NODE_ID, NODE_KEY, VALIDATOR_KEY
 # setup node key and unescape
@@ -88,7 +88,7 @@ echo ${PASSPHRASE} | gaiacli keys list
 
 echo "Creating genesis file..."
 echo ${KEYRINGPASS} | gaiad add-genesis-account $(gaiacli keys show validator -a) 100000000000$DENOM,10000000samoleans
-gaiad add-genesis-account $(rly chains addr $CHAINID) 10000000000000$DENOM,10000000samoleans
+gaiad add-genesis-account $(rly chains addr $CHAIN_ID) 10000000000000$DENOM,10000000samoleans
 
 gaiad gentx --name validator --amount 90000000000$DENOM << EOF
 $KEYRINGPASS
@@ -121,7 +121,7 @@ After=network.target
 [Service]
 Type=simple
 EnvironmentFile=/etc/environment
-ExecStart=$GAIACLI_BIN rest-server --chain-id=$CHAINID --home=$GAIACLI_HOME --node=$NODE_ADDESS 
+ExecStart=$GAIACLI_BIN rest-server --chain-id=$CHAIN_ID --home=$GAIACLI_HOME --node=$NODE_ADDESS 
 Restart=always
 RestartSec=5
 LimitNOFILE=4096
@@ -137,7 +137,7 @@ After=network.target
 Type=simple
 User=root
 WorkingDirectory=/usr/local
-ExecStart=$RLY_BIN testnets faucet $CHAINID $RLYKEY 100000$DENOM
+ExecStart=$RLY_BIN testnets faucet $CHAIN_ID $RLYKEY 100000$DENOM
 Restart=always
 RestartSec=5
 LimitNOFILE=4096
@@ -170,10 +170,10 @@ aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY"
 aws configure list
 
 echo "Starting services..."
-systemctl2 restart gaiad
-systemctl2 restart lcd
-systemctl2 restart nginx
-systemctl2 restart faucet
+systemctl2 restart nginx || echo "Failed to re-start nginx service"
+systemctl2 restart gaiad || systemctl2 status gaiad.service || echo "Failed to re-start gaiad service" && echo "$(cat /etc/systemd/system/gaiad.service)"
+systemctl2 restart lcd || systemctl2 status lcd.service || echo "Failed to re-start lcd service" && echo "$(cat /etc/systemd/system/lcd.service)"
+systemctl2 restart faucet || echo "Failed to re-start faucet service" && echo "$(cat /etc/systemd/system/faucet.service)"
 
 CDHelper email send \
  --from="noreply@kiracore.com" \

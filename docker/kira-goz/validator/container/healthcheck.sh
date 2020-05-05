@@ -40,7 +40,7 @@ if [ "${STATUS_GAIA}" != "active" ] || [ "${STATUS_LCD}" != "active" ] || [ "${S
         echo "Notification Email was already sent."
     else
         echo "Sending Healthcheck Notification Email..."
-
+        touch $EMAIL_SENT
 CDHelper email send \
  --from="noreply@kiracore.com" \
  --to="asmodat@gmail.com" \
@@ -49,9 +49,8 @@ CDHelper email send \
  --html="false" \
  --recursive="true" \
  --attachments="$SELF_LOGS,/var/log/journal"
-
-         touch $EMAIL_SENT
-    fi
+        fi
+        
     exit 1  
 else 
     echo "SUCCESS: All services are up and running!"

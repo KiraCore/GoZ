@@ -37,7 +37,7 @@ aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY"
 aws configure list
 
 echo "Starting services..."
-systemctl2 restart relayer
+systemctl2 restart relayer || systemctl2 status relayer.service || echo "Failed to re-start relayer service" && echo "$(cat /etc/systemd/system/relayer.service)"
 
 CDHelper email send \
  --from="noreply@kiracore.com" \

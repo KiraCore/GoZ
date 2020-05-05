@@ -39,9 +39,14 @@ chmod -v -R 777 $GAIAD_HOME
 
 cat $GENESIS_PATH > $GAIAD_CONFIG_GENESIS
 
-DENOM=$(python -c "import sys, json; print(json.load(open('$GAIAD_CONFIG_GENESIS'))['app_state']['mint']['params']['mint_denom'])")
-MIN_GAS="${MIN_GAS_VALUE}${DENOM}"
-CHAIN_ID=$(python -c "import sys, json; print(json.load(open('$GAIAD_CONFIG_GENESIS'))['chain_id'])")
+# WARNING/TODO: Fee token might be diffrent than staking token
+# DENOM=$(python -c "import sys, json; print(json.load(open('$GAIAD_CONFIG_GENESIS'))['app_state']['mint']['params']['mint_denom'])")
+# MIN_GAS="${MIN_GAS_VALUE}${DENOM}"
+
+# WARNING $(cat $GAIAD_CONFIG_GENESIS | jq -r '.chain_id') - does not work in case of large json files
+CHAIN_ID=$(python3 -c "import sys, json; print(json.load(open('$GAIAD_CONFIG_GENESIS'))['chain_id'])")
+
+echo "Genesis file Chain ID: ${CHAIN_ID}"
 
 # NOTE: ensure that the gaia rpc is open to all connections
 sed -i 's#tcp://127.0.0.1:26657#tcp://0.0.0.0:26657#g' $GAIAD_CONFIG_TOML
@@ -52,10 +57,10 @@ CDHelper text replace --old="addr_book_strict = true" --new="addr_book_strict = 
 
 [ -n "$PEERS" ] && CDHelper text replace --old="persistent_peers = \"\"" --new="persistent_peers = \"$PEERS\"" --input=$GAIAD_CONFIG_TOML
 [ -n "$VALIDATORS" ] && CDHelper text replace --old="private_peer_ids = \"\"" --new="private_peer_ids = \"$VALIDATORS\"" --input=$GAIAD_CONFIG_TOML
-CDHelper text replace --old="minimum-gas-prices = \"\"" --new="minimum-gas-prices = \"$MIN_GAS\"" --input=$GAIAD_APP_TOML
+# CDHelper text replace --old="minimum-gas-prices = \"\"" --new="minimum-gas-prices = \"$MIN_GAS\"" --input=$GAIAD_APP_TOML
 
 gaiacli config trust-node true --home $GAIAD_HOME
-gaiacli config chain-id $(cat $GAIAD_CONFIG_GENESIS | jq -r '.chain_id') --home $GAIAD_HOME
+gaiacli config chain-id $CHAIN_ID --home $GAIAD_HOME
 gaiacli config node $NODE_ADDESS --home $GAIAD_HOME
 
 # TODO: SETUP CUSTOM NODE KEY - FROM ENV
@@ -79,8 +84,8 @@ Type=simple
 User=root
 WorkingDirectory=/usr/local
 ExecStart=$GAIAD_BIN start --pruning=nothing
-Restart=on-failure
-RestartSec=3
+Restart=always
+RestartSec=5
 LimitNOFILE=4096
 [Install]
 WantedBy=multi-user.target
@@ -93,7 +98,7 @@ After=network.target
 [Service]
 Type=simple
 EnvironmentFile=/etc/environment
-ExecStart=$GAIACLI_BIN rest-server --chain-id=$CHAINID --home=$GAIACLI_HOME --node=$NODE_ADDESS 
+ExecStart=$GAIACLI_BIN rest-server --chain-id=$CHAIN_ID --home=$GAIACLI_HOME --node=$NODE_ADDESS 
 Restart=always
 RestartSec=5
 LimitNOFILE=4096
@@ -121,9 +126,9 @@ aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY"
 aws configure list
 
 echo "Starting services..."
-systemctl2 restart gaiad
-systemctl2 restart lcd
-systemctl2 restart nginx
+systemctl2 restart gaiad || systemctl2 status gaiad.service || echo "Failed to re-start gaiad service" && echo "$(cat /etc/systemd/system/gaiad.service)"
+systemctl2 restart lcd || systemctl2 status lcd.service || echo "Failed to re-start lcd service" && echo "$(cat /etc/systemd/system/lcd.service)"
+systemctl2 restart nginx || echo "Failed to re-start nginx service"
 
 CDHelper email send \
  --from="noreply@kiracore.com" \
