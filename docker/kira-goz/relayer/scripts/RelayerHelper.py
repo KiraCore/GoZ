@@ -13,7 +13,7 @@ import time
 from joblib import Parallel, delayed
 from subprocess import Popen, PIPE
 
-# Update: (rm $RELAY_SCRIPS/RelayerHelper.py || true) && nano $RELAY_SCRIPS/RelayerHelper.py 
+# Update: (rm $SELF_SCRIPTS/RelayerHelper.py || true) && nano $SELF_SCRIPTS/RelayerHelper.py 
 
 def callRaw(s, showErrors):
     err = None
@@ -72,12 +72,10 @@ def AddChainFromFile(chain_info_path):
 def UpsertChainFromFile(chain_info_path):
     chain_info = json.load(open(chain_info_path))
     chain_id = chain_info["chain-id"]
-    if None == callRaw(f"rly ch add -f {chain_info_path}", False):
-        print(f"WARNING: Chain {chain_id} was already present in the relay and will be updated")
+    if None != callRaw(f"rly ch show {chain_id} -j", False): # chain DO exists
+        print(f"INFO: Chain {chain_id} already exists so will be removed and re-added.")
         if not ChainDelete(chain_id):
             print(f"WARNING: Failed to remove {chain_id}")
-        else:
-            print(f"INFO: Chain {chain_id} was removed from the relay and will be updated")
     return AddChainFromFile(chain_info_path)
 
 def DeleteLiteClient(chain_id):
@@ -205,6 +203,6 @@ def RestartLiteClient(chain_id):
     DeleteLiteClient(chain_id) # rly lite delete kira-1
     InitLiteClient(chain_id) # rly lite init kira-1 -f
     UpdateLiteClient(chain_id) # rly lite update kira-1
-    out = QueryLiteClientHeader(chain_id) #rly lite header kira-1
+    out = QueryLiteClientHeader(chain_id) # rly lite header kira-1
     return False if not out else True
 

@@ -10,7 +10,7 @@ import os.path
 import time
 from joblib import Parallel, delayed
 
-# Update: (rm $RELAY_SCRIPS/ClientHelper.py || true) && nano $RELAY_SCRIPS/ClientHelper.py 
+# Update: (rm $SELF_SCRIPTS/ClientHelper.py || true) && nano $SELF_SCRIPTS/ClientHelper.py 
 # rm $HOME/.relayer/config/config.yaml
 def ShutdownClient(chain_info):
     chain_id = chain_info["chain-id"]

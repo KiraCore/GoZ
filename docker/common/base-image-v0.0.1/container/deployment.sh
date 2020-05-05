@@ -160,10 +160,10 @@ printf "[Service]\nExecStartPost=/bin/sleep 0.1\n" > $NGINX_SERVICED_PATH/overri
 systemctl2 enable nginx.service
 
 echo "Install Asmodat Automation helper tools"
-${SELF_SCRIPS}/awshelper-update-v0.0.1.sh "v0.12.0"
+${SELF_SCRIPTS}/awshelper-update-v0.0.1.sh "v0.12.0"
 AWSHelper version
 
-${SELF_SCRIPS}/cdhelper-update-v0.0.1.sh "v0.6.0"
+${SELF_SCRIPTS}/cdhelper-update-v0.0.1.sh "v0.6.0"
 CDHelper version
 
 printenv

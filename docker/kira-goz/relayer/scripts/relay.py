@@ -11,7 +11,7 @@ import os
 import time
 from joblib import Parallel, delayed
 
-# Update: (rm $RELAY_SCRIPS/relay.py || true) && nano $RELAY_SCRIPS/relay.py 
+# Update: (rm $SELF_SCRIPTS/relay.py || true) && nano $SELF_SCRIPTS/relay.py 
 
 # console args
 SOURCE_JSON_PATH=sys.argv[1]
@@ -24,7 +24,7 @@ BUCKET=sys.argv[5]
 connect_timeout = 60
 
 # Startup Example:
-# python3 $RELAY_SCRIPS/relay.py $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $RLYS_HOME "$RLYKEY_MNEMONIC" $BUCKET
+# python3 $SELF_SCRIPTS/relay.py $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $RLYS_HOME "$RLYKEY_MNEMONIC" $BUCKET
 
 for filename in os.listdir(DESTINATION_RLYS_DIR):
     src_json_dir = SOURCE_JSON_PATH

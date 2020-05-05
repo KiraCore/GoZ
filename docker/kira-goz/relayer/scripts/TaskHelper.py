@@ -9,7 +9,7 @@ import time
 from joblib import Parallel, delayed
 from subprocess import Popen, PIPE
 
-# Update: (rm $RELAY_SCRIPS/TaskHelper.py || true) && nano $RELAY_SCRIPS/TaskHelper.py 
+# Update: (rm $SELF_SCRIPTS/TaskHelper.py || true) && nano $SELF_SCRIPTS/TaskHelper.py 
 
 # runs utf-8 shell commands
 def CMD(s):

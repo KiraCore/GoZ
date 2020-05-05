@@ -1,6 +1,7 @@
 
 import IBCHelper
 import RelayerHelper
+import ClientHelper
 import StateHelper
 import StringHelper
 import ArrayHelper
@@ -11,27 +12,16 @@ import sys
 import os
 import time
 from joblib import Parallel, delayed
-from datetime import timedelta
+from datetime import timedelta, datetime
 
+# Update: (rm $SELF_SCRIPTS/phase1.py || true) && nano $SELF_SCRIPTS/phase1.py 
 
 # Startup example: 26657
 # rly pth show kira-alpha_kira-1
-# python3 $RELAY_SCRIPS/phase1.py $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $GOZCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $BUCKET False "test" "test_key" 10
-# python3 $RELAY_SCRIPS/phase1.py $GOZCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $BUCKET False "conn1"
-# python3 $RELAY_SCRIPS/phase1.py $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $GOZCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $BUCKET True
-# python3 $RELAY_SCRIPS/phase1.py $GOZCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $BUCKET True
 # rly pth show kira-alpha_gameofzoneshub-1
-# python3 $RELAY_SCRIPS/phase1.py $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $HUBCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $BUCKET False "alpha_goz" "test_key"
-# python3 $RELAY_SCRIPS/phase1.py $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $HUBCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $BUCKET False "alpha_goz" "test_key"
-
-
-# python3 $RELAY_SCRIPS/phase1.py $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $HUBCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $BUCKET False "test-goz" "test_key" 10
-# Update: (rm $RELAY_SCRIPS/phase1.py || true) && nano $RELAY_SCRIPS/phase1.py 
-
-
-# python3 $SELF_SCRIPS/phase1.py $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $HUBCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $BUCKET False "test-goz" "test_key" 10
 
 # console args
+t0 = time.time()
 SRC_JSON_DIR=sys.argv[1]
 SRC_MNEMONIC=sys.argv[2]
 DST_JSON_DIR=sys.argv[3]
@@ -47,7 +37,7 @@ KEY_PREFIX = "chain_key" if ((not KEY_PREFIX) or (len(KEY_PREFIX) <= 1)) else KE
 # constants 
 connect_timeout = 60
 update_period = int(TRUST_UPDATE_PERIOD)*60
-upload_period = 60*5
+upload_period = 60
 
 print(f" _________________________________")
 print(f"|     STARTING RELAYER v0.0.1     |")
@@ -68,6 +58,7 @@ prefix = None if (not connection) else connection.get("key-prefix", KEY_PREFIX)
 connected = False if ((not connection) or (not path) or (not prefix)) else connection.get("success", False)
 state_file_path = f"relayer/{path}/{prefix}/state.json"
 
+print(f"INFO: Fetching state file from S3...")
 state_file_txt = StateHelper.S3ReadText(BUCKET,state_file_path)
 old_connection_update = 0 # the last time node was connected or updated
 old_state_upload = 0 # last time state file was updated
@@ -84,6 +75,7 @@ elif None != state_file_txt and (not state_file_txt): # empty state file
     connection["upload-time"] = time_start
     connection["total-uptime"] = 0
 else: # status exists, extract state file from json
+    print(f"SUCCESS: State file was loaded")
     state_file = json.loads(state_file_txt)
     old_connection_update = state_file["last-update"]
     old_state_upload = state_file["upload-time"]
@@ -91,7 +83,6 @@ else: # status exists, extract state file from json
     connection["total-uptime"]=old_total_uptime
     connection["last-update"]=old_connection_update
     connection["upload-time"]=old_state_upload
-    
     print(f"INFO: Last connection update: {timedelta(seconds=(time.time() - old_connection_update))}")
     print(f"INFO: Last state upload: {timedelta(seconds=(time.time() - old_state_upload))}")
 
@@ -101,7 +92,7 @@ if not connected:
         print(f"INFO: Connection will be permanently shutdown")
         IBCHelper.ShutdownConnection(connection)
     else:
-        print(f"INFO: Connection will NOT be shutdown")
+        print(f"INFO: Connection is stable and will NOT be shutdown")
     connection["upload-time"] = time_start
     StateHelper.S3WriteText(connection,BUCKET,state_file_path);
     print(f"INFO: Script Failed (2)")
@@ -111,8 +102,13 @@ src_chain_info = connection["src"]
 dst_chain_info = connection["dst"]
 src_id = src_chain_info["chain-id"]
 dst_id = dst_chain_info["chain-id"]
+src_key = src_chain_info["key-name"]
+dst_key = dst_chain_info["key-name"]
+src_denom = src_chain_info["default-denom"]
+dst_denom = dst_chain_info["default-denom"]
 
-print(f"SUCCESS: connection between {src_id} and {dst_id} was established, path: '{path}'")
+dT0=int(time.time() - t0) # time between start of the scrip and relayer beeing ready to update connection
+print(f"SUCCESS: connection between {src_id} and {dst_id} was established within {timedelta(seconds=dT0)}, path: '{path}'")
 print(f"INFO: Entering connection sustainably mode")
 
 while True:
@@ -125,10 +121,16 @@ while True:
 
     total_uptime = old_total_uptime + elapsed
     connection["total-uptime"]=total_uptime
-    print(f"INFO: Current Connection: {timedelta(seconds=elapsed)}")
-    print(f"INFO: Total uptime: {timedelta(seconds=total_uptime)}")
-    print(f"INFO: Next connection update: {max(0,int(update_period - elpased_connection_update))}s")
-    print(f"INFO: Next state update: {max(0,int(upload_period-elapsed_state_upload))}s")
+    print(f"________________________________")
+    print(f"|      {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
+    print(f"|-------------------------------|")
+    print(f"| INFO: Current Connection:     - {timedelta(seconds=elapsed)}")
+    print(f"| INFO: Total uptime:           - {timedelta(seconds=total_uptime)}")
+    print(f"| INFO: Next connection update: - {max(0,int(update_period - elpased_connection_update))}s")
+    print(f"| INFO: Next state update:      - {max(0,int(upload_period-elapsed_state_upload))}s")
+    print(f"| INFO: Source Key  balance:    - {src_key} {ClientHelper.QueryFeeTokenBalance(src_chain_info)} {src_denom}")
+    print(f"| INFO: Key  balance:           - {dst_key} {ClientHelper.QueryFeeTokenBalance(dst_chain_info)} {dst_denom}")
+    print(f"|_______________________________|")
     
     if update_period <= elpased_connection_update:
         print(f"INFO: Elapsed minmum trust period of {timedelta(seconds=update_period)}, updating client connection...")

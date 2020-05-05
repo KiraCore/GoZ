@@ -1,6 +1,6 @@
 FROM kiracore/goz:relayer-alpha
 
-#ADD ./scripts ${SELF_SCRIPS}
+#ADD ./scripts ${SELF_SCRIPTS}
 #ADD ./configs ${SELF_CONFIGS}
 ADD ./container ${SELF_CONTAINER}
 

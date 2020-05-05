@@ -12,7 +12,7 @@ import time
 from joblib import Parallel, delayed
 import uuid
 
-# Update: (rm $RELAY_SCRIPS/StateHelper.py || true) && nano $RELAY_SCRIPS/StateHelper.py 
+# Update: (rm $SELF_SCRIPTS/StateHelper.py || true) && nano $SELF_SCRIPTS/StateHelper.py 
 
 def S3WriteText(text, bucket, s3_key_path):
     tmp_file=f"/tmp/{str(uuid.uuid4())}"
@@ -26,8 +26,7 @@ def S3WriteText(text, bucket, s3_key_path):
     return result
 
 def S3FileExists(bucket, s3_key_path):
-    out=RelayerHelper.callRaw(f"AWSHelper s3 object-exists --bucket='{bucket}' --path='{s3_key_path}' --throw-if-not-found=True",False)
-    return False if None == out else True
+    return False if None == RelayerHelper.callRaw(f"AWSHelper s3 object-exists --bucket='{bucket}' --path='{s3_key_path}' --throw-if-not-found=True",True) else True
 
 def S3ReadText(bucket, s3_key_path):
     tmp_file=f"/tmp/{str(uuid.uuid4())}"
@@ -35,16 +34,16 @@ def S3ReadText(bucket, s3_key_path):
         print(f"WARNING: File {bucket}/{s3_key_path} is not present in S3")
         return ""
     else:
-        print(f"SUCCESS: Found {bucket}/{s3_key_path} file in S3, reading...")
+        print(f"INFO: Found {bucket}/{s3_key_path} file in S3, reading...")
 
     downloaded = RelayerHelper.callRaw(f"AWSHelper s3 download-object --bucket='{bucket}' --path='{s3_key_path}' --output={tmp_file}",True)
 
     if None == downloaded:
-        print(f"ERROR: Failed to read {bucket}/{s3_key_path} file from S3")
+        print(f"ERROR: Failed to read {s3_key_path} file from {bucket} bucket in S3")
         return None
 
     if not os.path.isfile(tmp_file):
-        print(f"ERROR: Failed to read {bucket}/{s3_key_path} from tmp directory {tmp_file}")
+        print(f"ERROR: Failed to read {bucket}/{s3_key_path} from the tmp directory {tmp_file}")
         return None
 
     file = open(tmp_file,mode='r')

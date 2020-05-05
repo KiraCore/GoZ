@@ -11,7 +11,8 @@ SRC_CHAIN_ID=$(cat $SRC_CHAIN_FULL_PATH | jq -r '.["chain-id"]')
 DST_CHAIN_ID=$(cat $DST_CHAIN_FULL_PATH | jq -r '.["chain-id"]')
 
 [ -z "$RLY_PATH" ] && RLY_PATH="${SRC_CHAIN_ID}_${DST_CHAIN_ID}"
-[ -z "$RLY_KEY_PREFIX" ] && RLY_KEY_PREFIX="default"
+[ -z "$RLY_KEY_PREFIX" ] && RLY_KEY_PREFIX="default_key"
+[ -z "$RLY_FORCE_SHUTDOWN" ] && RLY_FORCE_SHUTDOWN="False"
 
 echo "Starting relayer service..."
 echo "BUCKET: $BUCKET" # kira-core-goz
@@ -21,6 +22,7 @@ echo "SRC CHAIN ID: $SRC_CHAIN_ID"
 echo "DST CHAIN ID: $DST_CHAIN_ID" 
 echo "RLY PATH: $RLY_PATH" # kira-1_goz-hub_phase1
 echo "KEY PREFIX: $RLY_KEY_PREFIX" # rly_key_goz
+echo "FORCE SHUTDOWN: $RLY_FORCE_SHUTDOWN" # forces shutdown if connection fails
 echo "TRUST UPDATE PERIOD: $TRUST_UPDATE_PERIOD" # rly_key_goz
 
 if [ "${MAINTENANCE_MODE}" = "true"  ] || [ -f "$MAINTENANCE_FILE" ] ; then
@@ -38,10 +40,23 @@ fi
 # KEY_PREFIX=sys.argv[8]
 # TRUST_UPDATE_PERIOD=sys.argv[9]
 
-python3 $SELF_SCRIPS/test.py &> $SELF_LOGS/relayer.txt
+python3 $SELF_SCRIPTS/test.py &> $SELF_LOGS/relayer.txt
 
-# # python3 $SELF_SCRIPS/phase1.py $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $HUBCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $BUCKET False "test-goz" "test_key" 10
-# python3 $SELF_UPDATE/common/configs/kira-1.json "$RLYKEY_MNEMONIC" $SELF_UPDATE/common/configs/kira-alpha.json "$RLYKEY_MNEMONIC" $BUCKET "goz-alpha" "test_key" 10
+#python3 $SELF_SCRIPTS/phase1.py \
+# $SRC_CHAIN_FULL_PATH \
+# "$RLYKEY_MNEMONIC" \
+# $DST_CHAIN_FULL_PATH \
+# "$RLYKEY_MNEMONIC" \
+# $BUCKET \
+# $RLY_FORCE_SHUTDOWN \
+# $RLY_PATH \
+# $RLY_KEY_PREFIX \
+# $TRUST_UPDATE_PERIOD &> $SELF_LOGS/phase1.txt
+
+
+
+# python3 $SELF_SCRIPTS/phase1.py $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $HUBCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $BUCKET False "test-goz" "test_key" 10
+# python3 $SELF_SCRIPTS/phase1.py $SELF_UPDATE/common/configs/kira-alpha.json "$RLYKEY_MNEMONIC" $SELF_UPDATE/common/configs/kira-1.json "$RLYKEY_MNEMONIC" $BUCKET False "goz-alpha" "test_key" 10
 
 
 #CDHelper email send \

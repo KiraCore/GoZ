@@ -11,7 +11,7 @@ import os.path
 import time
 from joblib import Parallel, delayed
 
-# Update: (rm $RELAY_SCRIPS/IBCHelper.py || true) && nano $RELAY_SCRIPS/IBCHelper.py 
+# Update: (rm $SELF_SCRIPTS/IBCHelper.py || true) && nano $SELF_SCRIPTS/IBCHelper.py 
 
 def QueryStatus(path):
     path_info = RelayerHelper.QueryPath(path) # rly pth show kira-alpha_kira-1 -j
