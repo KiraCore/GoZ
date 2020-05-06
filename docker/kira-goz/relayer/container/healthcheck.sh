@@ -9,7 +9,7 @@ EMAIL_SENT=$HOME/email_sent
 echo "INFO: Healthcheck => START"
 sleep 60 # rate limit
 
-if [ "${MAINTENANCE_MODE}" = "true"  ] || [ -f "$MAINTENANCE_FILE" ] ; then
+if [ "${MAINTENANCE_MODE}" == "true"  ] || [ -f "$MAINTENANCE_FILE" ] ; then
      echo "INFO: Entering maitenance mode!"
      exit 0
 fi

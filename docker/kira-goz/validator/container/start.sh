@@ -19,7 +19,7 @@ chmod -R 777 $SELF_UPDATE
 # Rate Limit
 sleep 5
 
-if [ "${MAINTENANCE_MODE}" = "true"  ] || [ -f "$MAINTENANCE_FILE" ] ; then
+if [ "${MAINTENANCE_MODE}" == "true"  ] || [ -f "$MAINTENANCE_FILE" ] ; then
      echo "Entering maitenance mode!"
      /bin/bash # enable user to inspect container while maitenance mode is on
      exit 0
