@@ -103,8 +103,9 @@ if not connected:
             print(f"WARNING: Failed to update clients")
         else:
             print(f"SUCCESS: Client was updated")
-            connection["last-update"] = time.time() 
-        
+            connection["last-update"] = time.time()
+
+    RelayerHelper.PushPendingTransactions(path)
     connection["upload-time"] = time_start
     StateHelper.S3WriteText(connection,BUCKET,state_file_path);
     print(f"INFO: Script Failed (2)")
@@ -166,6 +167,9 @@ while True:
         connection["upload-time"] = old_state_upload
         if not StateHelper.S3WriteText(connection,BUCKET,state_file_path):
             print(f"ERROR: Failed to upload state file.")
+
+    print(f"INFO: Pushing any pending transactions...")
+    RelayerHelper.PushPendingTransactions(path)
 
     time.sleep(float(30))
 

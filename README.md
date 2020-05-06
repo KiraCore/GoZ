@@ -8,6 +8,8 @@ Node Info:
 Status: 
  * External: `curl goz.kiraex.com:10001/status`
  * Internal: `curl internal-goz.kiraex.com:10001/status`
+Transactions:
+ * Internal: `curl internal-goz.kiraex.com:10002/txs/<hash>`
 
 IP Address Whitelist:
  * `35.230.14.56`
@@ -19,6 +21,7 @@ IP Address Whitelist:
 Validator Address: `alpha.kiraex.com` 
 Node Info: `curl alpha.kiraex.com:10002/node_info`
 Status: `curl alpha.kiraex.com:10001/status`
+Txs: `curl internal-alpha.kiraex.com:10002/txs/<hash>`
 
 # Registry Images
 

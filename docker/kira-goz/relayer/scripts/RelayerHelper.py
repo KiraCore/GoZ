@@ -174,7 +174,18 @@ def UpsertKey(chain_id, key_name):
     return callRaw(f"rly keys add {chain_id} {key_name}",True) # rly keys add kira-alpha prefix_kira-alpha
 
 def RelayPendingTransactions(path):
-    return  False if (None == callRaw(f"rly tx rly {path}",True)) else True 
+    return  False if (None == callRaw(f"rly tx rly {path}",True)) else True
+
+def QueryPendingTransactions(path):
+    return callJson(f"rly q unrelayed {path}",True)
+
+def PushPendingTransactions(path):
+    pending = QueryPendingTransactions(path)
+    if not (not pending):
+        print(f"INFO: Found pending transactions for {path}: {pending}")
+        return RelayPendingTransactions(path)
+    else:
+        print(f"INFO: No pending transactions were found in path {path}")
 
 # Usage: rly transact raw update-client [src-chain-id] [dst-chain-id] [client-id] [flags]
 def UpdateClientConnection(connection):
@@ -196,9 +207,6 @@ def UpdateClientConnection(connection):
         print(f"WARNING: Chains are not connected, might not be able to propagate transactions")
     #    print(f"ERROR: Could not update client connection because path {path} does not have established connection")
     #    return False
-    print(f"INFO: Relaying any pending transactions")
-    if RelayPendingTransactions(path):
-        print(f"SUCCESS: Pending transactions were relayed")
     
     src_chain_id = src_chain_info["chain-id"]
     dst_chain_id = dst_chain_info["chain-id"]
