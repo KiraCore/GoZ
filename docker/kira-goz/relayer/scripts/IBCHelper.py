@@ -120,9 +120,8 @@ def Connect(connection, timeout):
         if not RelayerHelper.GeneratePath(chain_id_src,chain_id_dst,path): #  rly pth gen kira-alpha transfer hashquarkchain transfer kira-alpha_gameofzoneshub-1
             print(f"ERROR: Failed to generate path '{path}' between {chain_id_src} and {chain_id_dst}")
             return connection
-        if not ReArmConnection(connection, timeout):
-            if not RelayerHelper.TransactLink(path, timeout): # rly transact link kira-alpha_gameofzoneshub-1 --timeout 10s, # rly transact link kira-alpha_kira-1
-                print(f"ERROR: Failed to link {chain_id_src} and {chain_id_dst} via path '{path}'")
+        if not RelayerHelper.TransactLink(path, 600): # rly transact link kira-alpha_gameofzoneshub-1 --timeout 10s, # rly transact link kira-alpha_kira-1
+            print(f"ERROR: Failed to link {chain_id_src} and {chain_id_dst} via path '{path}'")
 
     path_info = RelayerHelper.QueryPath(path) # rly pth show kira-alpha_gameofzoneshub-1 -j
     if not path_info:
