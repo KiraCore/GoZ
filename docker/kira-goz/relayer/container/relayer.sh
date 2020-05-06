@@ -70,6 +70,7 @@ CDHelper email send \
     exit 1
 fi
 
+# rly tx transfer kira-alpha kira-1 1ukex true cosmos13tyaljtac4l9jfen4uz338qdmklaupktgtwsrl
 
-# python3 $SELF_SCRIPTS/phase1.py $SELF_UPDATE/common/configs/kira-alpha.json "$RLYKEY_MNEMONIC" $SELF_UPDATE/common/configs/kira-1.json "$RLYKEY_MNEMONIC" $BUCKET False "goz_alpha_1" "test_key_2" 10
+# python3 $SELF_SCRIPTS/phase1.py $SELF_UPDATE/common/configs/kira-alpha.json "$RLYKEY_MNEMONIC" $SELF_UPDATE/common/configs/kira-1.json "$RLYKEY_MNEMONIC" $BUCKET False "goz_alpha_2" "test_key_3" 10
 

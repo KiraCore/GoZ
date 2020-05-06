@@ -27,16 +27,16 @@ def IsConnected(path):
     status = QueryStatus(path)
     return TestStatus(status)
 
-def RestartLiteClients(connection):
+def UpdateLiteClients(connection):
     chain_info_src=connection["src"]
     chain_info_dst=connection["dst"]
     chain_id_src = chain_info_src["chain-id"]
     chain_id_dst = chain_info_dst["chain-id"]
-    print(f"INFO: Restarting {chain_id_src} and {chain_id_dst} lite clients...")
-    if not RelayerHelper.RestartLiteClient(chain_id_src):
+    print(f"INFO: Updating {chain_id_src} and {chain_id_dst} lite clients...")
+    if not RelayerHelper.UpdateLiteClient(chain_id_src):
         print(f"ERROR: Failed to update {chain_id_src} lite client")
         return False
-    if not RelayerHelper.RestartLiteClient(chain_id_dst):
+    if not RelayerHelper.UpdateLiteClient(chain_id_dst):
         print(f"ERROR: Failed to update {chain_id_dst} lite client")
         return False
     return True
@@ -215,7 +215,7 @@ def ConnectWithJson(src_json_path, scr_mnemonic, dst_json_path, dst_mnemonic, bu
     
     if not IsConnected(path):
         print(f"INFO: Updating {src_chain_id} and {dst_chain_id} lite clients...")
-        if not RestartLiteClients(connection):
+        if not UpdateLiteClients(connection):
             print(f"Failed to restart lite clients, aborting connection...")
             return connection
         print(f"SUCCESS: Lite clients {src_chain_id} and {dst_chain_id} were updated.")

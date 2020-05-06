@@ -188,6 +188,9 @@ def PushPendingTransactions(path):
         print(f"INFO: No pending transactions were found in path {path}")
 
 # Usage: rly transact raw update-client [src-chain-id] [dst-chain-id] [client-id] [flags]
+# rly pth show kira-alpha_kira-1 -j
+# rly transact raw update-client kira-alpha kira-1 nhzihoslfo --debug
+# rly transact link kira-alpha_kira-1
 def UpdateClientConnection(connection):
     src_chain_info = connection.get("src", None)
     dst_chain_info = connection.get("dst", None)
@@ -229,4 +232,18 @@ def RestartLiteClient(chain_id):
     UpdateLiteClient(chain_id) # rly lite update kira-1
     out = QueryLiteClientHeader(chain_id) # rly lite header kira-1
     return False if not out else True
+
+def UpdateLiteClient(chain_id):
+    if (None == callRaw(f"rly lite update {chain_id}",False)):
+        if (None == callTryRetry(f"rly lite init {chain_id} -f",60, 0, 1,False)):
+            return False
+        if (None != callRaw(f"rly lite update {chain_id}",False)):
+            out = QueryLiteClientHeader(chain_id) # rly lite header kira-1
+            return False if not out else True
+        else:
+            return False
+    else:
+        return True
+    
+            
 

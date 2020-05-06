@@ -20,7 +20,7 @@ from datetime import timedelta, datetime
 # Startup example: 26657
 # rly pth show kira-alpha_kira-1
 # rly pth show kira-alpha_gameofzoneshub-1
-
+# 
 # console args
 t0 = time.time()
 SRC_JSON_DIR=sys.argv[1]

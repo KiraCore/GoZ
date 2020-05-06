@@ -54,7 +54,7 @@ def InitializeClientWithMnemonic(chain_info, mnemonic):
             else:
                 print(f"SUCCESS: Key {key_name} was configured as default of the chain {chain_id}")
 
-    if not RelayerHelper.RestartLiteClient(chain_id): # delete, init and update lite
+    if not RelayerHelper.UpdateLiteClient(chain_id): # delete, init and update lite
         if not RelayerHelper.UpsertChainFromFile(chain_info_path): # rly chains add -f $TESTCHAIN_JSON_PATH
             print(f"ERROR: Failed adding new chain from '{chain_info_path}' file :(")
             return chain_info
@@ -62,7 +62,7 @@ def InitializeClientWithMnemonic(chain_info, mnemonic):
         print(f"SUCCESS: Chain {chain_id} was added from file {chain_info_path}")
         UpdateKeyIfNotSetAndConfigure()
 
-        if not RelayerHelper.RestartLiteClient(chain_id):
+        if not RelayerHelper.UpdateLiteClient(chain_id):
             print(f"ERROR: Failed lite client init of the '{chain_id}' chain :(")
             return chain_info
 
@@ -71,8 +71,8 @@ def InitializeClientWithMnemonic(chain_info, mnemonic):
         print(f"SUCCESS: Lite client header of the chain '{chain_id}' was found")
         UpdateKeyIfNotSetAndConfigure()
 
-        if not RelayerHelper.RestartLiteClient(chain_id): 
-            print(f"ERROR: Failed restarting lite client of the '{chain_id}' chain :(")
+        if not RelayerHelper.UpdateLiteClient(chain_id): 
+            print(f"ERROR: Failed updating lite client of the '{chain_id}' chain :(")
             return chain_info
         print(f"SUCCESS: Lite client of the chain '{chain_id}' was updated")
 
