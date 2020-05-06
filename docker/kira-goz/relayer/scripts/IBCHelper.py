@@ -115,12 +115,6 @@ def Connect(connection, timeout):
         print(f"ERROR: source chain and destination chain id's cant be the same ({chain_id_src}")
         return connection
 
-    if ReArmConnection(connection, timeout):
-        print(f"INFO: Path {path} was re-armed")
-        connection["info"] = RelayerHelper.QueryPath(path)
-        connection["success"] = True
-        return connection
-
     if not IsConnected(path):
         print(f"WARNING: Chains {chain_id_src} and {chain_id_dst} are not connected, re-generating path")
         if not RelayerHelper.GeneratePath(chain_id_src,chain_id_dst,path): #  rly pth gen kira-alpha transfer hashquarkchain transfer kira-alpha_gameofzoneshub-1
