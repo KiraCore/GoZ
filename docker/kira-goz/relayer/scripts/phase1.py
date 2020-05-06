@@ -170,6 +170,7 @@ while True:
 
     print(f"INFO: Pushing any pending transactions...")
     RelayerHelper.PushPendingTransactions(path)
+    IBCHelper.UpdateLiteClients(connection)
 
     time.sleep(float(30))
 
