@@ -57,20 +57,19 @@ python3 $SELF_SCRIPTS/phase1.py \
  $RLY_FORCE_SHUTDOWN \
  $RLY_PATH \
  $RLY_KEY_PREFIX \
- $TRUST_UPDATE_PERIOD &> $SELF_LOGS/relayer.txt
+ $TRUST_UPDATE_PERIOD &> $SELF_LOGS/relayer.txt ||  true
+
+CDHelper email send \
+ --from="noreply@kiracore.com" \
+ --to="asmodat@gmail.com" \
+ --subject="[GoZ] $(curl -H 'Metadata-Flavor: Google' http://metadata/computeMetadata/v1/instance/name 2>/dev/null) FAILURE" \
+ --body="[$(date)] ERROR: Phase1 relayer loop was terminated, see details in the attachment." \
+ --html="false" \
+ --recursive="false" \
+ --attachments="$SELF_LOGS/relayer.txt"
+    exit 1
 fi
 
-# python3 $SELF_SCRIPTS/phase1.py $TESTCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $HUBCHAIN_JSON_PATH "$RLYKEY_MNEMONIC" $BUCKET False "test-goz" "test_key" 10
-# python3 $SELF_SCRIPTS/phase1.py $SELF_UPDATE/common/configs/kira-alpha.json "$RLYKEY_MNEMONIC" $SELF_UPDATE/common/configs/kira-1.json "$RLYKEY_MNEMONIC" $BUCKET False "goz-alpha" "test_key" 10
 
-#CDHelper email send \
-# --from="noreply@kiracore.com" \
-# --to="asmodat@gmail.com" \
-# --subject="[GoZ] $(curl -H 'Metadata-Flavor: Google' http://metadata/computeMetadata/v1/instance/name 2>/dev/null) SUCCESS" \
-# --body="[$(date)] SUCCESS: Relayer script was executed without errors. Attached you will find relayer log file" \
-# --html="false" \
-# --recursive="true" \
-# --attachments="$SELF_LOGS/relayer.txt"
-
-
+# python3 $SELF_SCRIPTS/phase1.py $SELF_UPDATE/common/configs/kira-alpha.json "$RLYKEY_MNEMONIC" $SELF_UPDATE/common/configs/kira-1.json "$RLYKEY_MNEMONIC" $BUCKET False "goz_alpha_1" "test_key_2" 10
 

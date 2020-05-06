@@ -85,14 +85,14 @@ def DeleteLiteClient(chain_id):
     return False if (None == callRaw(f"rly lite delete {chain_id}",True)) else True
 
 def InitLiteClient(chain_id):
-    return False if (None == callTryRetry(f"rly lite init {chain_id} -f",30, 0, 1,True)) else True
+    return False if (None == callTryRetry(f"rly lite init {chain_id} -f",60, 0, 1,True)) else True
 
 def UpdateLiteClient(chain_id):
-    return False if (None == callTryRetry(f"rly lite update {chain_id}",30, 0, 1,True)) else True
+    return False if (None == callTryRetry(f"rly lite update {chain_id}",60, 0, 1,True)) else True
 
 def QueryLiteClientHeader(chain_id):
-    callTryRetry(f"rly lite update {chain_id}",30, 0, 1,False) # lite must be updated before the query
-    out = callTryRetryJson(f"rly lite header {chain_id}",30, 0, 1,True)
+    callTryRetry(f"rly lite update {chain_id}",60, 0, 1,False) # lite must be updated before the query
+    out = callTryRetryJson(f"rly lite header {chain_id}",60, 0, 1,True)
     return None if ((None != out) and len(out) <= 0) else out
 
 def RequestTokens(chain_id):
@@ -126,16 +126,16 @@ def QueryPath(path):
     return None if ((None != out) and len(out) <= 0) else out
 
 def TransactClients(path):
-    return False if (None == callTryRetry(f"rly transact clients {path}",30, 0, 1,True)) else True
+    return False if (None == callTryRetry(f"rly transact clients {path}",60, 0, 1,True)) else True
 
 def TransactConnection(path, timeout):
-    return False if (None == callTryRetry(f"rly transact connection {path} --timeout {timeout}s",30, 0, 1,True)) else True
+    return False if (None == callTryRetry(f"rly transact connection {path} --timeout {timeout}s",60, 0, 1,True)) else True
 
 def TransactChannel(path, timeout):
-    return False if (None == callTryRetry(f"rly transact channel {path} --timeout {timeout}s",30, 0, 1,True)) else True
+    return False if (None == callTryRetry(f"rly transact channel {path} --timeout {timeout}s",60, 0, 1,True)) else True
 
 def TransactLink(path, timeout):
-    return False if (None == callTryRetry(f"rly transact link {path} --timeout {timeout}s",30, 0, 1,True)) else True
+    return False if (None == callTryRetry(f"rly transact link {path} --timeout {timeout}s",60, 0, 1,True)) else True
 
 # relay any packets that remain to be relayed on a given path, in both directions
 def TransactRelay(path): # rly tx rly kira-alpha_isillienchain
@@ -173,10 +173,13 @@ def RestoreKey(chain_id, key_name, mnemonic):
 def UpsertKey(chain_id, key_name):
     return callRaw(f"rly keys add {chain_id} {key_name}",True) # rly keys add kira-alpha prefix_kira-alpha
 
+def RelayPendingTransactions(path):
+    return  False if (None == callRaw(f"rly tx rly {path}",True)) else True 
+
 # Usage: rly transact raw update-client [src-chain-id] [dst-chain-id] [client-id] [flags]
 def UpdateClientConnection(connection):
-    src_chain_info = connection["src"]
-    dst_chain_info = connection["dst"]
+    src_chain_info = connection.get("src", None)
+    dst_chain_info = connection.get("dst", None)
     path = connection["path"]
     
     info = QueryPath(path) # rly pth show kira-alpha_kira-1 -j
@@ -187,13 +190,16 @@ def UpdateClientConnection(connection):
 
     chains = info["chains"]
     status = info["status"]
-
     is_connected = IBCHelper.TestStatus(status)
-
+    
     if not is_connected:
-        print(f"ERROR: Could not update client connection because path {path} does not have established connection")
-        return False
-
+        print(f"WARNING: Chains are not connected, might not be able to propagate transactions")
+    #    print(f"ERROR: Could not update client connection because path {path} does not have established connection")
+    #    return False
+    print(f"INFO: Relaying any pending transactions")
+    if RelayPendingTransactions(path):
+        print(f"SUCCESS: Pending transactions were relayed")
+    
     src_chain_id = src_chain_info["chain-id"]
     dst_chain_id = dst_chain_info["chain-id"]
     src_client_id = chains["src"]["client-id"]

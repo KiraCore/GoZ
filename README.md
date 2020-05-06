@@ -2,8 +2,12 @@
 Game of Zones
 
 Validator Address: `goz.kiraex.com` 
-Node Info: `curl goz.kiraex.com:10002/node_info`
-Status: `curl goz.kiraex.com:10001/status`
+Node Info: 
+ * External: `curl goz.kiraex.com:10002/node_info`
+ * Internal: `curl internal-goz.kiraex.com:10002/node_info`
+Status: 
+ * External: `curl goz.kiraex.com:10001/status`
+ * Internal: `curl internal-goz.kiraex.com:10001/status`
 
 IP Address Whitelist:
  * `35.230.14.56`

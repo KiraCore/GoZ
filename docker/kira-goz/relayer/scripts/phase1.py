@@ -94,7 +94,17 @@ if not connected:
         print(f"INFO: Connection will be permanently shutdown")
         IBCHelper.ShutdownConnection(connection)
     else:
-        print(f"INFO: Connection is stable and will NOT be shutdown")
+        print(f"INFO: Connection will NOT be shutdown")
+
+    elpased_connection_update = time.time() - old_connection_update
+    if (update_period/2) <= elpased_connection_update:
+        print(f"INFO: Updating client despite errors...")
+        if not RelayerHelper.UpdateClientConnection(connection):
+            print(f"WARNING: Failed to update clients")
+        else:
+            print(f"SUCCESS: Client was updated")
+            connection["last-update"] = time.time() 
+        
     connection["upload-time"] = time_start
     StateHelper.S3WriteText(connection,BUCKET,state_file_path);
     print(f"INFO: Script Failed (2)")
