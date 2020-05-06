@@ -13,7 +13,6 @@ import time
 from joblib import Parallel, delayed
 from subprocess import Popen, PIPE
 
-# (rm $SELF_SCRIPS/RelayerHelper.py || true) && nano $SELF_SCRIPS/RelayerHelper.py 
 # Update: (rm $SELF_SCRIPTS/RelayerHelper.py || true) && nano $SELF_SCRIPTS/RelayerHelper.py 
 
 def callRaw(s, showErrors):
@@ -197,11 +196,18 @@ def UpdateClientConnection(connection):
 
     src_chain_id = src_chain_info["chain-id"]
     dst_chain_id = dst_chain_info["chain-id"]
+    src_client_id = chains["src"]["client-id"]
     dst_client_id = chains["dst"]["client-id"]
 
-    out = callRaw(f"rly transact raw update-client {src_chain_id} {dst_chain_id} {dst_client_id}", True)
-    print(f"INFO: update-client output: {out}")
-    return False if (None == out) else True
+    out1 = callRaw(f"rly transact raw update-client {src_chain_id} {dst_chain_id} {dst_client_id}", True)
+    if (None == out1):
+        return False
+    print(f"INFO: update destination client output: {out1}")
+    out2 = callRaw(f"rly transact raw update-client {dst_chain_id} {src_chain_id} {src_client_id}", True)
+    if (None == out2):
+        return False
+    print(f"INFO: update source client output: {out2}")
+    return True
 
 def RestartLiteClient(chain_id):
     DeleteLiteClient(chain_id) # rly lite delete kira-1

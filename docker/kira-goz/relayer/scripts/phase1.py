@@ -14,7 +14,7 @@ import time
 from joblib import Parallel, delayed
 from datetime import timedelta, datetime
 
-#(rm $SELF_SCRIPS/phase1.py || true) && nano $SELF_SCRIPS/phase1.py 
+
 # Update: (rm $SELF_SCRIPTS/phase1.py || true) && nano $SELF_SCRIPTS/phase1.py 
 
 # Startup example: 26657

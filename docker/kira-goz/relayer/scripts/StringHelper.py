@@ -4,7 +4,6 @@ import sys
 import os
 import os.path
 
-# Update: (rm $SELF_SCRIPS/StringHelper.py || true) && nano $SELF_SCRIPS/StringHelper.py
 # Update: (rm $SELF_SCRIPTS/StringHelper.py || true) && nano $SELF_SCRIPTS/StringHelper.py 
 
 def FixToAsciiN(s, c, N):

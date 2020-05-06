@@ -12,7 +12,6 @@ import time
 from joblib import Parallel, delayed
 import uuid
 
-# Update: (rm $SELF_SCRIPS/StateHelper.py || true) && nano $SELF_SCRIPS/StateHelper.py 
 # Update: (rm $SELF_SCRIPTS/StateHelper.py || true) && nano $SELF_SCRIPTS/StateHelper.py 
 
 def S3WriteText(text, bucket, s3_key_path):
