@@ -8,15 +8,28 @@ import sys
 import time
 from joblib import Parallel, delayed
 from subprocess import Popen, PIPE
-
+from threading import Timer
 
 # Update: (rm $SELF_SCRIPTS/TaskHelper.py || true) && nano $SELF_SCRIPTS/TaskHelper.py 
 
+def CMDInput(s, input, timeout):
+    kill = lambda process: process.kill()
+    p = subprocess.run(s, input=input, timeout=timeout, shell=True, stdout=PIPE, stderr=PIPE, universal_newlines=True, encoding="utf-8")
+    o = StringHelper.Trim(p.stdout)
+    status = f"{p.returncode}"
+    print(status)
+    if status != "0":
+        if not p.stderr:
+            raise Exception(f"Status: {status}")
+        else:
+            raise Exception(f"Status: {status} => Error: {StringHelper.Trim(str(p.stderr))}")
+    return o
+
 # runs utf-8 shell commands
-def CMD(s):
-    p = Popen(s, shell=True, stdout=PIPE, stderr=PIPE, universal_newlines=True, encoding="utf-8")
+def CMD(s, timeout):
+    p = subprocess.Popen(s, shell=True, stdout=PIPE, stderr=PIPE, universal_newlines=True, encoding="utf-8")
     #print(f"CMD => Input: {s}") # debug only
-    o, err = p.communicate()
+    o, err = p.communicate(timeout=timeout)
     #print(f"CMD => Output: {o}") # debug only
     #print(f"CMD => Error: {str(err)}") # debug only
     status = f"{p.wait()}"
@@ -33,6 +46,7 @@ def CMD(s):
     o = StringHelper.Trim(o)
     #print(f"CMD => Result: {o}") # debug only
     return "" if o == None else o
+
 
 def Process(func, args, q, showErrors):
     err = None
@@ -78,13 +92,13 @@ def TryRetry(func, args, timeout, retry, delay, showErrors):
     return None
 
 def TryRetryCMD(s, timeout, retry, delay, showErrors):
-    return TryRetry(CMD, [ s ], timeout, retry, delay, showErrors)
+    return TryRetry(CMD, [ s, timeout ], (timeout + 5), retry, delay, showErrors)
 
 def TryRetryJsonCMD(s, timeout, retry, delay, showErrors):
     jsonParseError = False
     o = None
     try:
-        o = TryRetry(CMD, [ s ], timeout, retry, delay, showErrors)
+        o = TryRetry(CMD, [ s, timeout ], (timeout+ 5), retry, delay, showErrors)
         jsonParseError = False
         return json.loads(o)
     except Exception as e:

@@ -10,6 +10,8 @@ import sys
 import os
 import os.path
 import time
+import datetime
+from datetime import datetime, timezone
 from joblib import Parallel, delayed
 from subprocess import Popen, PIPE
 
@@ -19,7 +21,7 @@ def callRaw(s, showErrors):
     err = None
     try:
         #print(f"callRaw => Input: {s}") # debug only
-        o = TaskHelper.CMD(s)
+        o = TaskHelper.CMD(s, 3600)
         #print(f"callRaw => Output: {o}") # debug only
         return o
     except Exception as e:
@@ -33,7 +35,7 @@ def callJson(s, showErrors):
     jsonParseError = False
     o = None
     try:
-        o = TaskHelper.CMD(s)
+        o = TaskHelper.CMD(s, 3600)
         jsonParseError = False
         return json.loads(o)
     except Exception as e:
@@ -43,6 +45,17 @@ def callJson(s, showErrors):
                 print(f"CMD '{s}' failed to parse output: '{str(o)}', error: {str(e)}")
             else:
                 print(f"ERROR: CMD {str(e)}")
+        return None
+
+def callRawInput(s, input, showErrors):
+    err = None
+    try:
+        return TaskHelper.CMDInput(s, input, 3600)
+    except Exception as e:
+        pass
+        #print(f"callRaw => Error: {str(e)}") # debug only
+        if showErrors:
+            print(f"ERROR: CMD {str(e)}")
         return None
 
 def callTryRetry(s, timeout, retry, delay, showErrors):
@@ -85,15 +98,23 @@ def DeleteLiteClient(chain_id):
     return False if (None == callRaw(f"rly lite delete {chain_id}",True)) else True
 
 def InitLiteClient(chain_id):
-    return False if (None == callTryRetry(f"rly lite init {chain_id} -f",60, 0, 1,True)) else True
+    return False if (None == callRaw(f"rly lite init {chain_id} -f",True)) else True
 
 def UpdateLiteClient(chain_id):
-    return False if (None == callTryRetry(f"rly lite update {chain_id}",60, 0, 1,True)) else True
+    return False if (None == callRaw(f"rly lite update {chain_id}",True)) else True
 
 def QueryLiteClientHeader(chain_id):
-    callTryRetry(f"rly lite update {chain_id}",60, 0, 1,False) # lite must be updated before the query
-    out = callTryRetryJson(f"rly lite header {chain_id}",60, 0, 1,True)
+    if None == callRaw(f"rly lite update {chain_id}",False): # lite must be updated before the query
+        return None
+    out = callJson(f"rly lite header {chain_id}",True)
     return None if ((None != out) and len(out) <= 0) else out
+
+def QueryClient(chain_id, client_id):
+    out = callJson(f"rly q client {chain_id} {client_id}",True)
+    return None if ((None != out) and len(out) <= 0) else out
+
+def TryRequestTokens(chain_id):
+    return False if (None == callTryRetry(f"rly testnets request {chain_id}", 60, 1, 0, False)) else True
 
 def RequestTokens(chain_id):
     return False if (None == callRaw(f"rly testnets request {chain_id}",True)) else True
@@ -111,31 +132,64 @@ def TryQueryBalance(chain_id):
 def DeletePath(path):
     return False if (None == callRaw(f"rly pth delete {path}",True)) else True
 
+def PathExists(path):
+    return False if not callJson(f"rly pth show {path} -j",False) else True
+
 def GeneratePath(chain_id_src, chain_id_dst, path):
-    if None != callRaw(f"rly pth show {path} -j",False):
+    if PathExists(path):
         return True #path was already created
-    out=callRaw(f"rly pth gen {chain_id_src} transfer {chain_id_dst} transfer {path}",True)
-    return False if (None == out) else True
+    out=callRaw(f"rly pth gen {chain_id_src} transfer {chain_id_dst} transfer {path} --debug",True)
+    return PathExists(path)
+
+def ReGeneratePath(chain_id_src, chain_id_dst, path):
+    callRaw(f"rly pth delete {path}",False) # lets delete path to be for sure on the safe side if something goes wrong
+    out=callRaw(f"rly pth gen {chain_id_src} transfer {chain_id_dst} transfer {path} -f --debug",True)
+    return PathExists(path)
 
 def QueryChainAddress(chain_id):
     out=callRaw(f"rly ch addr {chain_id}",True)
     return None if ((None != out) and len(out) <= 0) else out
 
+'''
+# Example Output:
+{"chains":{
+ "src":{"chain-id":"kira-alpha","client-id":"ubohltylat","connection-id":"tdeeqbwuau","channel-id":"ejjggqwtkm","port-id":"transfer","order":"ORDERED"},
+ "dst":{"chain-id":"kira-1","client-id":"mbxdppcthy","connection-id":"wqvfpxjmzy","channel-id":"qzjrrvnwzn","port-id":"transfer","order":"ORDERED"},
+ "strategy":{"type":"naive"}},
+ "status":{"chains":true,"clients":true,"connection":true,"channel":true}}
+'''
 def QueryPath(path):
     out=callJson(f"rly pth show {path} -j",True)
     return None if ((None != out) and len(out) <= 0) else out
 
-def TransactClients(path):
-    return False if (None == callTryRetry(f"rly transact clients {path}",60, 0, 1,True)) else True
+def AddPath(connection):
+    s=connection["src"]["chain-id"] ; d=connection["dst"]["chain-id"]
+    p=connection["path"]
+    srcPI=connection["path-info"]["src"] ; dtsPI=connection["path-info"]["dst"]
+    s_ci=srcPI["client-id"] ; s_cn=srcPI["connection-id"] ; s_ch=srcPI["channel-id"] ; s_cp=srcPI["port-id"]
+    d_ci=dstPI["client-id"] ; d_cn=dstPI["connection-id"] ; d_ch=dstPI["channel-id"] ; d_cp=dstPI["port-id"]
+    out=callRawInput(f"rly pth add {s} {d} {p}", "{s_ci}\n{s_cn}\n{s_ch}\n{s_cp}\n{d_ci}\n{d_cn}\n{d_ch}\n{d_cp}\n" ,True)
+    path = QueryPath(p)
+    if not path:
+        return False
+    ps = path["src"] ; pd = path["dst"]
+    return \
+    ps["client-id"] == s_ci and pd["client-id"] == d_ci and \
+    ps["connection-id"] == s_cn and pd["connection-id"] == d_cn and \
+    ps["channel-id"] == s_ch and pd["channel-id"] == d_ch and \
+    ps["port-id"] == s_cp and pd["port-id"] == d_cp
+
+def TransactClients(path,timeout):
+    return False if (None == callTryRetry(f"rly transact clients {path}",timeout, 2, 1,True)) else True
 
 def TransactConnection(path, timeout):
-    return False if (None == callTryRetry(f"rly transact connection {path} --timeout {timeout}s",60, 0, 1,True)) else True
+    return False if (None == callTryRetry(f"rly transact connection {path} --timeout 5s",timeout, 2, 1,True)) else True
 
 def TransactChannel(path, timeout):
-    return False if (None == callTryRetry(f"rly transact channel {path} --timeout {timeout}s",60, 0, 1,True)) else True
+    return False if (None == callTryRetry(f"rly transact channel {path} --timeout 5s",timeout, 2, 1,True)) else True
 
 def TransactLink(path, timeout):
-    return False if (None == callTryRetry(f"rly transact link {path} --timeout {timeout}s",60, 0, 1,True)) else True
+    return False if (None == callTryRetry(f"rly transact link {path} --timeout 5s",timeout, 2, 1,True)) else True
 
 # relay any packets that remain to be relayed on a given path, in both directions
 def TransactRelay(path): # rly tx rly kira-alpha_isillienchain
@@ -227,15 +281,15 @@ def UpdateClientConnection(connection):
     return True
 
 def RestartLiteClient(chain_id):
-    DeleteLiteClient(chain_id) # rly lite delete kira-1
-    InitLiteClient(chain_id) # rly lite init kira-1 -f
-    UpdateLiteClient(chain_id) # rly lite update kira-1
+    callRaw(f"rly lite delete {chain_id}",False) # rly lite delete kira-1
+    callRaw(f"rly lite update {chain_id}",False) # rly lite init kira-1 -f
+    callRaw(f"rly lite init {chain_id} -f",False) # rly lite update kira-1
     out = QueryLiteClientHeader(chain_id) # rly lite header kira-1
     return False if not out else True
 
 def UpdateLiteClient(chain_id):
     if (None == callRaw(f"rly lite update {chain_id}",False)):
-        if (None == callTryRetry(f"rly lite init {chain_id} -f",60, 0, 1,False)):
+        if (None == callRaw(f"rly lite init {chain_id} -f",False)):
             return False
         if (None != callRaw(f"rly lite update {chain_id}",False)):
             out = QueryLiteClientHeader(chain_id) # rly lite header kira-1
@@ -246,4 +300,52 @@ def UpdateLiteClient(chain_id):
         return True
     
             
+def GetRemainingTimeToLive(connection):
+    p=connection["path"]
+    path_info = QueryPath(p) # rly pth show kira-alpha_kira-1 -j
+    if not path_info:
+        print("ERROR: Could NOT read connection time, failed to query path {p}")
+        return None
+
+    cnn_s = connection["src"] ; cnn_d = connection["src"]
+    sc_id = cnn_s["chain-id"] ; dc_id = cnn_d["chain-id"]
+    s_cl_id = path_info["src"]["client-id"]
+    d_cl_id = path_info["dst"]["client-id"]
+    
+    src_client_info = QueryClient(sc_id, s_cl_id)
+    if not src_client_info:
+        print("ERROR: Could NOT read connection time, failed to query source client {sc_id} ({s_cl_id})")
+        return None
+
+    dst_client_info = QueryClient(dc_id, d_cl_id)
+    if not dst_client_info:
+        print("ERROR: Could NOT read connection time, failed to query destination client {dc_id} ({s_cl_id})")
+        return None
+
+    ts_dt = None ; td_dt = None # date time source & destination
+    tes = None ; ted = None # time elapsed source &  destination
+    ts_tp = None ; td_tp = None # trust period source & destination
+    trs = -1 ; trd = -1 # time remaining source & destination
+    
+    try:
+        ts_dt=src_client_info["client_state"]["value"]["last_header"]["SignedHeader"]["header"]["time"]
+        ts_tp=int(src_client_info["client_state"]["value"]["trusting_period"])
+        tes = datetime.utcnow() - dateutil.parser.isoparse(ts_dt).replace(tzinfo=None)
+        trs = tes - ts_tp
+    except  Exception as e:
+        pass
+        print("WARNING: Could NOT find last signed header time of the source chain client {sc_id} or one of {ts_dt}, {ts_tp}  could not be parsed")
+    
+    try:
+        td_dt=dst_client_info["client_state"]["value"]["last_header"]["SignedHeader"]["header"]["time"]
+        td_tp=int(dst_client_info["client_state"]["value"]["trusting_period"])
+        ted = datetime.utcnow() - dateutil.parser.isoparse(td_dt).replace(tzinfo=None)
+        trd = ted - td_tp
+    except Exception as e:
+        pass
+        print("WARNING: Could NOT find last signed header time of the destination chain client {dc_id} or one of {td_dt}, {td_tp} could NOT be parsed")
+    
+    return { "src": trs, "dst": trd, "min": min(trs,trd), "max": max(trs,trd) } 
+    
+    
 

@@ -74,3 +74,8 @@ fi
 
 # python3 $SELF_SCRIPTS/phase1.py $SELF_UPDATE/common/configs/kira-alpha.json "$RLYKEY_MNEMONIC" $SELF_UPDATE/common/configs/kira-1.json "$RLYKEY_MNEMONIC" $BUCKET False "goz_alpha_2" "test_key_3" 10
 
+# python3 $SELF_SCRIPTS/phase1.py $SELF_UPDATE/common/configs/kira-alpha.json "$RLYKEY_MNEMONIC" $SELF_UPDATE/common/configs/goz-hub.json "$RLYKEY_MNEMONIC" $BUCKET False "hub_alpha_2" "test_ke3y_3" 10
+
+
+# 
+

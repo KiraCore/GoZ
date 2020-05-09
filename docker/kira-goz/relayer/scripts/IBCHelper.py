@@ -23,22 +23,68 @@ def TestStatus(status):
         return False
     return False if (not status) else (status["chains"] and status["clients"] and status["connection"] and status["channel"])
 
-def IsConnected(path):
+# Returns None if its not not known if connection exists (networking issues) else False or True
+def IsConnected(connection):
+    path=connection["path"]
     status = QueryStatus(path)
-    return TestStatus(status)
+    if status == None:
+        return None
+    if not TestStatus(status):
+        return False
+    ttl = RelayerHelper.GetRemainingTimeToLive(connection)
+    if ttl == None:
+        return None
+    if not ttl or ttl["min"] <= 0:
+        print(f"WARNING: Path {path} expired, TTL: {ttl}")
+        return False
+    return True
 
 def UpdateLiteClients(connection):
-    chain_info_src=connection["src"]
-    chain_info_dst=connection["dst"]
-    chain_id_src = chain_info_src["chain-id"]
-    chain_id_dst = chain_info_dst["chain-id"]
-    print(f"INFO: Updating {chain_id_src} and {chain_id_dst} lite clients...")
+    chain_id_src=connection["src"]["chain-id"]
+    chain_id_dst=connection["dst"]["chain-id"]
+    print(f"INFO: Updating lite clients...")
     if not RelayerHelper.UpdateLiteClient(chain_id_src):
         print(f"ERROR: Failed to update {chain_id_src} lite client")
         return False
+    else:
+        print(f"SUCCESS: Updated {chain_id_src} lite client")
     if not RelayerHelper.UpdateLiteClient(chain_id_dst):
         print(f"ERROR: Failed to update {chain_id_dst} lite client")
         return False
+    else:
+        print(f"SUCCESS: Updated {chain_id_dst} lite client")
+    return True
+
+def RestartLiteClients(connection):
+    chain_id_src=connection["src"]["chain-id"]
+    chain_id_dst=connection["dst"]["chain-id"]
+    print(f"INFO: Re-starting lite clients...")
+    if not RelayerHelper.RestartLiteClient(chain_id_src):
+        print(f"ERROR: Failed to update {chain_id_src} lite client")
+        return False
+    else:
+        print(f"SUCCESS: Updated {chain_id_src} lite client")
+    if not RelayerHelper.RestartLiteClient(chain_id_dst):
+        print(f"ERROR: Failed to update {chain_id_dst} lite client")
+        return False
+    else:
+        print(f"SUCCESS: Updated {chain_id_dst} lite client")
+    return True
+
+def DeleteLiteClients(connection):
+    chain_id_src=connection["src"]["chain-id"]
+    chain_id_dst=connection["dst"]["chain-id"]
+    print(f"INFO: Re-starting lite clients...")
+    if not RelayerHelper.DeleteLiteClient(chain_id_src):
+        print(f"ERROR: Failed to update {chain_id_src} lite client")
+        return False
+    else:
+        print(f"SUCCESS: Updated {chain_id_src} lite client")
+    if not RelayerHelper.DeleteLiteClient(chain_id_dst):
+        print(f"ERROR: Failed to update {chain_id_dst} lite client")
+        return False
+    else:
+        print(f"SUCCESS: Updated {chain_id_dst} lite client")
     return True
 
 def ReArmConnection(connection, timeout):
@@ -48,6 +94,13 @@ def ReArmConnection(connection, timeout):
     chain_id_src = chain_info_src["chain-id"]
     chain_id_dst = chain_info_dst["chain-id"]
     path = connection["path"]
+
+    print(f"INFO: Updating lite clients...")
+    if not UpdateLiteClients(connection):
+        print(f"WARNING: Failed to update lite clients, restarting...")
+        if not RestartLiteClients(connection):
+             raise Exception(f"Failed to restart lite clients, connection can't be established, exiting...")
+
     status = QueryStatus(path)
 
     if TestStatus(status):
@@ -58,7 +111,7 @@ def ReArmConnection(connection, timeout):
         print(f"INFO: Path {path} status: Chains {status['chains']} | Clients {status['clients']} | Connection {status['connection']} | Channel {status['channel']}")
 
         if not status["clients"]: 
-            if not RelayerHelper.TransactClients(path): # rly transact clients kira-alpha_hashquarkchain --debug
+            if not RelayerHelper.TransactClients(path, timeout): # rly transact clients kira-alpha_hashquarkchain --debug
                 print(f"ERROR: Failed to create clients (Step 1) between {chain_id_src} and {chain_id_dst}, path: '{path}'")
                 return False
             else:
@@ -77,7 +130,7 @@ def ReArmConnection(connection, timeout):
                 return False
             else:
                 print(f"SUCCESS: Established channel (Step 3) between {chain_id_src} and {chain_id_dst}, path: '{path}'")
-    return IsConnected(path)
+    return True
 
 # Interacts with configuration file: $HOME/.relayer/config/config.yaml
 def ShutdownConnection(connection):
@@ -100,6 +153,7 @@ def ShutdownConnection(connection):
     else:
         print(f"WARNING: Destination chain not present in the connection object, can't remove None")
 
+
 def Connect(connection, timeout):
     chain_info_src=connection["src"]
     chain_info_dst=connection["dst"]
@@ -107,37 +161,56 @@ def Connect(connection, timeout):
     
     chain_id_src = chain_info_src["chain-id"]
     chain_id_dst = chain_info_dst["chain-id"]
-    path=connection.get("path", f"{chain_id_src}_{chain_id_dst}")
-    connection["path"]=path
-    path_info = None
+    path = connection["path"];
+    min_ttl = connection["min-ttl"]
+    path_info = connection.get("path-info", None)
+    
 
     if (chain_id_src == chain_id_dst):
-        print(f"ERROR: source chain and destination chain id's cant be the same ({chain_id_src}")
+        raise Exception(f"Source chain and destination chain id's cant be the same, but both were: {chain_id_src}")
         return connection
+    
+    if not RelayerHelper.PathExists(path):
+        DeleteLiteClients(connection)
+        if (not (not path_info)):
+            print(f"INFO: Path {path} does not exists, but recovery state is available")
+            RelayerHelper.AddPath(connection)
+        else:
+            print(f"INFO: Path {path} does not exists and recovery is not available, re-generating path")
+            if not RelayerHelper.ReGeneratePath(chain_id_src,chain_id_dst,path): 
+                raise Exception(f"Failed to re-generate new {path} path")
+            else:
+                connection["path-info"] = path_info = None
+    
+    if not RelayerHelper.PathExists(path): # by now path must exist
+        raise Exception(f"Failed to assert {path} path existence") # probably networking issues
 
-    if not IsConnected(path):
-        print(f"WARNING: Chains {chain_id_src} and {chain_id_dst} are not connected, re-generating path")
-        if not RelayerHelper.GeneratePath(chain_id_src,chain_id_dst,path): #  rly pth gen kira-alpha transfer hashquarkchain transfer kira-alpha_gameofzoneshub-1
-            print(f"ERROR: Failed to generate path '{path}' between {chain_id_src} and {chain_id_dst}")
-            return connection
-        if not RelayerHelper.TransactLink(path, 600): # rly transact link kira-alpha_gameofzoneshub-1 --timeout 10s, # rly transact link kira-alpha_kira-1
-            print(f"ERROR: Failed to link {chain_id_src} and {chain_id_dst} via path '{path}'")
+    if not RestartLiteClients(connection): # it should always be possible to restart lite clients
+        raise Exception(f"Could NOT restart lite clients, it will not be possible to connect")
 
-    path_info = RelayerHelper.QueryPath(path) # rly pth show kira-alpha_gameofzoneshub-1 -j
-    if not path_info:
-        print(f"ERROR: Failed to query path {path}")
-        return connection
+    if not ReArmConnection(connection, timeout):
+        ttl = RelayerHelper.GetRemainingTimeToLive(connection) 
+        if None != ttl and ttl["min"] < min_ttl: # connection expired
+            print(f"WARNING: Path {path} expired, TTL: {ttl}")
+            RelayerHelper.DeletePath(path)
+            connection["path-info"] = None
+            return Connect(connection, timeout)
+        else:
+            raise Exception(f"Failed to re-arm connection via {path} path")
 
-    status = path_info["status"]
+    connection["success"] = success = IsConnected(connection)
+    if not success:
+        raise(f"Failed to connect {chain_id_src} and {chain_id_dst} via {path}")
 
-    if None != status:
-        print(f"INFO: Path {path} status: Chains {status['chains']} | Clients {status['clients']} | Connection {status['connection']} | Channel {status['channel']}")
+    connection["ttl"] = ttl = RelayerHelper.GetRemainingTimeToLive(connection)
+    if not ttl: # Assert there are no networking issues, NOTE: Auto rotate RPC add should occur before this section
+        raise(f"Failed to acquire TTL information of chain {chain_id_src} and {chain_id_dst} connected via {path} path")
 
-    connection["info"] = path_info
-    connection["success"] = IsConnected(path)
-   
-    if connection["success"]:
-        print(f"SUCCESS: Chains {chain_id_src} and {chain_id_dst} are connected via path '{path}'")
+    print(f"SUCCESS: Chains {chain_id_src} and {chain_id_dst} are connected, TTL: {ttl}")
+    connection["path-info"] = path_info = RelayerHelper.QueryPath(path) # rly pth show kira-alpha_gameofzoneshub-1 -j
+
+    if not path_info: # assert path info availability
+        raise(f"Failed to acquire path information of a successfully connected chain {chain_id_src} and {chain_id_dst} connected via {path}")
 
     return connection
 
@@ -158,70 +231,29 @@ def ReConnect(connection, timeout):
 
     return Connect(connection, timeout)
 
-def ConnectWithJson(src_json_path, scr_mnemonic, dst_json_path, dst_mnemonic, bucket, path, key_prefix, timeout):
+def ConnectWithJson(src_json_path, scr_mnemonic, dst_json_path, dst_mnemonic, bucket, path, key_prefix, timeout, min_ttl):
     print(f"INFO: Started => ConnectWithJson({src_json_path},{dst_json_path})")
-    lc_update_retry = 3 # 3x
-    lc_update_delay = 5 # 5s
-    connection = { "success": False }
+    connection = { "success": False, "path": path, "min-ttl": min_ttl }
 
-    src_chain_info = ClientHelper.InitializeClientWithJsonFile(src_json_path, key_prefix, scr_mnemonic, bucket)
+    connection["src"] = src_chain_info = ClientHelper.InitializeClientWithJsonFile(src_json_path, key_prefix, scr_mnemonic, bucket)
     src_chain_id = src_chain_info["chain-id"]
-    src_denom = src_chain_info["default-denom"]
+    print(f"SUCCESS: Source client {src_chain_id} was initalized")
+
+    connection["dst"] = dst_chain_info = ClientHelper.InitializeClientWithJsonFile(dst_json_path, key_prefix, dst_mnemonic, bucket)
+    dst_chain_id = dst_chain_info["chain-id"]
+    print(f"SUCCESS: Destination client {dst_chain_id} was initalized")
+    
     src_address = src_chain_info["address"]
     connection["src"] = src_chain_info
-    
-    if ClientHelper.QueryFeeTokenBalance(src_chain_info) <= 0:
-        print(f"WARNING: Insufficient account balance on the source chain '{src_chain_id}'.")
-        if ((not RelayerHelper.RequestTokens_Process(src_chain_id, timeout, lc_update_retry, lc_update_delay)) or # rly testnets request kira-1
-           (ClientHelper.QueryFeeTokenBalance(src_chain_info) <= 0)): # rly q bal kira-1 -j
-            print(f"ERROR: Failed to acquire any tokens from the {src_chain_id} faucet, aborting connection...")
-            return connection
-        else:
-            src_chain_info["balance"] = RelayerHelper.TryQueryBalance(src_chain_id)
-    
-    print(f"SUCCESS: Source client {src_chain_id} was initalized")
-    
-    dst_chain_info = ClientHelper.InitializeClientWithJsonFile(dst_json_path, key_prefix, dst_mnemonic, bucket)
-    dst_chain_id = dst_chain_info["chain-id"]
-    dst_denom = dst_chain_info["default-denom"]
+
     dst_address = dst_chain_info["address"]
     connection["dst"] = dst_chain_info
-    
-    if ClientHelper.QueryFeeTokenBalance(dst_chain_info) <= 0:
-        print(f"WARNING: Insufficient account balance on the destination chain '{dst_chain_id}'.")
-        if ((not RelayerHelper.RequestTokens_Process(dst_chain_id, timeout, lc_update_retry, lc_update_delay)) or # rly testnets request kira-1
-           (ClientHelper.QueryFeeTokenBalance(dst_chain_info) <= 0)): # rly q bal kira-1 -j
-            print(f"ERROR: Failed to acquire any tokens from the {dst_chain_id} faucet, aborting connection...")
-            return connection
-        else:
-            dst_chain_info["balance"] = RelayerHelper.TryQueryBalance(dst_chain_id)
 
-    print(f"SUCCESS: Destination client {src_chain_id} was initalized")
     src_fee_token_amount = RelayerHelper.GetAmountByDenom(src_chain_info["balance"], src_denom)
     dst_fee_token_amount = RelayerHelper.GetAmountByDenom(dst_chain_info["balance"], dst_denom)
-    
     print(f"INFO: Source client balance {src_chain_id} ({src_address}): {src_fee_token_amount} {src_denom}")
     print(f"INFO: Destination client balance {dst_chain_id} ({dst_address}): {dst_fee_token_amount} {dst_denom}")
-
-    path = f"{src_chain_id}_{dst_chain_id}" if not path else path
-    connection["path"] = path
-    
-    if not IsConnected(path):
-        print(f"INFO: Updating {src_chain_id} and {dst_chain_id} lite clients...")
-        if not UpdateLiteClients(connection):
-            print(f"Failed to restart lite clients, aborting connection...")
-            return connection
-        print(f"SUCCESS: Lite clients {src_chain_id} and {dst_chain_id} were updated.")
-    
-    print(f"INFO: Connecting  {src_chain_id} and {dst_chain_id} lite clients through path {path}...")
-    connection = Connect(connection, timeout)
-    
-    if (not connection) or (not connection["success"]):
-       print(f"ERROR: Failed to establish connection between {src_chain_id} and {dst_chain_id}, aborting connection...")
-       return connection
-
-    print(f"SUCCESS: Path {path} between {src_chain_id} and {dst_chain_id} was established")
-    return connection
+    return Connect(connection, timeout) # this command is asserted and throws if connection is not estbalished
 
 def TransferEachToken(src_chain_info, dst_chain_info, path, min_amount):
     src_id = src_chain_info["chain-id"]
@@ -276,24 +308,3 @@ def TestConnection(connection):
         print(f"WARNING: Failed to query connection status")
 
     return is_connected
-
-
-
-
-# root@kira-alpha-relayer-v2-1:/# rly pth show kira-1_kira-alpha
-# Path "kira-1_kira-alpha" strategy(naive):
-#   SRC(kira-1)
-#     ClientID:     nzgrdymmpv
-#     ConnectionID: xpmhyhnzzi
-#     ChannelID:    lcxdfyjuug
-#     PortID:       transfer
-#   DST(kira-alpha)
-#     ClientID:     ucljkzaurl
-#     ConnectionID: vgccuoqnyw
-#     ChannelID:    kpkwxlwahy
-#     PortID:       transfer
-#   STATUS:
-#     Chains:       ✔
-#     Clients:      ✔
-#     Connection:   ✘
-#     Channel:      ✘

@@ -29,35 +29,41 @@ DST_JSON_DIR=sys.argv[3]
 DST_MNEMONIC=sys.argv[4]
 BUCKET=sys.argv[5]
 SHUTDOWN=sys.argv[6]
-PATH=sys.argv[7]
-KEY_PREFIX=sys.argv[8]
-TRUST_UPDATE_PERIOD=sys.argv[9]
-PATH = None if ((not PATH) or (len(PATH) <= 1)) else PATH
-KEY_PREFIX = "chain_key" if ((not KEY_PREFIX) or (len(KEY_PREFIX) <= 1)) else KEY_PREFIX
-   
+path=sys.argv[7]
+key_prefix=sys.argv[8]
+min_ttl=sys.argv[9]
+path = "default_path" if ((not path) or (len(path) <= 1)) else path
+key_prefix = "chain_key" if ((not key_prefix) or (len(key_prefix) <= 1)) else key_prefix
+min_ttl = int(min_ttl)*60
+
 # constants 
-connect_timeout = 60
-update_period = int(TRUST_UPDATE_PERIOD)*60
+timeout = 60
 upload_period = 2*60
 
 print(f" _________________________________")
 print(f"|     STARTING RELAYER v0.0.1     |")
 print(f"|---------------------------------|")
-print(f"| INFO: Connection Path:          - {PATH}")
-print(f"| INFO: Key Prefix:               - {KEY_PREFIX}")
+print(f"| INFO: Connection path:          - {path}")
+print(f"| INFO: Key Prefix:               - {key_prefix}")
 print(f"| INFO: S3 Bucket:                - {BUCKET}")
 print(f"| INFO: Source Chain File:        - {SRC_JSON_DIR}")
 print(f"| INFO: Destination Chain File:   - {DST_JSON_DIR}")
-print(f"| INFO: Connection Update Period: - {timedelta(seconds=update_period)}")
+print(f"| INFO: Minimum Time To Live:     - {timedelta(seconds=min_ttl)}")
 print(f"| INFO: State Upload Period:      - {timedelta(seconds=upload_period)}")
 print(f"|_________________________________|")
 
-connection = IBCHelper.ConnectWithJson(SRC_JSON_DIR, SRC_MNEMONIC, DST_JSON_DIR, DST_MNEMONIC, BUCKET, PATH, KEY_PREFIX, connect_timeout)
-connection = {} if not connection else connection
-path = None if (not connection) else connection.get("path", PATH)
-prefix = None if (not connection) else connection.get("key-prefix", KEY_PREFIX)
-connected = False if ((not connection) or (not path) or (not prefix)) else connection.get("success", False)
-state_file_path = f"relayer/{path}/{prefix}/state.json"
+state_file_path = f"relayer/{path}/{key_prefix}/state.json"
+print(f"INFO: Fetching '{state_file_path}' state file from S3...")
+state_file_txt = StateHelper.S3ReadText(BUCKET,state_file_path)
+state_file = {}
+if None == state_file_txt: # error
+    raise Exception(f"Error occurred while fetching {state_file_path} from {BUCKET} bucket")
+elif len(state_file_txt) > 10:
+     state_file = json.loads(state_file_txt)
+
+# this command is asserted and throws if connection is not estbalished
+connection = IBCHelper.ConnectWithJson(SRC_JSON_DIR, SRC_MNEMONIC, DST_JSON_DIR, DST_MNEMONIC, BUCKET, path, key_prefix, timeout, min_ttl)
+
 
 print(f"INFO: Fetching state file from S3...")
 state_file_txt = StateHelper.S3ReadText(BUCKET,state_file_path)
@@ -158,14 +164,14 @@ while True:
 
         old_state_upload = time.time()
         connection["upload-time"] = old_state_upload
-        if not StateHelper.S3WriteText(connection,BUCKET,state_file_path):
+        if not StateHelper.TryS3WriteText(connection,BUCKET,state_file_path):
             print(f"ERROR: Failed to upload state file.")
 
     elif upload_period <= elapsed_state_upload:
         print(f"INFO: Elapsed minmum upload period of {timedelta(seconds=upload_period)}")
         old_state_upload = time.time()
         connection["upload-time"] = old_state_upload
-        if not StateHelper.S3WriteText(connection,BUCKET,state_file_path):
+        if not StateHelper.TryS3WriteText(connection,BUCKET,state_file_path):
             print(f"ERROR: Failed to upload state file.")
 
     print(f"INFO: Pushing any pending transactions...")

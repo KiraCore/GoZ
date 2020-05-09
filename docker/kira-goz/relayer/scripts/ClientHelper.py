@@ -19,89 +19,55 @@ def ShutdownClient(chain_info):
     RelayerHelper.DeleteLiteClient(chain_id) # rly lite delete kira-alpha
     RelayerHelper.ChainDelete(chain_id) # rly chains delete kira-alpha
 
+# NOTE: Keys / chain's can be fully re-initalized without impacting client connection, this method can be used even during live operations / post initalization to update the rly
 def InitializeClientWithMnemonic(chain_info, mnemonic):
+    print(f"INFO: Initializing client with mnemonic...")
     chain_id = chain_info["chain-id"]
     chain_info_path = chain_info["file-path"]
     key_name = chain_info["key-name"]
     bucket = chain_info["bucket"]
     s3_key_path = chain_info["s3-path"]
 
-    retry = 3 # 3x
-    delay = 5 # 5s
+    if not mnemonic:
+        raise Exception(f"Failed to recover key {key_name}. Mnemonic was not defined.");
 
-    def UpdateKeyIfNotSetAndConfigure():
-        if not RelayerHelper.KeyExists(chain_id, key_name):
-            print(f"WARNING: Key {key_name} of the {chain_id} chain does not exist, restoring...")
-            if mnemonic: # restore old key
-                RelayerHelper.RestoreKey(chain_id, key_name, mnemonic) # rly keys restore kira-alpha prefix_kira-alpha "$RLYKEY_MNEMONIC"
-            else: # add new key
-                key = RelayerHelper.UpsertKey(chain_id, key_name)
-                if not StateHelper.S3WriteText(key, bucket, s3_key_path):
-                     print(f"ERROR: Failed to save {key_name} in S3")
-                else:
-                    print(f"SUCCESS: Key {key_name} was saved in S3")
+    if not RelayerHelper.UpsertChainFromFile(chain_info_path): # rly chains add -f $TESTCHAIN_JSON_PATH
+        raise Exception(f"Failed adding new chain from '{chain_info_path}' file :(")
 
-            if not RelayerHelper.KeyExists(chain_id, key_name):
-                print(f"ERROR: Failed to restore key {key_name} of the chain {chain_id}")
-            else:
-                print(f"SUCCESS: Key {key_name} of the chain {chain_id} was restored")
-        else:
-            print(f"INFO: Key {key_name} of the {chain_id} already exists.")
+    if not RelayerHelper.KeyExists(chain_id, key_name):
+        print(f"WARNING: Key {key_name} of the {chain_id} chain does not exist, restoring...")
+        RelayerHelper.RestoreKey(chain_id, key_name, mnemonic) # rly keys restore kira-alpha prefix_kira-alpha "$RLYKEY_MNEMONIC"
         
-        if not RelayerHelper.IsKeyConfigured(chain_id):
-            if not RelayerHelper.ConfigureDefaultKey(chain_id, key_name): # rly ch edit kira-alpha key prefix_kira-alpha
-                print(f"WARNING: Failed to configure chain {chain_id} to use {key_name} key by default")
-            else:
-                print(f"SUCCESS: Key {key_name} was configured as default of the chain {chain_id}")
+        if not StateHelper.TryS3FileExists(bucket, s3_key_path):
+            print(f"INFO: Relayer key {key_name} was not present in S3, uploading...")
+            StateHelper.S3WriteText(key, bucket, s3_key_path) # will throw if fails to upload
+        if not RelayerHelper.KeyExists(chain_id, key_name):
+            raise Exception(f"Failed to restore key {key_name} of the chain {chain_id}")
 
-    if not RelayerHelper.UpdateLiteClient(chain_id): # delete, init and update lite
-        if not RelayerHelper.UpsertChainFromFile(chain_info_path): # rly chains add -f $TESTCHAIN_JSON_PATH
-            print(f"ERROR: Failed adding new chain from '{chain_info_path}' file :(")
-            return chain_info
+        print(f"SUCCESS: Key {key_name} of the chain {chain_id} was restored")
+    else:
+        print(f"INFO: Key {key_name} of the {chain_id} already exists")
+    
+    if not RelayerHelper.ConfigureDefaultKey(chain_id, key_name): # rly ch edit kira-alpha key prefix_kira-alpha
+        raise Exception(f"Failed to configure chain {chain_id} to use {key_name} key by default")
+    print(f"SUCCESS: Key {key_name} was configured as default of the chain {chain_id}")
 
-        print(f"SUCCESS: Chain {chain_id} was added from file {chain_info_path}")
-        UpdateKeyIfNotSetAndConfigure()
-
-        if not RelayerHelper.UpdateLiteClient(chain_id):
-            print(f"ERROR: Failed lite client init of the '{chain_id}' chain :(")
-            return chain_info
-
-        print(f"SUCCESS: Lite client of the chain '{chain_id}' was initialized")
-    else: # update
-        print(f"SUCCESS: Lite client header of the chain '{chain_id}' was found")
-        UpdateKeyIfNotSetAndConfigure()
-
-        if not RelayerHelper.UpdateLiteClient(chain_id): 
-            print(f"ERROR: Failed updating lite client of the '{chain_id}' chain :(")
-            return chain_info
-        print(f"SUCCESS: Lite client of the chain '{chain_id}' was updated")
-
-    address = RelayerHelper.QueryChainAddress(chain_id)
+    chain_info["address"] = address = RelayerHelper.QueryChainAddress(chain_id)
 
     if not address:
-        print(f"ERROR: Failed to query {chain_id} chain address")
-        return chain_info
+        raise Exception(f"Failed to query {chain_id} chain address")
 
-    balance = RelayerHelper.TryQueryBalance(chain_id)
+    chain_info["balance"] = balance = RelayerHelper.TryQueryBalance(chain_id)
 
     if (not balance) or (len(balance) <= 0):
-        print(f"WARNING: Address {address} on the chain {chain_id} has no tokens deposited!")
-        balance = None
+        print(f"WARNING: Address {address} on the chain {chain_id} has no tokens deposited or query failed to fetch balance!")
+        chain_info["balance"] = balance = None
 
-    chain_info["address"] = address
-    chain_info["balance"] = balance
     return chain_info
 
 def InitializeClientWithBucket(chain_info):
-    chain_id = chain_info["chain-id"]
-    chain_info_path = chain_info["file-path"]
-    bucket = chain_info["bucket"]
-    key_name = chain_info["key-name"]
-    s3_key_path = chain_info["s3-path"]
-    
-    key = StateHelper.DownloadKey(bucket, s3_key_path)
-    mnemonic=key["mnemonic"]
-    return InitializeClientWithMnemonic(chain_info, mnemonic)
+    print(f"INFO: Initializing client with bucket...")
+    return InitializeClientWithMnemonic(chain_info, StateHelper.DownloadKey(chain_info["bucket"], chain_info["s3-path"])["mnemonic"])
 
 def InitializeClient(chain_info, key_prefix, mnemonic):
     chain_info["balance"] = None
@@ -114,31 +80,44 @@ def InitializeClient(chain_info, key_prefix, mnemonic):
     chain_info["key-prefix"] = key_prefix
     chain_info["key-name"] = key_name
     chain_info["s3-path"] = f"{chain_id}/{key_name}.json"
-    chain_info["tmp-path"] = "/tmp/{chain_id}_{key_name}.json"
 
     if mnemonic:
         return InitializeClientWithMnemonic(chain_info, mnemonic)
-    elif bucket:
+    elif None != chain_info.Get("bucket", None):
         return InitializeClientWithBucket(chain_info)
     else:
-        raise Exception(f"bucket or mnemonic was not specified, failed to initialize client")
-
-def InitializeClientWithJsonFile(json_path, key_prefix, mnemonic, bucket):
-    print(f"INFO: Started => InitializeClientWithJsonFile({json_path})")
-    chain_info = json.load(open(json_path))
-    chain_info["file-path"] = json_path
-    chain_info["bucket"] = bucket
-    return InitializeClient(chain_info, key_prefix, mnemonic)
+        raise Exception(f"FATAL! Bucket or mnemonic was not specified, failed to initialize client.")
 
 def QueryFeeTokenBalance(chain_info):
     chain_id = chain_info["chain-id"]
-    denom = chain_info["default-denom"]
-
+    denom = chain_info.get("default-denom")
     if not denom:
         print(f"WARNING: Chain {chain_id} does not have a default denom for the fee token defined")
         return 0
-
-    address = chain_info["address"]
     balances=RelayerHelper.TryQueryBalance(chain_id)
     return RelayerHelper.GetAmountByDenom(balances, denom)
 
+def AssertRefreshBalances(chain_info):
+    chain_id = chain_info["chain-id"]
+    denom = chain_info["default-denom"]
+    address = chain_info.get("address","undefined")
+    chain_info["balance"] = balances = RelayerHelper.TryQueryBalance(chain_id)
+    if RelayerHelper.GetAmountByDenom(balances, denom) <= 0:
+        raise Exception(f"Insufficient {denom} balance of the account '{chain_id}:{address}', client will not be able to further continue the connections unless {denom} tokens are available.")
+    return chain_info
+
+def InitializeClientWithJsonFile(json_path, key_prefix, mnemonic, bucket):
+    print(f"INFO: Initializing IBC client with JSON file: {json_path}")
+    chain_info = json.load(open(json_path))
+    chain_info["file-path"] = json_path
+    chain_info["bucket"] = bucket
+    chain_info = InitializeClient(chain_info, key_prefix, mnemonic)
+    chain_id = chain_info["chain-id"]
+    denom = chain_info["default-denom"]
+    address = chain_info.get("address","undefined")
+
+    print(f"INFO: Requesting {denom} tokens from {chain_id} faucet...")
+    if not RelayerHelper.TryRequestTokens(chain_id):
+        print(f"WARNING: Failed to request {denom} tokens from the {chain_id} faucet...")
+    chain_info = AssertRefreshBalances(chain_info)
+    return chain_info

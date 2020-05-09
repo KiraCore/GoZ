@@ -51,7 +51,7 @@ Private Sentry:
 
 SEEDS: 
 ```
-tcp://6e4e0fad3d152b4086e24fd84602f71c6815832d@goz-trust-alias.kiraex.com:26656,tcp://c65d517ed3784605c96fb6be5a16c4d577e35bb3@internal-goz-sentry-public.kiraex.com:10000
+tcp://d95a9f97e31f36d0a467e6855c71f5e5b8eccf65@34.83.90.172:26656,tcp://0e76d473f005e3b7cd530ee3ee6999bfa3c9a45e@80.64.211.64:26656,tcp://7cb9cbba21fdc3b004f098c116e5e2c2ac77ddfb@34.83.218.4:26656,tcp://6e4e0fad3d152b4086e24fd84602f71c6815832d@35.233.155.199:26656,tcp://ef36b3167b8599c46b0daf799f089068360c3911@34.83.0.237:26656,tcp://c65d517ed3784605c96fb6be5a16c4d577e35bb3@internal-goz-sentry-public.kiraex.com:10000
 ```
 
 Public Sentry:
@@ -61,7 +61,7 @@ Public Sentry:
 
 SEEDS: 
 ```
-tcp://6e4e0fad3d152b4086e24fd84602f71c6815832d@goz-trust-alias.kiraex.com:26656,tcp://c5a16d35506b3052d9d6f684881ced8016d42e76@internal-goz-sentry-private.kiraex.com:10000
+tcp://d95a9f97e31f36d0a467e6855c71f5e5b8eccf65@34.83.90.172:26656,tcp://0e76d473f005e3b7cd530ee3ee6999bfa3c9a45e@80.64.211.64:26656,tcp://7cb9cbba21fdc3b004f098c116e5e2c2ac77ddfb@34.83.218.4:26656,tcp://6e4e0fad3d152b4086e24fd84602f71c6815832d@35.233.155.199:26656,tcp://ef36b3167b8599c46b0daf799f089068360c3911@34.83.0.237:26656
 ```
 
 # Localhost
@@ -76,6 +76,7 @@ tcp://6e4e0fad3d152b4086e24fd84602f71c6815832d@goz-trust-alias.kiraex.com:26656,
 
 > Kira Validator container: `docker exec -it $(docker ps -a -q  --filter ancestor=kiracore/goz:kira-goz-validator) bash`
 > Kira Relayer container: `docker exec -it $(docker ps -a -q --filter ancestor=kiracore/goz:kira-goz-relayer) bash`
+  * Check Output Log: `cat $SELF_LOGS/relayer.txt`
 > Kira Sentry container: `docker exec -it $(docker ps -a -q --filter ancestor=kiracore/goz:goz-hub-sentry) bash`
 
 ## Checking container error logs
@@ -103,6 +104,8 @@ tcp://6e4e0fad3d152b4086e24fd84602f71c6815832d@goz-trust-alias.kiraex.com:26656,
 > Delete Path: `rly pth delete kira-alpha_hashquarkchain`
 > Show Path: `rly pth show kira-alpha_hashquarkchain -j`
   
+rly pth show kira-1_gameofzoneshub-1a -j
+
   Example Output:
 ```
 {"chains":{"src":{"chain-id":"kira-alpha","client-id":"wyrwjrphee","connection-id":"fggmltnqgu","channel-id":"rxkhmzzlea","port-id":"transfer","order":"ORDERED"},"dst":{"chain-id":"hashquarkchain","client-id":"dahykiltwr","connection-id":"qkrjxeqgus","channel-id":"mryfsrxoit","port-id":"transfer","order":"ORDERED"},"strategy":{"type":"naive"}},"status":{"chains":true,"clients":true,"connection":true,"channel":true}}
@@ -110,14 +113,14 @@ tcp://6e4e0fad3d152b4086e24fd84602f71c6815832d@goz-trust-alias.kiraex.com:26656,
 
 > Token Transfer
  * Generate Path:  `rly pth gen kira-1 transfer hashquarkchain transfer kira-1_hashquarkchain`
- * Link Chains (all in one): `rly tx link kira-1_hashquarkchain`
+ * Link Chains (all in one): `rly tx link kira-1_gameofzoneshub-1a`**rly pth show  -j**
  * Transfer Tokens: `rly tx transfer hashquarkchain kira-1 1quark true $(rly ch addr kira-1)`
  * Transfer Hanging Packets: `rly tx rly kira-1_hashquarkchain`
 
 > Chain Linking (step by step):
- * Transact Clients: `rly transact clients kira-alpha_hashquarkchain --debug`
- * Transact Connection: `rly transact connection kira-alpha_hashquarkchain --debug`
- * Transact Channel: `rly transact channel kira-alpha_hashquarkchain --debug`
+ * Transact Clients: `rly transact clients kira-1_gameofzoneshub-1a --debug`
+ * Transact Connection: `rly transact connection kira-1_gameofzoneshub-1a --debug`
+ * Transact Channel: `rly transact channel kira-1_gameofzoneshub-1a --debug`
   
 > Check Balances: `rly q bal kira-1 -j`
 > Update Connection: `rly tx raw update-client {src_chain_id} {dst_chain_id} {client-id}`
@@ -136,3 +139,45 @@ tcp://6e4e0fad3d152b4086e24fd84602f71c6815832d@goz-trust-alias.kiraex.com:26656,
 > Agent Logs: `sudo journalctl -u konlet-startup`
 > Instance Metadata: `curl -H "Metadata-Flavor: Google" http://metadata/computeMetadata/v1/instance/`
 
+
+# Wipe Connection
+> rly lite delete kira-1
+> rly lite delete gameofzoneshub-1a
+> rly pth delete kira-1_gameofzoneshub-1a
+
+# Re-init Connection
+* Initialize LIte Clients
+    > rly lite init kira-1 -f 
+    > rly lite init gameofzoneshub-1a -f 
+* Generate new path
+    > rly pth gen kira-1 transfer gameofzoneshub-1a transfer kira-1_gameofzoneshub-1a -f
+* Link: NOTE - DO NOT USE THE `rly tx link kira-1_gameofzoneshub-1a --debug` 
+  > set fees if needed `rly ch edit gameofzoneshub-1a gas-prices 0.025doubloons`
+    > rly transact clients kira-1_gameofzoneshub-1a --debug
+    > rly transact connection kira-1_gameofzoneshub-1a --debug
+    > rly transact channel kira-1_gameofzoneshub-1a --debug
+* Query Status
+    > rly pth show kira-1_gameofzoneshub-1a
+    > rly query full-path kira-1_gameofzoneshub-1a --debug
+    > rly q client kira-1 jttozounos
+    > rly q client gameofzoneshub-1a znmvqkvtub
+
+* Transfer Tokens
+    > Src -> Dst: `rly tx transfer kira-1 gameofzoneshub-1a 2ukex true $(rly ch addr gameofzoneshub-1a) --path=kira-1_gameofzoneshub-1a --debug`
+    > Dst -> Src: `rly tx transfer gameofzoneshub-1a kira-1 2doubloons true $(rly ch addr kira-1) --path=kira-1_gameofzoneshub-1a --debug`
+    > Push pending tx: `rly transact relay kira-1_gameofzoneshub-1a --debug`
+
+
+## Re-connection steps:
+1. Delete Chain
+2. Force Re-Add Chain (updates info from files)
+3. Delete rly key's
+4. Restore rly key's
+5. Set key as default of the chain
+6. Delete lite client (as it is used in the path creation)
+7. Delete Path
+8. Create new path
+9. Lite client init
+10. Lite client update
+11. Request Test Tokens
+12. Establish clients, connection and channel
