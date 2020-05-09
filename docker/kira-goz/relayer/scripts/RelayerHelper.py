@@ -248,7 +248,6 @@ def PushPendingTransactions(path):
 # rly transact link kira-alpha_kira-1
 def UpdateClientConnection(chain_info, path):    
     info = QueryPath(path) # rly pth show $p -j
-
     if not info or (not info["chains"]) or (not info["status"]):
         print(f"ERROR: Could not correctly query path {path}, chain or status information is missing from the response")
         return False
@@ -274,9 +273,9 @@ def UpdateClientConnection(chain_info, path):
 
     client_id = None
     if is_source:
-        client_id = chains["dst"]["client-id"]
-    else:
         client_id = chains["src"]["client-id"]
+    else:
+        client_id = chains["dst"]["client-id"]
         tmp = dst_chain_id
         dst_chain_id = src_chain_id
         src_chain_id = tmp
@@ -286,7 +285,7 @@ def UpdateClientConnection(chain_info, path):
         print(f"ERROR: Client was NOT updated")
         return False
     if int(tx.get("height", "0")) <= 0:
-        print(f"ERROR: Failed to propagate raw update-client transactions between {src_chain_id} and {dst_chain_id}")
+        print(f"ERROR: Failed to propagate raw update-client transactions between {src_chain_id} and {dst_chain_id} with client-id {client_id}, tx response: {tx}")
         return False
   
     print(f"SUCCESS: Client was updated: {tx}")

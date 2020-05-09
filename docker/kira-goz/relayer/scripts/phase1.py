@@ -60,14 +60,17 @@ connection = IBCHelper.ConnectWithJson(SRC_JSON_DIR, SRC_MNEMONIC, DST_JSON_DIR,
 time_start = time.time()
 init_time = int(time_start - t0)
 
-src = connection["src"];
-dst = connection["dst"];
+src = connection["src"]
+dst = connection["dst"]
+src_conn_id=connection["path-info"]["chains"]["src"]["connection-id"]
+dst_conn_id=connection["path-info"]["chains"]["dst"]["connection-id"]
 src_chain_id = src["chain-id"]
 dst_chain_id = dst["chain-id"];
 src_denom = src["default-denom"]
 dst_denom = dst["default-denom"]
 src_key = src["key-name"]
 dst_key = dst["key-name"]
+
 
 connection["init-time"] = init_time
 connection["max-init-time"] = max_init_time = max(state_file.get("max-init-time", init_time), init_time)
@@ -102,8 +105,8 @@ while True:
     ttl_dst = int(ttl["dst"]) # destination connection time to live
 
     print(f"_________________________________")
-    print(f"|        Source Chain            - {src_chain_id}")
-    print(f"|      Destination Chain         - {dst_chain_id}")
+    print(f"|        Source Chain            - {src_chain_id} ({src_conn_id})")
+    print(f"|      Destination Chain         - {dst_chain_id} ({dst_conn_id})")
     print(f"|       Connection Path          - {path}")
     print(f"|        Date Time Now           - {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
     print(f"|--------------------------------|")
@@ -136,14 +139,20 @@ while True:
     if skip_upload:
         continue
     
+    print(f"INFO: Pushing any pending transactions...");
+    if not RelayerHelper.PushPendingTransactions(path):
+        print(f"WARNING: Failed to push pending transactions")
+
+    print(f"INFO: Updating lite clients...");
+    if not IBCHelper.RestartLiteClients(connection):
+        print(f"WARNING: Failed to update lite clients")
+
     if time_to_upload < 0:
         connection["upload-time"] = upload_time = time.time()
         StateHelper.S3WriteText(connection,BUCKET,state_file_path);
-
-    print(f"INFO: Pushing any pending transactions...")
+    
     time.sleep(15)
-    if not RelayerHelper.PushPendingTransactions(path):
-        print(f"WARNING: Failed to push pending transactions")
+
 
 print(f"ERROR: Failed to maitain connection between {src_id} and {dst_id}, Uptime: {timedelta(seconds=int(time.time() - time_start))}")
 print(f"INFO: Script Failed (1)")
