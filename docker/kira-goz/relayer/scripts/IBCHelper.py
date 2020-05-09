@@ -289,21 +289,29 @@ def TestConnection(connection):
     src_id = src_chain_info["chain-id"]
     dst_id = dst_chain_info["chain-id"]
     path = connection["path"]
+    min_ttl = connection["min-ttl"]
 
-    RelayerHelper.InitLiteClient(src_id)
-    RelayerHelper.InitLiteClient(dst_id)
-    src_header = RelayerHelper.QueryLiteClientHeader(src_id)
-    dst_header = RelayerHelper.QueryLiteClientHeader(dst_id)
+    if not RelayerHelper.UpdateLiteClient(src_id) or (not RelayerHelper.QueryLiteClientHeader(src_id)):
+        print(f"FAILURE: Could not update source '{src_id}' lite client or fetch header")
+        return False
+    if not RelayerHelper.UpdateLiteClient(dst_id) or (not RelayerHelper.QueryLiteClientHeader(dst_id)):
+        print(f"FAILURE: Could not update destination '{dst_id}' lite client or fetch header")
+        return False
+
     status = QueryStatus(path)
     is_connected = TestStatus(status)
+    ttl = RelayerHelper.GetRemainingTimeToLive(connection)
 
     if is_connected:
-        print(f"SUCCESS: Connection of the path {path} is maitained.")
+        print(f"SUCCESS: Connection of the path {path} is maitained, testing ttl...")
+        if not ttl or ttl["min"] <= 0:
+            print(f"FAILURE: Could not acquire remaining TTL or {ttl} indicates dropped connection.")
+            is_connected = False
     else:
         print(f"FAILURE: Connection of the path {path} is faulty.")
 
     if None != status:
-        print(f"INFO: Path {path} status: Chains {status['chains']} | Clients {status['clients']} | Connection {status['connection']} | Channel {status['channel']}")
+        print(f"INFO: Path {path} status: Chains {status['chains']} | Clients {status['clients']} | Connection {status['connection']} | Channel {status['channel']}, TTL: {ttl}")
     else:
         print(f"WARNING: Failed to query connection status")
 

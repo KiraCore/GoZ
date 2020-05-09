@@ -14,13 +14,8 @@ import time
 from joblib import Parallel, delayed
 from datetime import timedelta, datetime
 
-
 # Update: (rm $SELF_SCRIPTS/phase1.py || true) && nano $SELF_SCRIPTS/phase1.py 
 
-# Startup example: 26657
-# rly pth show kira-alpha_kira-1
-# rly pth show kira-alpha_gameofzoneshub-1
-# 
 # console args
 t0 = time.time()
 SRC_JSON_DIR=sys.argv[1]
@@ -28,10 +23,9 @@ SRC_MNEMONIC=sys.argv[2]
 DST_JSON_DIR=sys.argv[3]
 DST_MNEMONIC=sys.argv[4]
 BUCKET=sys.argv[5]
-SHUTDOWN=sys.argv[6]
-path=sys.argv[7]
-key_prefix=sys.argv[8]
-min_ttl=sys.argv[9]
+path=sys.argv[6]
+key_prefix=sys.argv[7]
+min_ttl=sys.argv[8]
 path = "default_path" if ((not path) or (len(path) <= 1)) else path
 key_prefix = "chain_key" if ((not key_prefix) or (len(key_prefix) <= 1)) else key_prefix
 min_ttl = int(min_ttl)*60
@@ -63,126 +57,89 @@ elif len(state_file_txt) > 10:
 
 # this command is asserted and throws if connection is not estbalished
 connection = IBCHelper.ConnectWithJson(SRC_JSON_DIR, SRC_MNEMONIC, DST_JSON_DIR, DST_MNEMONIC, BUCKET, path, key_prefix, timeout, min_ttl)
-
-
-print(f"INFO: Fetching state file from S3...")
-state_file_txt = StateHelper.S3ReadText(BUCKET,state_file_path)
-old_connection_update = 0 # the last time node was connected or updated
-old_state_upload = 0 # last time state file was updated
-old_total_uptime = 0 # sum of the connection uptime
 time_start = time.time()
+init_time = int(time_start - t0)
 
-if None == state_file_txt: # error when fetching state file
-   print(f"ERROR: Failed to download state file or access s3")
-   print(f"INFO: Script Failed (1)")
-   exit(1)
-elif None != state_file_txt and (not state_file_txt): # empty state file
-    print(f"WARNING: State file was not present in s3")
-    connection["last-update"] = 0
-    connection["upload-time"] = time_start
-    connection["total-uptime"] = 0
-else: # status exists, extract state file from json
-    print(f"SUCCESS: State file was loaded")
-    print(state_file_txt)
-    state_file = json.loads(state_file_txt)
-    old_connection_update = state_file["last-update"]
-    old_state_upload = state_file["upload-time"]
-    old_total_uptime = state_file["total-uptime"]
-    connection["total-uptime"]=old_total_uptime
-    connection["last-update"]=old_connection_update
-    connection["upload-time"]=old_state_upload
-    print(f"INFO: Last connection update: {timedelta(seconds=(time.time() - old_connection_update))}")
-    print(f"INFO: Last state upload: {timedelta(seconds=(time.time() - old_state_upload))}")
+src = connection["src"];
+dst = connection["dst"];
+src_chain_id = src["chain-id"]
+dst_chain_id = dst["chain-id"];
+src_denom = src["default-denom"]
+dst_denom = dst["default-denom"]
+src_key = src["key-name"]
+dst_key = dst["key-name"]
 
-if not connected:
-    print(f"ERROR: Failed to establish connection using {SRC_JSON_DIR} and {DST_JSON_DIR}")
-    if f"{SHUTDOWN}" == "True":
-        print(f"INFO: Connection will be permanently shutdown")
-        IBCHelper.ShutdownConnection(connection)
-    else:
-        print(f"INFO: Connection will NOT be shutdown")
+connection["init-time"] = init_time
+connection["max-init-time"] = max_init_time = max(state_file.get("max-init-time", init_time), init_time)
+connection["min-init-time"] = min_init_time = min(state_file.get("min-init-time", init_time), init_time)
+upload_time = connection["upload-time"] = state_file.get("upload-time", 0) # time when state_info was uploaded for the last time
+total_uptime = connection["total-uptime"] = state_file.get("total-uptime", 0)
+loop_start = time_start
 
-    elpased_connection_update = time.time() - old_connection_update
-    if (update_period/2) <= elpased_connection_update:
-        print(f"INFO: Updating client despite errors...")
-        if not RelayerHelper.UpdateClientConnection(connection):
-            print(f"WARNING: Failed to update clients")
-        else:
-            print(f"SUCCESS: Client was updated")
-            connection["last-update"] = time.time()
-
-    RelayerHelper.PushPendingTransactions(path)
-    connection["upload-time"] = time_start
-    StateHelper.S3WriteText(connection,BUCKET,state_file_path);
-    print(f"INFO: Script Failed (2)")
-    exit(2)
-
-src_chain_info = connection["src"]
-dst_chain_info = connection["dst"]
-src_id = src_chain_info["chain-id"]
-dst_id = dst_chain_info["chain-id"]
-src_key = src_chain_info["key-name"]
-dst_key = dst_chain_info["key-name"]
-src_denom = src_chain_info["default-denom"]
-dst_denom = dst_chain_info["default-denom"]
-
-dT0=int(time.time() - t0) # time between start of the scrip and relayer beeing ready to update connection
-print(f"SUCCESS: connection between {src_id} and {dst_id} was established within {timedelta(seconds=dT0)}, path: '{path}'")
-print(f"INFO: Entering connection sustainably mode")
+print(f"INFO: Connection was established within {init_time}s")
+print(f"INFO: Max init time: {max_init_time}s")
+print(f"INFO: Min init time: {min_init_time}s")
 
 while True:
-    if not IBCHelper.TestConnection(connection):
-        connection["success"] = False
-        break;
-    elapsed = time.time() - time_start
-    elpased_connection_update = time.time() - old_connection_update
-    elapsed_state_upload = time.time() - old_state_upload
+    loop_elapsed = int(time.time() - loop_start)
+    upload_elapsed = int(time.time() - upload_time)
+    time_to_upload = int(upload_period - upload_elapsed)
+    total_uptime = connection["total-uptime"] =  total_uptime + loop_elapsed
+    loop_start = time.time()
+    current_session = time.time() - time_start
 
-    total_uptime = old_total_uptime + elapsed
-    connection["total-uptime"]=total_uptime
+    if not IBCHelper.TestConnection(connection):
+        print(f"FAILURE: Connection was dropped or failed to query status. Current session duration: {timedelta(seconds=current_session)}")
+        break
+
+    ttl = RelayerHelper.GetRemainingTimeToLive(connection)
+    ttl_src = int(ttl["src"]) # source connection time to live
+    ttl_dst = int(ttl["dst"]) # destination connection time to live
+    ttl_min = int(ttl["min"]) # minimum time to live
+
     print(f"_________________________________")
+    print(f"| SRC: {src_chain_id}")
+    print(f"| DST: {dst_chain_id}")
     print(f"| PATH: {path}")
     print(f"| TIME: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
     print(f"|--------------------------------|")
-    print(f"| INFO: Current Connection:      - {timedelta(seconds=elapsed)}")
+    print(f"| INFO: Current Session:         - {timedelta(seconds=current_session)}") # time since routine was started
     print(f"| INFO: Total uptime:            - {timedelta(seconds=total_uptime)}")
-    print(f"| INFO: Next connection update:  - {max(0,int(update_period - elpased_connection_update))}s")
-    print(f"| INFO: Next state update:       - {max(0,int(upload_period-elapsed_state_upload))}s")
-    print(f"| INFO: Source Key balance:      - {src_key} {ClientHelper.QueryFeeTokenBalance(src_chain_info)} {src_denom}")
-    print(f"| INFO: Destination Key balance: - {dst_key} {ClientHelper.QueryFeeTokenBalance(dst_chain_info)} {dst_denom}")
+    print(f"| INFO: Remaining Time To Live:  - {max(0, ttl_min)}s")
+    print(f"| INFO: Next State Upload:       - {max(0,int(time_to_upload))}s")
+    print(f"| INFO: Source Key balance:      - {src_key} {ClientHelper.QueryFeeTokenBalance(src)} {src_denom}")
+    print(f"| INFO: Destination Key balance: - {dst_key} {ClientHelper.QueryFeeTokenBalance(dst)} {dst_denom}")
     print(f"|________________________________|")
+
+    skip_upload = False
+    if ttl_src <= min_ttl:
+        print(f"INFO: Remaining time to live of the source connection ({ttl_src}) is smaller than min TTL of {min_ttl}, updating...")
+        if not RelayerHelper.UpdateClientConnection(src, path):
+            print(f"WARNING: Failed to update source connection")
+            skip_upload = True
+
+    if ttl_dst <= min_ttl:
+        print(f"INFO: Remaining time to live of the destination connection ({ttl_dst}) is smaller than min TTL of {min_ttl}, updating...")
+        if not RelayerHelper.UpdateClientConnection(dst, path):
+            print(f"WARNING: Failed to update destination connection")
+            skip_upload = True
+            
+    if skip_upload:
+        continue
     
-    if update_period <= elpased_connection_update:
-        print(f"INFO: Elapsed minmum trust period of {timedelta(seconds=update_period)}, updating client connection...")
-        last_update=time.time() # time has to be measured before the function is called
-        if RelayerHelper.UpdateClientConnection(connection):
-            print(f"SUCCESS: Connection was updated!")
-            connection["last-update"]=last_update
-            old_connection_update=last_update
-        else:
-            print(f"ERROR: Failed to update connection :(")
-
-        old_state_upload = time.time()
-        connection["upload-time"] = old_state_upload
-        if not StateHelper.TryS3WriteText(connection,BUCKET,state_file_path):
-            print(f"ERROR: Failed to upload state file.")
-
-    elif upload_period <= elapsed_state_upload:
-        print(f"INFO: Elapsed minmum upload period of {timedelta(seconds=upload_period)}")
-        old_state_upload = time.time()
-        connection["upload-time"] = old_state_upload
-        if not StateHelper.TryS3WriteText(connection,BUCKET,state_file_path):
-            print(f"ERROR: Failed to upload state file.")
+    if time_to_upload < 0:
+        connection["upload-time"] = upload_time = time.time()
+        StateHelper.S3WriteText(connection,BUCKET,state_file_path);
 
     print(f"INFO: Pushing any pending transactions...")
-    RelayerHelper.PushPendingTransactions(path)
-    IBCHelper.UpdateLiteClients(connection)
+    if not RelayerHelper.PushPendingTransactions(path):
+        print(f"WARNING: Failed to push pending transactions")
 
-    time.sleep(float(30))
 
-elapsed = time.time() - time_start
-print(f"ERROR: Failed to maitain connection between {src_id} and {dst_id}, Uptime: {timedelta(seconds=elapsed)}")
-connection["upload-time"] = time.time()
-StateHelper.S3WriteText(connection,BUCKET,state_file_path)
-print(f"INFO: Script Failed (3)")
-exit(3)
+
+# loop exited
+
+
+print(f"ERROR: Failed to maitain connection between {src_id} and {dst_id}, Uptime: {timedelta(seconds=int(time.time() - time_start))}")
+print(f"INFO: Script Failed (1)")
+exit(1)

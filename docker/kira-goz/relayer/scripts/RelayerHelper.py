@@ -245,12 +245,8 @@ def PushPendingTransactions(path):
 # rly pth show kira-alpha_kira-1 -j
 # rly transact raw update-client kira-alpha kira-1 nhzihoslfo --debug
 # rly transact link kira-alpha_kira-1
-def UpdateClientConnection(connection):
-    src_chain_info = connection.get("src", None)
-    dst_chain_info = connection.get("dst", None)
-    path = connection["path"]
-    
-    info = QueryPath(path) # rly pth show kira-alpha_kira-1 -j
+def UpdateClientConnection(chain_info, path):    
+    info = QueryPath(path) # rly pth show $p -j
 
     if not info or (not info["chains"]) or (not info["status"]):
         print(f"ERROR: Could not correctly query path {path}, chain or status information is missing from the response")
@@ -265,20 +261,33 @@ def UpdateClientConnection(connection):
     #    print(f"ERROR: Could not update client connection because path {path} does not have established connection")
     #    return False
     
-    src_chain_id = src_chain_info["chain-id"]
-    dst_chain_id = dst_chain_info["chain-id"]
-    src_client_id = chains["src"]["client-id"]
-    dst_client_id = chains["dst"]["client-id"]
+    chain_id = chain_info["chain-id"]
+    src_chain_id = chains["src"]["chain-id"]
+    dst_chain_id = chains["dst"]["chain-id"]
+    is_source = src_chain_id == chain_id
+    is_destination = dst_chain_id == chain_id
 
-    out1 = callRaw(f"rly transact raw update-client {src_chain_id} {dst_chain_id} {dst_client_id}", True)
-    if (None == out1):
+    if (not is_source) and (not is_destination):
+        print(f"ERROR: Chain {chain_id} is nither a source nor destination of the path '{path}'")
         return False
-    print(f"INFO: update destination client output: {out1}")
-    out2 = callRaw(f"rly transact raw update-client {dst_chain_id} {src_chain_id} {src_client_id}", True)
-    if (None == out2):
+
+    client_id = None
+    if is_source:
+        client_id = chains["dst"]["client-id"]
+    else:
+        client_id = chains["src"]["client-id"]
+        tmp = dst_chain_id
+        dst_chain_id = src_chain_id
+        src_chain_id = tmp
+
+    out = callRaw(f"rly transact raw update-client {src_chain_id} {dst_chain_id} {client_id}", True)
+    if (None == out):
+        print(f"ERROR: Client was NOT updated")
         return False
-    print(f"INFO: update source client output: {out2}")
+  
+    print(f"SUCCESS: Client was updated: {out}")
     return True
+
 
 def RestartLiteClient(chain_id):
     callRaw(f"rly lite delete {chain_id}",False) # rly lite delete kira-1

@@ -12,8 +12,8 @@ DST_CHAIN_ID=$(cat $DST_CHAIN_FULL_PATH | jq -r '.["chain-id"]')
 
 [ -z "$RLY_PATH" ] && RLY_PATH="${SRC_CHAIN_ID}_${DST_CHAIN_ID}"
 [ -z "$RLY_KEY_PREFIX" ] && RLY_KEY_PREFIX="default_key"
-[ -z "$RLY_FORCE_SHUTDOWN" ] && RLY_FORCE_SHUTDOWN="False"
 [ -z "$RLY_TEST" ] && RLY_TEST="true"
+[ -z "$MIN_TTL" ] && MIN_TTL=2
 
 echo "Starting relayer service..."
 echo "BUCKET: $BUCKET" # kira-core-goz
@@ -23,8 +23,7 @@ echo "SRC CHAIN ID: $SRC_CHAIN_ID"
 echo "DST CHAIN ID: $DST_CHAIN_ID" 
 echo "RLY PATH: $RLY_PATH" # kira-1_goz-hub_phase1
 echo "KEY PREFIX: $RLY_KEY_PREFIX" # rly_key_goz
-echo "FORCE SHUTDOWN: $RLY_FORCE_SHUTDOWN" # forces shutdown if connection fails
-echo "TRUST UPDATE PERIOD: $TRUST_UPDATE_PERIOD" # rly_key_goz
+echo "MIN TTL: $MIN_TTL" # 2
 
 if [ "${MAINTENANCE_MODE}" == "true"  ] || [ -f "$MAINTENANCE_FILE" ] ; then
      echo "Entering maitenance mode!"
@@ -36,10 +35,9 @@ fi
 # DST_JSON_DIR=sys.argv[3]
 # DST_MNEMONIC=sys.argv[4]
 # BUCKET=sys.argv[5]
-# SHUTDOWN=sys.argv[6]
-# PATH=sys.argv[7]
-# KEY_PREFIX=sys.argv[8]
-# TRUST_UPDATE_PERIOD=sys.argv[9]
+# PATH=sys.argv[6]
+# KEY_PREFIX=sys.argv[7]
+# MIN_TTL=sys.argv[8]
 
 if [ "${RLY_TEST}" == "true"  ] ; then
      echo "INFO: Entering relayer TEST mode"
@@ -54,10 +52,9 @@ python3 $SELF_SCRIPTS/phase1.py \
  $DST_CHAIN_FULL_PATH \
  "$RLYKEY_MNEMONIC" \
  $BUCKET \
- $RLY_FORCE_SHUTDOWN \
  $RLY_PATH \
  $RLY_KEY_PREFIX \
- $TRUST_UPDATE_PERIOD &> $SELF_LOGS/relayer.txt ||  true
+ $MIN_TTL &> $SELF_LOGS/relayer.txt ||  true
 
 CDHelper email send \
  --from="noreply@kiracore.com" \
@@ -70,12 +67,13 @@ CDHelper email send \
     exit 1
 fi
 
+# PLAYGROUND
+
 # rly tx transfer kira-alpha kira-1 1ukex true cosmos13tyaljtac4l9jfen4uz338qdmklaupktgtwsrl
 
-# python3 $SELF_SCRIPTS/phase1.py $SELF_UPDATE/common/configs/kira-alpha.json "$RLYKEY_MNEMONIC" $SELF_UPDATE/common/configs/kira-1.json "$RLYKEY_MNEMONIC" $BUCKET False "goz_alpha_2" "test_key_3" 10
+# Alpha -> Kira
+# python3 $SELF_SCRIPTS/phase1.py $SELF_UPDATE/common/configs/kira-alpha.json "$RLYKEY_MNEMONIC" $SELF_UPDATE/common/configs/kira-1.json "$RLYKEY_MNEMONIC" $BUCKET "goz_alpha_v1" "test_key_v1" 2
 
-# python3 $SELF_SCRIPTS/phase1.py $SELF_UPDATE/common/configs/kira-alpha.json "$RLYKEY_MNEMONIC" $SELF_UPDATE/common/configs/goz-hub.json "$RLYKEY_MNEMONIC" $BUCKET False "hub_alpha_2" "test_ke3y_3" 10
-
-
-# 
+# Alpha -> GoZ
+# python3 $SELF_SCRIPTS/phase1.py $SELF_UPDATE/common/configs/kira-alpha.json "$RLYKEY_MNEMONIC" $SELF_UPDATE/common/configs/goz-hub.json "$RLYKEY_MNEMONIC" $BUCKET "hub_alpha_v1" "test_key_v1" 2
 
