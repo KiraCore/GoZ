@@ -47,6 +47,9 @@ RUN chmod -R 777 ${SELF_HOME} && chmod 777 ${PROFILE_PATH} && chmod 777 ${BASHRC
 ARG DEBIAN_FRONTEND=noninteractive
 RUN LC_ALL=C ${BUILD_SCRIPT} && rm -rf /var/lib/apt/lists/*
 
+ENV AWSHelperVersion="$(AWSHelper version --silent=true)"
+ENV CDHelperVersion="$(CDHelper version --silent=true)"
+
 RUN git config --global url.https://github.com/.insteadOf git://github.com/
 
 RUN npm install -g @angular/cli

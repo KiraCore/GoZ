@@ -32,14 +32,14 @@ def TryS3WriteText(text, bucket, s3_key_path):
         return None
 
 def TryS3FileExists(bucket, s3_key_path):
-    return False if None == RelayerHelper.callRaw(f"AWSHelper s3 object-exists --bucket='{bucket}' --path='{s3_key_path}' --throw-if-not-found=True",True) else True
+    return False if None == RelayerHelper.callRaw(f"AWSHelper s3 object-exists --bucket='{bucket}' --path='{s3_key_path}' --throw-if-not-found=True",False) else True
 
 def S3ReadText(bucket, s3_key_path):
     out = RelayerHelper.callRaw(f"AWSHelper s3 download-text --bucket='{bucket}' --path='{s3_key_path}' --silent=true --throw-if-not-found=False",True)
     if None == out:
         raise Exception(f"Failed to read {s3_key_path} file from {bucket} bucket in S3")
     else:
-        print(f"SUCCESS: Read all {len(text_output)} characters from {bucket}/{s3_key_path} path in S3")
+        print(f"SUCCESS: Read all {len(out)} characters from {bucket}/{s3_key_path} path in S3")
         return out
 
 def TryS3ReadText(bucket, s3_key_path):
@@ -47,7 +47,7 @@ def TryS3ReadText(bucket, s3_key_path):
     if None == out:
         print(f"ERROR: Failed to read {s3_key_path} file from {bucket} bucket in S3")
     else:
-        print(f"SUCCESS: Read all {len(text_output)} characters from {bucket}/{s3_key_path} path in S3")
+        print(f"SUCCESS: Read all {len(out)} characters from {bucket}/{s3_key_path} path in S3")
     return out
 
 def DownloadKey(bucket, s3_key_path):

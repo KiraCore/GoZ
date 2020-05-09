@@ -92,7 +92,7 @@ while True:
         print(f"FAILURE: Connection was dropped or failed to query status. Current session duration: {timedelta(seconds=current_session)}")
         break
 
-    ttl = RelayerHelper.GetRemainingTimeToLive(connection)
+    ttl = RelayerHelper.GetRemainingTimesToLive(connection)
 
     if not ttl:
         print(f"FAILURE: Could not fetch remaining TTL")
@@ -102,10 +102,10 @@ while True:
     ttl_dst = int(ttl["dst"]) # destination connection time to live
 
     print(f"_________________________________")
-    print(f"| SRC: {src_chain_id}")
-    print(f"| DST: {dst_chain_id}")
-    print(f"| PATH: {path}")
-    print(f"| TIME: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
+    print(f"|        Source Chain            - {src_chain_id}")
+    print(f"|      Destination Chain         - {dst_chain_id}")
+    print(f"|       Connection Path          - {path}")
+    print(f"|        Date Time Now           - {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
     print(f"|--------------------------------|")
     print(f"| INFO: Current Session:         - {timedelta(seconds=current_session)}") # time since routine was started
     print(f"| INFO: Total uptime:            - {timedelta(seconds=total_uptime)}")
@@ -141,16 +141,9 @@ while True:
         StateHelper.S3WriteText(connection,BUCKET,state_file_path);
 
     print(f"INFO: Pushing any pending transactions...")
-    sleep
+    time.sleep(15)
     if not RelayerHelper.PushPendingTransactions(path):
         print(f"WARNING: Failed to push pending transactions")
-
-
-
-
-# loop exited
-
-
 
 print(f"ERROR: Failed to maitain connection between {src_id} and {dst_id}, Uptime: {timedelta(seconds=int(time.time() - time_start))}")
 print(f"INFO: Script Failed (1)")

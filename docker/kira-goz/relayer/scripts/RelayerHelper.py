@@ -11,6 +11,7 @@ import os
 import os.path
 import time
 import datetime
+import dateutil.parser
 from datetime import datetime, timezone
 from joblib import Parallel, delayed
 from subprocess import Popen, PIPE
@@ -183,13 +184,13 @@ def TransactClients(path,timeout):
     return False if (None == callTryRetry(f"rly transact clients {path}",timeout, 2, 1,True)) else True
 
 def TransactConnection(path, timeout):
-    return False if (None == callTryRetry(f"rly transact connection {path} --timeout 5s",timeout, 2, 1,True)) else True
+    return False if (None == callTryRetry(f"rly transact connection {path}",timeout, 2, 1,True)) else True
 
 def TransactChannel(path, timeout):
-    return False if (None == callTryRetry(f"rly transact channel {path} --timeout 5s",timeout, 2, 1,True)) else True
+    return False if (None == callTryRetry(f"rly transact channel {path}",timeout, 2, 1,True)) else True
 
 def TransactLink(path, timeout):
-    return False if (None == callTryRetry(f"rly transact link {path} --timeout 5s",timeout, 2, 1,True)) else True
+    return False if (None == callTryRetry(f"rly transact link {path}",timeout, 2, 1,True)) else True
 
 # relay any packets that remain to be relayed on a given path, in both directions
 def TransactRelay(path): # rly tx rly kira-alpha_isillienchain
@@ -310,54 +311,57 @@ def UpdateLiteClient(chain_id):
             return False
     else:
         return True
-    
-            
-def GetRemainingTimeToLive(connection):
+
+def GetRemainingTimesToLive(connection):
     p=connection["path"]
-    path_info = QueryPath(p) # rly pth show kira-alpha_kira-1 -j
+    path_info = QueryPath(p) # rly pth show $p -j
     if not path_info:
         print("ERROR: Could NOT read connection time, failed to query path {p}")
         return None
 
-    cnn_s = connection["src"] ; cnn_d = connection["src"]
-    sc_id = cnn_s["chain-id"] ; dc_id = cnn_d["chain-id"]
-    s_cl_id = path_info["src"]["client-id"]
-    d_cl_id = path_info["dst"]["client-id"]
+    src_chain_info = connection["src"]
+    dst_chain_info = connection["dst"]
+    src_chain_id = src_chain_info["chain-id"]
+    dst_chain_id = dst_chain_info["chain-id"]
+    src_client_id = path_info["chains"]["src"]["client-id"]
+    dst_client_id = path_info["chains"]["dst"]["client-id"]
     
-    src_client_info = QueryClient(sc_id, s_cl_id)
-    if not src_client_info:
-        print("ERROR: Could NOT read connection time, failed to query source client {sc_id} ({s_cl_id})")
+    src_client_info = QueryClient(src_chain_id, src_client_id) # rly q client $s
+    if not src_client_info: # rly q client kira-alpha upiobaeidw
+        print(f"ERROR: Could NOT read connection time, failed to query source client {src_chain_id} ({src_client_id})")
         return None
 
-    dst_client_info = QueryClient(dc_id, d_cl_id)
-    if not dst_client_info:
-        print("ERROR: Could NOT read connection time, failed to query destination client {dc_id} ({s_cl_id})")
+    dst_client_info = QueryClient(dst_chain_id, dst_client_id) # rly q client $s
+    if not dst_client_info: # rly q client kira-1 upiobaeidw
+        print(f"ERROR: Could NOT read connection time, failed to query destination client {dst_chain_id} ({dst_client_id})")
         return None
 
-    ts_dt = None ; td_dt = None # date time source & destination
-    tes = None ; ted = None # time elapsed source &  destination
-    ts_tp = None ; td_tp = None # trust period source & destination
-    trs = -1 ; trd = -1 # time remaining source & destination
-    
+    time_now = datetime.utcnow()
+    src_ttl = -1 ; dst_ttl = -1 # time remaining source & destination
     try:
-        ts_dt=src_client_info["client_state"]["value"]["last_header"]["SignedHeader"]["header"]["time"]
-        ts_tp=int(src_client_info["client_state"]["value"]["trusting_period"])
-        tes = datetime.utcnow() - dateutil.parser.isoparse(ts_dt).replace(tzinfo=None)
-        trs = tes - ts_tp
+        src_datetime=src_client_info["client_state"]["value"]["last_header"]["SignedHeader"]["header"]["time"]
+        src_trusting_period=int(src_client_info["client_state"]["value"]["trusting_period"][:-9]) # nanoseconds 10^9
+        src_elapsed = (time_now - dateutil.parser.isoparse(src_datetime).replace(tzinfo=None)).total_seconds()
+        src_ttl = int(src_trusting_period - src_elapsed)
+        if src_ttl <= 0:
+            raise Exception(f"Trusing period of the source chain {src_chain_id} expired. Time: {src_datetime}, Trusting: {src_trusting_period}, Elapsed: {src_elapsed}, Remaining: {src_ttl}")
     except  Exception as e:
         pass
-        print("WARNING: Could NOT find last signed header time of the source chain client {sc_id} or one of {ts_dt}, {ts_tp}  could not be parsed")
+        print(f"WARNING: Could NOT find last signed header time of the source chain {src_chain_id}: {str(e)}")
     
     try:
-        td_dt=dst_client_info["client_state"]["value"]["last_header"]["SignedHeader"]["header"]["time"]
-        td_tp=int(dst_client_info["client_state"]["value"]["trusting_period"])
-        ted = datetime.utcnow() - dateutil.parser.isoparse(td_dt).replace(tzinfo=None)
-        trd = ted - td_tp
+        dst_datetime=dst_client_info["client_state"]["value"]["last_header"]["SignedHeader"]["header"]["time"]
+        dst_trusting_period=int(dst_client_info["client_state"]["value"]["trusting_period"][:-9]) # nanoseconds 10^9
+        dst_elapsed = (time_now - dateutil.parser.isoparse(dst_datetime).replace(tzinfo=None)).total_seconds()
+        dst_ttl = int(dst_trusting_period - dst_elapsed)
+
+        if dst_ttl <= 0:
+            raise Exception(f"Trusing period of the destination chain {dst_chain_id} expired. Time: {dst_datetime}, Trusting: {dst_trusting_period}, Elapsed: {dst_elapsed}, Remaining: {dst_ttl}")
     except Exception as e:
         pass
-        print("WARNING: Could NOT find last signed header time of the destination chain client {dc_id} or one of {td_dt}, {td_tp} could NOT be parsed")
+        print(f"WARNING: Could NOT find last signed header time of the destination {dst_chain_id} chain: {str(e)}")
     
-    return { "src": trs, "dst": trd, "min": min(trs,trd), "max": max(trs,trd) } 
+    return { "src": src_ttl, "dst": dst_ttl, "min": min(src_ttl,dst_ttl), "max": max(src_ttl,dst_ttl) } 
     
     
 

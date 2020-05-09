@@ -1,6 +1,7 @@
 import RelayerHelper
 import StringHelper
 import ArrayHelper
+import StateHelper
 import subprocess
 import json
 import statistics
@@ -36,11 +37,8 @@ def InitializeClientWithMnemonic(chain_info, mnemonic):
 
     if not RelayerHelper.KeyExists(chain_id, key_name):
         print(f"WARNING: Key {key_name} of the {chain_id} chain does not exist, restoring...")
-        RelayerHelper.RestoreKey(chain_id, key_name, mnemonic) # rly keys restore kira-alpha prefix_kira-alpha "$RLYKEY_MNEMONIC"
-        
-        if not StateHelper.TryS3FileExists(bucket, s3_key_path):
-            print(f"INFO: Relayer key {key_name} was not present in S3, uploading...")
-            StateHelper.S3WriteText(key, bucket, s3_key_path) # will throw if fails to upload
+        RelayerHelper.RestoreKey(chain_id, key_name, mnemonic) # rly keys restore $s k$s "$RLYKEY_MNEMONIC"
+
         if not RelayerHelper.KeyExists(chain_id, key_name):
             raise Exception(f"Failed to restore key {key_name} of the chain {chain_id}")
 
@@ -56,6 +54,11 @@ def InitializeClientWithMnemonic(chain_info, mnemonic):
 
     if not address:
         raise Exception(f"Failed to query {chain_id} chain address")
+
+    if not StateHelper.TryS3FileExists(bucket, s3_key_path):
+        print(f"INFO: Relayer key {key_name} was not present in S3, uploading...")
+        key = { "mnemonic":mnemonic, "address":address } 
+        StateHelper.S3WriteText(key, bucket, s3_key_path) # will throw if fails to upload
 
     chain_info["balance"] = balance = RelayerHelper.TryQueryBalance(chain_id)
 
@@ -104,6 +107,8 @@ def AssertRefreshBalances(chain_info):
     chain_info["balance"] = balances = RelayerHelper.TryQueryBalance(chain_id)
     if RelayerHelper.GetAmountByDenom(balances, denom) <= 0:
         raise Exception(f"Insufficient {denom} balance of the account '{chain_id}:{address}', client will not be able to further continue the connections unless {denom} tokens are available.")
+    else:
+        print(f"SUCCESS: Account {address} has a valid, non zero balance of {denom} token, on the chain {chain_id}")
     return chain_info
 
 def InitializeClientWithJsonFile(json_path, key_prefix, mnemonic, bucket):

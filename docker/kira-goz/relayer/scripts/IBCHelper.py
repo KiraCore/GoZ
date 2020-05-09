@@ -31,7 +31,7 @@ def IsConnected(connection):
         return None
     if not TestStatus(status):
         return False
-    ttl = RelayerHelper.GetRemainingTimeToLive(connection)
+    ttl = RelayerHelper.GetRemainingTimesToLive(connection)
     if ttl == None:
         return None
     if not ttl or ttl["min"] <= 0:
@@ -165,7 +165,6 @@ def Connect(connection, timeout):
     min_ttl = connection["min-ttl"]
     path_info = connection.get("path-info", None)
     
-
     if (chain_id_src == chain_id_dst):
         raise Exception(f"Source chain and destination chain id's cant be the same, but both were: {chain_id_src}")
         return connection
@@ -185,32 +184,34 @@ def Connect(connection, timeout):
     if not RelayerHelper.PathExists(path): # by now path must exist
         raise Exception(f"Failed to assert {path} path existence") # probably networking issues
 
+    if not ReArmConnection(connection, timeout):
+        print(f"WARNING: Failed to rearm {path} connection")
+
     if not RestartLiteClients(connection): # it should always be possible to restart lite clients
         raise Exception(f"Could NOT restart lite clients, it will not be possible to connect")
 
-    if not ReArmConnection(connection, timeout):
-        ttl = RelayerHelper.GetRemainingTimeToLive(connection) 
-        if None != ttl and ttl["min"] < min_ttl: # connection expired
-            print(f"WARNING: Path {path} expired, TTL: {ttl}")
-            RelayerHelper.DeletePath(path)
-            connection["path-info"] = None
-            return Connect(connection, timeout)
-        else:
-            raise Exception(f"Failed to re-arm connection via {path} path")
+    ttl = RelayerHelper.GetRemainingTimesToLive(connection) 
+    if None != ttl and ttl["min"] < min_ttl: # connection expired
+        print(f"WARNING: Path {path} expired, TTL: {ttl}")
+        RelayerHelper.DeletePath(path)
+        connection["path-info"] = None
+        return Connect(connection, timeout)
+    elif ttl == None:
+        raise Exception(f"Failed to read TTL")
 
     connection["success"] = success = IsConnected(connection)
     if not success:
-        raise(f"Failed to connect {chain_id_src} and {chain_id_dst} via {path}")
+        raise Exception(f"Failed to connect {chain_id_src} and {chain_id_dst} via {path}")
 
-    connection["ttl"] = ttl = RelayerHelper.GetRemainingTimeToLive(connection)
+    connection["ttl"] = ttl = RelayerHelper.GetRemainingTimesToLive(connection)
     if not ttl: # Assert there are no networking issues, NOTE: Auto rotate RPC add should occur before this section
-        raise(f"Failed to acquire TTL information of chain {chain_id_src} and {chain_id_dst} connected via {path} path")
+        raise Exception(f"Failed to acquire TTL information of chain {chain_id_src} and {chain_id_dst} connected via {path} path")
 
     print(f"SUCCESS: Chains {chain_id_src} and {chain_id_dst} are connected, TTL: {ttl}")
     connection["path-info"] = path_info = RelayerHelper.QueryPath(path) # rly pth show kira-alpha_gameofzoneshub-1 -j
 
     if not path_info: # assert path info availability
-        raise(f"Failed to acquire path information of a successfully connected chain {chain_id_src} and {chain_id_dst} connected via {path}")
+        raise Exception(f"Failed to acquire path information of a successfully connected chain {chain_id_src} and {chain_id_dst} connected via {path}")
 
     return connection
 
@@ -232,28 +233,15 @@ def ReConnect(connection, timeout):
     return Connect(connection, timeout)
 
 def ConnectWithJson(src_json_path, scr_mnemonic, dst_json_path, dst_mnemonic, bucket, path, key_prefix, timeout, min_ttl):
-    print(f"INFO: Started => ConnectWithJson({src_json_path},{dst_json_path})")
     connection = { "success": False, "path": path, "min-ttl": min_ttl }
-
+    # Initialize Source
     connection["src"] = src_chain_info = ClientHelper.InitializeClientWithJsonFile(src_json_path, key_prefix, scr_mnemonic, bucket)
-    src_chain_id = src_chain_info["chain-id"]
-    print(f"SUCCESS: Source client {src_chain_id} was initalized")
-
+    print(f"SUCCESS: Source client {src_chain_info['chain-id']} was initalized")
+    # Initialize Destination
     connection["dst"] = dst_chain_info = ClientHelper.InitializeClientWithJsonFile(dst_json_path, key_prefix, dst_mnemonic, bucket)
-    dst_chain_id = dst_chain_info["chain-id"]
-    print(f"SUCCESS: Destination client {dst_chain_id} was initalized")
-    
-    src_address = src_chain_info["address"]
-    connection["src"] = src_chain_info
-
-    dst_address = dst_chain_info["address"]
-    connection["dst"] = dst_chain_info
-
-    src_fee_token_amount = RelayerHelper.GetAmountByDenom(src_chain_info["balance"], src_denom)
-    dst_fee_token_amount = RelayerHelper.GetAmountByDenom(dst_chain_info["balance"], dst_denom)
-    print(f"INFO: Source client balance {src_chain_id} ({src_address}): {src_fee_token_amount} {src_denom}")
-    print(f"INFO: Destination client balance {dst_chain_id} ({dst_address}): {dst_fee_token_amount} {dst_denom}")
-    return Connect(connection, timeout) # this command is asserted and throws if connection is not estbalished
+    print(f"SUCCESS: Destination client {dst_chain_info['chain-id']} was initalized")
+    # this command is asserted and throws if connection is not estbalished
+    return Connect(connection, timeout) 
 
 def TransferEachToken(src_chain_info, dst_chain_info, path, min_amount):
     src_id = src_chain_info["chain-id"]
@@ -300,7 +288,7 @@ def TestConnection(connection):
 
     status = QueryStatus(path)
     is_connected = TestStatus(status)
-    ttl = RelayerHelper.GetRemainingTimeToLive(connection)
+    ttl = RelayerHelper.GetRemainingTimesToLive(connection)
 
     if is_connected:
         print(f"SUCCESS: Connection of the path {path} is maitained, testing ttl...")
