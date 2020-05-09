@@ -280,12 +280,15 @@ def UpdateClientConnection(chain_info, path):
         dst_chain_id = src_chain_id
         src_chain_id = tmp
 
-    out = callRaw(f"rly transact raw update-client {src_chain_id} {dst_chain_id} {client_id}", True)
-    if (None == out):
+    tx = callJson(f"rly transact raw update-client {src_chain_id} {dst_chain_id} {client_id}", True)
+    if (None == tx):
         print(f"ERROR: Client was NOT updated")
         return False
+    if int(tx.get("height", "0")) <= 0:
+        print(f"ERROR: Failed to propagate raw update-client transactions between {src_chain_id} and {dst_chain_id}")
+        return False
   
-    print(f"SUCCESS: Client was updated: {out}")
+    print(f"SUCCESS: Client was updated: {tx}")
     return True
 
 

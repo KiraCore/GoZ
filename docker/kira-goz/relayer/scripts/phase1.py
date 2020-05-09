@@ -93,9 +93,13 @@ while True:
         break
 
     ttl = RelayerHelper.GetRemainingTimeToLive(connection)
+
+    if not ttl:
+        print(f"FAILURE: Could not fetch remaining TTL")
+        break
+
     ttl_src = int(ttl["src"]) # source connection time to live
     ttl_dst = int(ttl["dst"]) # destination connection time to live
-    ttl_min = int(ttl["min"]) # minimum time to live
 
     print(f"_________________________________")
     print(f"| SRC: {src_chain_id}")
@@ -105,7 +109,8 @@ while True:
     print(f"|--------------------------------|")
     print(f"| INFO: Current Session:         - {timedelta(seconds=current_session)}") # time since routine was started
     print(f"| INFO: Total uptime:            - {timedelta(seconds=total_uptime)}")
-    print(f"| INFO: Remaining Time To Live:  - {max(0, ttl_min)}s")
+    print(f"| INFO: Source Client TTL:       - {max(0, ttl_src)}s")
+    print(f"| INFO: Destination Client TTL:  - {max(0, ttl_dst)}s")
     print(f"| INFO: Next State Upload:       - {max(0,int(time_to_upload))}s")
     print(f"| INFO: Source Key balance:      - {src_key} {ClientHelper.QueryFeeTokenBalance(src)} {src_denom}")
     print(f"| INFO: Destination Key balance: - {dst_key} {ClientHelper.QueryFeeTokenBalance(dst)} {dst_denom}")
@@ -117,12 +122,16 @@ while True:
         if not RelayerHelper.UpdateClientConnection(src, path):
             print(f"WARNING: Failed to update source connection")
             skip_upload = True
+        else:
+            print(f"SUCCESS: Source client connection ({src_chain_id}) was updated")
 
     if ttl_dst <= min_ttl:
         print(f"INFO: Remaining time to live of the destination connection ({ttl_dst}) is smaller than min TTL of {min_ttl}, updating...")
         if not RelayerHelper.UpdateClientConnection(dst, path):
             print(f"WARNING: Failed to update destination connection")
             skip_upload = True
+        else:
+            print(f"SUCCESS: Destination client connection ({dst_chain_id}) was updated")
             
     if skip_upload:
         continue
@@ -132,12 +141,15 @@ while True:
         StateHelper.S3WriteText(connection,BUCKET,state_file_path);
 
     print(f"INFO: Pushing any pending transactions...")
+    sleep
     if not RelayerHelper.PushPendingTransactions(path):
         print(f"WARNING: Failed to push pending transactions")
 
 
 
+
 # loop exited
+
 
 
 print(f"ERROR: Failed to maitain connection between {src_id} and {dst_id}, Uptime: {timedelta(seconds=int(time.time() - time_start))}")

@@ -17,6 +17,12 @@ import dateutil.parser
 from datetime import datetime, timezone
 from joblib import Parallel, delayed
 
+
+# Update: (rm $SELF_SCRIPTS/test.py || true) && nano $SELF_SCRIPTS/test.py 
+
+
+print(dateutil.__version__)
+
 print("Test Script Start")
 
 test={"a":1}
