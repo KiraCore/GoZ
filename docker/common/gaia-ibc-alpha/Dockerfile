@@ -5,7 +5,7 @@ ENV GAIAD_BIN="${GOBIN}/gaiad"
 ENV GAIACLI_BIN="${GOBIN}/gaiacli"
 ARG REPO="https://github.com/cosmos/gaia"
 ARG BRANCH=""
-ARG CHECKOUT="b617e2b"
+ARG CHECKOUT="bde5e9c"
 
 RUN ${SELF_SCRIPTS}/git-pull-v0.0.1.sh "${REPO}" "${BRANCH}" "${CHECKOUT}" "${GAIA}"
 RUN cd ${GAIA} && make install

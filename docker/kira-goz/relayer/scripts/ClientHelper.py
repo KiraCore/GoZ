@@ -107,8 +107,6 @@ def AssertRefreshBalances(chain_info):
     chain_info["balance"] = balances = RelayerHelper.TryQueryBalance(chain_id)
     if RelayerHelper.GetAmountByDenom(balances, denom) <= 0:
         raise Exception(f"Insufficient {denom} balance of the account '{chain_id}:{address}', client will not be able to further continue the connections unless {denom} tokens are available.")
-    else:
-        print(f"SUCCESS: Account {address} has a valid, non zero balance of {denom} token, on the chain {chain_id}")
     return chain_info
 
 def InitializeClientWithJsonFile(json_path, key_prefix, mnemonic, bucket):

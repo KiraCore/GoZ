@@ -68,8 +68,14 @@ def callTryRetryJson(s, timeout, retry, delay, showErrors):
 def ConfigureDefaultKey(chain_id, key_name): # rly ch edit kira-1 key prefix_kira-1
     return False if (None == callRaw(f"rly ch edit {chain_id} key {key_name}",True)) else True 
 
+def ConfigureDefaultGas(chain_id, gas_value): # rly ch edit kira-1 gas 1000000
+    return False if (None == callRaw(f"rly ch edit {chain_id} gas {gas_value}",True)) else True 
+
 def ChainDelete(chain_id):
     return False if (None == callRaw(f"rly chains delete {chain_id}",True)) else True
+
+def ShowChain(chain_id):
+    return callJson(f"rly ch show {chain_id} -j", True)
 
 def TryShowChain(chain_id):
     chain_info = callJson(f"rly ch show {chain_id} -j", False)
@@ -123,8 +129,26 @@ def RequestTokens(chain_id):
 def RequestTokens_Process(chain_id, timeout, retry, delay):
     return False if (None == callTryRetry(f"rly testnets request {chain_id}", timeout, retry, delay,True)) else True
 
-def TransferTokens(src_chain_id, dst_chain_id, amount, dst_chain_addr): # rly tx transfer hashquarkchain kira-1 1quark true $(rly ch addr kira-1)
-    return False if (None == callRaw(f"rly tx transfer {src_chain_id} {dst_chain_id} {amount} true {dst_chain_addr}",True)) else True
+def TransferTokens(src_chain_id, dst_chain_id, amount, dst_chain_addr, path): # rly tx transfer hashquarkchain kira-1 1quark true $(rly ch addr kira-1)
+    return False if (None == callRaw(f"rly tx transfer {src_chain_id} {dst_chain_id} {amount} true {dst_chain_addr} --path={path}",True)) else True
+
+def TransferTokensInternally(src_chain_info, dst_chain_info, amount, path):
+    src_id = src_chain_info["chain-id"]
+    dst_id = dst_chain_info["chain-id"]
+    dst_addr = dst_chain_info["address"]
+    s = f"rly tx transfer {src_id} {dst_id} {amount} true {dst_addr} --path={path}"
+    out = callRaw(s, True)
+    if out == None:  
+    if "err(" in out:
+        print(f"ERROR: Token transfer failed: {s} => {out}")
+        return None
+
+    return out
+
+def SendPacket(src_chain_info, dst_chain_info, path, data):
+    src_id = src_chain_info["chain-id"]
+    dst_id = dst_chain_info["chain-id"]
+    return callRaw(f"rly tx transfer {src_id} {dst_id} {data} --path={path}", True);
 
 def TryQueryBalance(chain_id):
     balance=callJson(f"rly q bal {chain_id} -j", False)
@@ -228,19 +252,31 @@ def RestoreKey(chain_id, key_name, mnemonic):
 def UpsertKey(chain_id, key_name):
     return callRaw(f"rly keys add {chain_id} {key_name}",True) # rly keys add kira-alpha prefix_kira-alpha
 
-def RelayPendingTransactions(path):
-    return  False if (None == callRaw(f"rly tx rly {path}",True)) else True
+def RelayPendingTransactions(path): # rly tx rly goz_alpha_v1 --debug
+    pending = callRaw(f"rly tx rly {path}", True)
+    if pending == None:
+        return False
+    return CountPendingTransactions(path) <= 0
 
 def QueryPendingTransactions(path):
-    return callJson(f"rly q unrelayed {path}",True)
+    return callJson(f"rly q unrelayed {path}",True) # rly q unrelayed goz_alpha_v1
+
+def CountPendingTransactions(path):
+    pending = QueryPendingTransactions(path)
+    if None == pending:
+        raise Exception("Failed to query pending transactions of the {path} path")
+    src_pending=len(pending.get("src",[]))
+    dst_pending=len(pending.get("dst",[]))
+    return src_pending + dst_pending
 
 def PushPendingTransactions(path):
-    pending = QueryPendingTransactions(path)
-    if not (not pending):
-        print(f"INFO: Found pending transactions for {path}: {pending}")
+    pending = CountPendingTransactions(path)
+    if pending > 0:
+        print(f"INFO: Found {pending} pending transactions in {path} path")
         return RelayPendingTransactions(path)
     else:
         print(f"INFO: No pending transactions were found in path {path}")
+        return True
 
 # Usage: rly transact raw update-client [src-chain-id] [dst-chain-id] [client-id] [flags]
 # rly pth show kira-alpha_kira-1 -j

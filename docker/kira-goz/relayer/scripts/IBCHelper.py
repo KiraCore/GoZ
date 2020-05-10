@@ -304,3 +304,17 @@ def TestConnection(connection):
         print(f"WARNING: Failed to query connection status")
 
     return is_connected
+
+def GasUpdateAssert(connection, gas):
+    src_chain_info = connection["src"]
+    dst_chain_info = connection["dst"]
+    src_id = src_chain_info["chain-id"]
+    dst_id = dst_chain_info["chain-id"]
+    if not RelayerHelper.ConfigureDefaultGas(src_id, gas): # rly ch edit kira-alpha gas 100000
+        raise Exception(f"WARNING: Failed to configure gas of the source chain")
+    if not RelayerHelper.ConfigureDefaultGas(dst_id, gas): # rly ch edit kira-1 gas 100000
+        raise Exception(f"WARNING: Failed to configure gas of the source chain")
+    if not UpdateLiteClients(connection):
+        raise Exception("Failed to update lite client after adjusting gas prices")
+    print(f"SUCCESS: New gas price was set to {gas}")
+

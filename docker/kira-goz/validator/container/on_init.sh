@@ -40,8 +40,8 @@ else
     [ -z "$RLYKEY" ] && RLYKEY="faucet"
     [ -z "$ACCOUNT_PREFIX" ] && ACCOUNT_PREFIX="cosmos"
     [ -z "$GAS" ] && GAS="200000"
-    [ -z "$GAS_PRICES" ] && GAS_PRICES="0.025$DENOM"
-    [ -z "$RLYTRUSTING" ] && RLYTRUSTING="90m"
+    [ -z "$GAS_PRICES" ] && GAS_PRICES="0.0025$DENOM"
+    [ -z "$RLYTRUSTING" ] && RLYTRUSTING="21d"
     echo "{\"key\":\"$RLYKEY\",\"chain-id\":\"$CHAIN_ID\",\"rpc-addr\":\"$RPC_ADDR\",\"account-prefix\":\"$ACCOUNT_PREFIX\",\"gas\":$GAS,\"gas-prices\":\"$GAS_PRICES\",\"default-denom\":\"$DENOM\",\"trusting-period\":\"$RLYTRUSTING\"}" > $CHAIN_ID.json
 fi
 
@@ -102,10 +102,10 @@ fi
 echo ${KEYRINGPASS} | gaiacli keys list
 
 echo "Creating genesis file..."
-echo ${KEYRINGPASS} | gaiad add-genesis-account $(gaiacli keys show validator -a) 100000000000$DENOM,10000000samoleans
-gaiad add-genesis-account $(rly chains addr $CHAIN_ID) 10000000000000$DENOM,10000000samoleans
+echo ${KEYRINGPASS} | gaiad add-genesis-account $(gaiacli keys show validator -a) 100000000000000$DENOM,10000000samoleans
+gaiad add-genesis-account $(rly chains addr $CHAIN_ID) 10000000000000000$DENOM,10000000samoleans
 
-gaiad gentx --name validator --amount 90000000000$DENOM << EOF
+gaiad gentx --name validator --amount 90000000000000$DENOM << EOF
 $KEYRINGPASS
 $KEYRINGPASS
 $KEYRINGPASS
@@ -152,7 +152,7 @@ After=network.target
 Type=simple
 User=root
 WorkingDirectory=/usr/local
-ExecStart=$RLY_BIN testnets faucet $CHAIN_ID $RLYKEY 100000$DENOM
+ExecStart=$RLY_BIN testnets faucet $CHAIN_ID $RLYKEY 200000000$DENOM
 Restart=always
 RestartSec=5
 LimitNOFILE=4096

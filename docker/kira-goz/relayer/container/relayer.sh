@@ -46,7 +46,7 @@ if [ "${RLY_TEST}" == "true"  ] ; then
      exit 0
 else
     echo "INFO: Entering relayer MAINNET mode"
-python3 $SELF_SCRIPTS/phase1.py \
+python3 $SELF_SCRIPTS/phase2.py \
  $SRC_CHAIN_FULL_PATH \
  "$RLYKEY_MNEMONIC" \
  $DST_CHAIN_FULL_PATH \
@@ -68,12 +68,17 @@ CDHelper email send \
 fi
 
 # PLAYGROUND
+# Debug: -> touch $MAINTENANCE_FILE && systemctl2 stop relayer && systemctl2 status relayer
+# nano $SELF_UPDATE/common/configs/kira-alpha.json
+# nano $SELF_UPDATE/common/configs/kira-1.json
 
 # rly tx transfer kira-alpha kira-1 1ukex true cosmos13tyaljtac4l9jfen4uz338qdmklaupktgtwsrl
-
+# Phase 1
 # Alpha -> Kira
 # python3 $SELF_SCRIPTS/phase1.py $SELF_UPDATE/common/configs/kira-alpha.json "$RLYKEY_MNEMONIC" $SELF_UPDATE/common/configs/kira-1.json "$RLYKEY_MNEMONIC" $BUCKET "goz_alpha_v1" "test_key_v1" 2
-
 # Alpha -> GoZ
 # python3 $SELF_SCRIPTS/phase1.py $SELF_UPDATE/common/configs/kira-alpha.json "$RLYKEY_MNEMONIC" $SELF_UPDATE/common/configs/goz-hub.json "$RLYKEY_MNEMONIC" $BUCKET "hub_alpha_v1" "test_key_v1" 2
 
+# Phase 2
+# Alpha -> Kira
+# python3 $SELF_SCRIPTS/phase2.py $SELF_UPDATE/common/configs/kira-alpha.json "$RLYKEY_MNEMONIC" $SELF_UPDATE/common/configs/kira-1.json "$RLYKEY_MNEMONIC" $BUCKET "goz_alpha_v1" "alpha" 2

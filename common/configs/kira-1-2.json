@@ -1,10 +1,10 @@
 {
   "key": "faucet",
-  "chain-id": "kira-1",
+  "chain-id": "kira-1-2",
   "rpc-addr": "http://internal-goz.kiraex.com:10001",
   "account-prefix": "cosmos",
-  "gas": 200000,
+  "gas": 500000,
   "gas-prices": "0.025ukex",
   "default-denom": "ukex",
-  "trusting-period": "90m"
+  "trusting-period": "21d"
 }
