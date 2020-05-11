@@ -3,8 +3,8 @@
   "chain-id": "kira-1-2",
   "rpc-addr": "http://internal-goz.kiraex.com:10001",
   "account-prefix": "cosmos",
-  "gas": 500000,
+  "gas": 200000,
   "gas-prices": "0.025ukex",
   "default-denom": "ukex",
-  "trusting-period": "21d"
+  "trusting-period": "504h"
 }
