@@ -23,7 +23,7 @@ def CMDInput(s, input, timeout):
             raise Exception(f"Status: {status}")
         else:
             raise Exception(f"Status: {status} => Error: {StringHelper.Trim(str(p.stderr))}")
-    return o
+    return "" if o == None else o
 
 # runs utf-8 shell commands
 def CMD(s, timeout):

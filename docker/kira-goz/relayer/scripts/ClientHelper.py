@@ -55,6 +55,8 @@ def InitializeClientWithMnemonic(chain_info, mnemonic):
     if not address:
         raise Exception(f"Failed to query {chain_id} chain address")
 
+    chain_info["address"] = str(chain_info["address"],"utf-8")
+
     if not StateHelper.TryS3FileExists(bucket, s3_key_path):
         print(f"INFO: Relayer key {key_name} was not present in S3, uploading...")
         key = { "mnemonic":mnemonic, "address":address } 

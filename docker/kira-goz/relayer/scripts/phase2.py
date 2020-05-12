@@ -59,11 +59,9 @@ print(f"|_________________________________|")
 
 state_file_path = f"relayer/{path}/{key_prefix}/state.json"
 print(f"INFO: Fetching '{state_file_path}' state file from S3...")
-state_file_txt = StateHelper.S3ReadText(BUCKET,state_file_path)
-if None == state_file_txt: # error
+state_file = StateHelper.S3ReadJson(BUCKET,state_file_path)
+if None == state_file or (len(state_file) <= 1): # error
     raise Exception(f"Error occurred while fetching {state_file_path} from {BUCKET} bucket")
-elif len(state_file_txt) > 10:
-     state_file = json.loads(state_file_txt)
 
 # this command is asserted and throws if connection is not estbalished
 connection = IBCHelper.ConnectWithJson(SRC_JSON_DIR, SRC_MNEMONIC, DST_JSON_DIR, DST_MNEMONIC, BUCKET, path, key_prefix, timeout, min_ttl)
@@ -82,16 +80,12 @@ src_key = src["key-name"]
 dst_key = dst["key-name"]
 
 connection["init-time"] = init_time
-connection["max-init-time"] = max_init_time = max(state_file.get("max-init-time", init_time), init_time)
-connection["min-init-time"] = min_init_time = min(state_file.get("min-init-time", init_time), init_time)
+connection["max-init-time"] = max_init_time = state_file.get("max-init-time", init_time)
+connection["min-init-time"] = min_init_time = state_file.get("min-init-time", init_time)
 upload_time = connection["upload-time"] = state_file.get("upload-time", 0) # time when state_info was uploaded for the last time
 total_uptime = connection["total-uptime"] = state_file.get("total-uptime", 0)
 total_transactions = connection["total-transactions"] = state_file.get("total-transactions", 0)
 loop_start = time_start
-
-print(f"INFO: Connection was established within {init_time}s")
-print(f"INFO: Max init time: {max_init_time}s")
-print(f"INFO: Min init time: {min_init_time}s")
 
 gas_min = min(src.get("gas-min", 0),dst.get("gas-min", 0))
 gas = 0
@@ -99,6 +93,10 @@ gas_max = max(src.get("gas-max", 1000000),dst.get("gas-max", 1000000))
 gas_min_pass = gas_max
 gas_adjustments = 0
 failed_tx_counter = 0
+
+print(f"INFO: Connection was established within {init_time}s")
+print(f"INFO: Max init time: {max_init_time}s")
+print(f"INFO: Min init time: {min_init_time}s")
 
 while True:
     loop_elapsed = int(time.time() - loop_start)
@@ -265,6 +263,6 @@ while True:
         StateHelper.S3WriteText(connection,BUCKET,state_file_path);
 
 
-print(f"ERROR: Failed to maitain connection between {src_id} and {dst_id}, Uptime: {timedelta(seconds=int(time.time() - time_start))}")
+print(f"ERROR: Failed to maitain connection between {src_chain_id} and {dst_chain_id}, Uptime: {timedelta(seconds=int(time.time() - time_start))}")
 print(f"INFO: Script Failed (1)")
 exit(1)

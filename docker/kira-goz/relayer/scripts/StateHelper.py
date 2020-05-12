@@ -42,6 +42,14 @@ def S3ReadText(bucket, s3_key_path):
         print(f"SUCCESS: Read all {len(out)} characters from {bucket}/{s3_key_path} path in S3")
         return out
 
+def S3ReadJson(bucket, s3_key_path):
+    out = RelayerHelper.callJson(f"AWSHelper s3 download-text --bucket='{bucket}' --path='{s3_key_path}' --silent=true --throw-if-not-found=False",True)
+    if None == out:
+        raise Exception(f"Failed to read {s3_key_path} file from {bucket} bucket in S3")
+    else:
+        print(f"SUCCESS: Read all {len(out)} json elements from {bucket}/{s3_key_path} path in S3")
+        return out
+
 def TryS3ReadText(bucket, s3_key_path):
     out = RelayerHelper.callRaw(f"AWSHelper s3 download-text --bucket='{bucket}' --path='{s3_key_path}' --silent=true",True)
     if None == out:

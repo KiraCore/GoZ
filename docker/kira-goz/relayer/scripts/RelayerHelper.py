@@ -8,6 +8,7 @@ import json
 import statistics
 import sys
 import os
+import ast
 import os.path
 import time
 import datetime
@@ -24,7 +25,7 @@ def callRaw(s, showErrors):
         #print(f"callRaw => Input: {s}") # debug only
         o = TaskHelper.CMD(s, 3600)
         #print(f"callRaw => Output: {o}") # debug only
-        return o
+        return o.encode("utf-8")
     except Exception as e:
         pass
         #print(f"callRaw => Error: {str(e)}") # debug only
@@ -38,7 +39,11 @@ def callJson(s, showErrors):
     try:
         o = TaskHelper.CMD(s, 3600)
         jsonParseError = False
-        return json.loads(o)
+        j = json.loads(o)
+        if type(j) == str:
+            return ast.literal_eval(j) # json.loads(o,encoding="utf-8")
+        else:
+            return j
     except Exception as e:
         pass
         if showErrors:
@@ -138,10 +143,10 @@ def TransferTokensInternally(src_chain_info, dst_chain_info, amount, path):
     dst_addr = dst_chain_info["address"]
     s = f"rly tx transfer {src_id} {dst_id} {amount} true {dst_addr} --path={path}"
     out = callRaw(s, True)
-    if out == None:  
-        if "err(" in out:
-            print(f"ERROR: Token transfer failed: {s} => {out}")
+    if out == None:
         return None
+    if "err(" in f"{out}":
+        print(f"ERROR: Token transfer failed: {s} => {out}")
     return out
 
 def SendPacket(src_chain_info, dst_chain_info, path, data):
@@ -156,7 +161,7 @@ def TryQueryBalance(chain_id):
 def DeletePath(path):
     return False if (None == callRaw(f"rly pth delete {path}",True)) else True
 
-def PathExists(path):
+def PathExists(path): # rly pth show kira-alpha_kira-1-2 -j
     return False if not callJson(f"rly pth show {path} -j",False) else True
 
 def GeneratePath(chain_id_src, chain_id_dst, path):

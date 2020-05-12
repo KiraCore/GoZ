@@ -50,5 +50,5 @@ def WriteJsonToFile(s, path):
     if not s:
         f.write("")
     else:
-        json.dump(s,f,ensure_ascii=False, indent=4)
+        json.dump(f"{s}",f,ensure_ascii=False, indent=4)
     f.close()

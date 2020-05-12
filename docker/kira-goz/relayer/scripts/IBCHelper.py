@@ -158,7 +158,6 @@ def ShutdownConnection(connection):
 def Connect(connection, timeout):
     chain_info_src=connection["src"]
     chain_info_dst=connection["dst"]
-    connection["success"] = False
     
     chain_id_src = chain_info_src["chain-id"]
     chain_id_dst = chain_info_dst["chain-id"]
@@ -202,8 +201,7 @@ def Connect(connection, timeout):
     elif ttl == None:
         raise Exception(f"Failed to read TTL")
 
-    connection["success"] = success = IsConnected(connection)
-    if not success:
+    if not IsConnected(connection):
         raise Exception(f"Failed to connect {chain_id_src} and {chain_id_dst} via {path}")
 
     connection["ttl"] = ttl = RelayerHelper.GetRemainingTimesToLive(connection)
@@ -236,7 +234,7 @@ def ReConnect(connection, timeout):
     return Connect(connection, timeout)
 
 def ConnectWithJson(src_json_path, scr_mnemonic, dst_json_path, dst_mnemonic, bucket, path, key_prefix, timeout, min_ttl):
-    connection = { "success": False, "path": path, "min-ttl": min_ttl }
+    connection = { "path": path, "min-ttl": min_ttl }
     # Initialize Source
     connection["src"] = src_chain_info = ClientHelper.InitializeClientWithJsonFile(src_json_path, key_prefix, scr_mnemonic, bucket)
     print(f"SUCCESS: Source client {src_chain_info['chain-id']} was initalized")
