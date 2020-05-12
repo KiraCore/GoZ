@@ -1,3 +1,66 @@
+# phase 2
+cat $SELF_UPDATE/common/configs/kira-1-2.json > kira-1-2.json 
+cat $SELF_UPDATE/common/configs/kira-alpha.json > kira-alpha.json
+cat $SELF_UPDATE/common/configs/goz-hub.json > goz-hub.json
+
+m="cost goat lazy genre spring transfer uncle canvas fashion tuition tired heart usual child gauge flag sign barrel during disagree false ocean drum weekend" && \
+ j1=./kira-alpha.json && \
+ j2=./kira-1-2.json && \
+ k=alpha
+
+i=$(cat $j1) && s=$(echo $i | jq -r '."chain-id"') && \
+ o=$(cat $j2) && d=$(echo $o | jq -r '."chain-id"') && \
+ p="$s_$d" && \
+ rly ch d $s && rly ch d $d && \
+ rly ch a -f $j1 && rly ch a -f $j2 && \
+ rly k d $s $k$s ||: && rly k d $d $k$d ||: && \
+ rly k r $s $k$s "$m" && rly k r $d $k$d "$m" && \
+ rly ch e $s key $k$s && rly ch e $d key $k$d && \
+ rly l d $s && rly l d $d && rly pth d $p || : && \
+ rly pth gen $s transfer $d transfer $p -f && \
+ rly l i $s -f && rly l i $d -f && \
+ rly l u $s && rly l u $d && \
+ rly tst req $s || : && rly tst req $d || : && \
+ rly q bal $s -j && rly q bal $d -j && \
+ rly tx clnts $p -d &> clnts.log; wait && \
+ rly tx conn $p -d &> conn.log; wait && \
+ rly tx chan $p -d &> chan.log; wait && \
+ rly pth s $p && sp=$(rly pth s $p -j) && \
+ dc=$(echo $sp | jq -r '.chains.dst."client-id"') && \
+ sc=$(echo $sp | jq -r '.chains.src."client-id"') && \
+ dh=$(echo $sp | jq -r '.chains.dst."channel-id"') && \
+ sh=$(echo $sp | jq -r '.chains.src."channel-id"') && \
+ dn=$(echo $sp | jq -r '.chains.dst."connection-id"') && \
+ sn=$(echo $sp | jq -r '.chains.src."connection-id"') && \
+ tq=".client_state.value.last_header.signed_header.header.time" && \
+ ts=$(rly q client $s $sc | jq -r $tq) && td=$(rly q client $d $dc | jq -r $tq) && \
+ echo "Time Source: $ts" && echo "Time Destin: $td" && \
+ while :; do \
+  rly pth s $p && sp=$(rly pth s $p -j) && \
+  rly tx raw uc $d $s $dc && rly tx raw uc $s $d $sc && \
+  dc=$(echo $sp | jq -r '.chains.dst."client-id"') && \
+  sc=$(echo $sp | jq -r '.chains.src."client-id"') && \
+  tq=".client_state.value.last_header.signed_header.header.time" && \
+  ts=$(rly q client $s $sc | jq -r $tq) && td=$(rly q client $d $dc | jq -r $tq) && \
+  echo "Time Source: $ts" && echo "Time Destin: $td" && \
+  echo "SUCCESS" && rly q bal $s -j && rly q bal $d -j && sleep 5300 ; done
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Usefully Snippets
 ```
@@ -6,12 +69,12 @@ cat $SELF_UPDATE/common/configs/kira-alpha.json > kira-alpha.json
 cat $SELF_UPDATE/common/configs/goz-hub.json > goz-hub.json
 
 m=$RLYKEY_MNEMONIC && \
- j1=./kira-1.json && \
+ j1=./kira-1-2.json && \
  j2=./goz-hub.json
 
 m="cost goat lazy genre spring transfer uncle canvas fashion tuition tired heart usual child gauge flag sign barrel during disagree false ocean drum weekend" && \
  j1=./kira-alpha.json && \
- j2=./kira-1.json
+ j2=./kira-1-2.json
 
 i=$(cat $j1) && s=$(echo $i | jq -r '."chain-id"') && \
  o=$(cat $j2) && d=$(echo $o | jq -r '."chain-id"') && \
@@ -37,7 +100,7 @@ i=$(cat $j1) && s=$(echo $i | jq -r '."chain-id"') && \
  sh=$(echo $sp | jq -r '.chains.src."channel-id"') && \
  dn=$(echo $sp | jq -r '.chains.dst."connection-id"') && \
  sn=$(echo $sp | jq -r '.chains.src."connection-id"') && \
- tq=".client_state.value.last_header.SignedHeader.header.time" && \
+ tq=".client_state.value.last_header.signed_header.header.time" && \
  ts=$(rly q client $s $sc | jq -r $tq) && td=$(rly q client $d $dc | jq -r $tq) && \
  echo "Time Source: $ts" && echo "Time Destin: $td" && \
  while :; do \
@@ -45,7 +108,7 @@ i=$(cat $j1) && s=$(echo $i | jq -r '."chain-id"') && \
   rly tx raw uc $d $s $dc && rly tx raw uc $s $d $sc && \
   dc=$(echo $sp | jq -r '.chains.dst."client-id"') && \
   sc=$(echo $sp | jq -r '.chains.src."client-id"') && \
-  tq=".client_state.value.last_header.SignedHeader.header.time" && \
+  tq=".client_state.value.last_header.signed_header.header.time" && \
   ts=$(rly q client $s $sc | jq -r $tq) && td=$(rly q client $d $dc | jq -r $tq) && \
   echo "Time Source: $ts" && echo "Time Destin: $td" && \
   echo "SUCCESS" && rly q bal $s -j && rly q bal $d -j && sleep 5300 ; done
@@ -93,14 +156,14 @@ i=$(cat $j1) && s=$(echo $i | jq -r '."chain-id"') && \
  dn=$(echo $sp | jq -r '.chains.dst."connection-id"') && \
  sn=$(echo $sp | jq -r '.chains.src."connection-id"') && \
 
- tq=".client_state.value.last_header.SignedHeader.header.time" && \
+ tq=".client_state.value.last_header.signed_header.header.time" && \
  ts=$(rly q client $s $sc | jq -r $tq) && td=$(rly q client $d $dc | jq -r $tq) && \
  echo "Time Source: $ts" && echo "Time Destin: $td" && \
 
  while :; do rly tx raw uc $d $s $dc && rly tx raw uc $s $d $sc && echo "SUCCESS" && rly q bal $s -j && rly q bal $d -j && sleep 5300 ; done
 
 > Check for last updated time
-Last header: `echo $(rly q client $s $sc | jq -r '.client_state.value.last_header.SignedHeader.header.time') `
+Last header: `echo $(rly q client $s $sc | jq -r '.client_state.value.last_header.signed_header.header.time') `
 
 
 
@@ -128,7 +191,7 @@ i=$(cat $j1) && s=$(echo $i | jq -r '."chain-id"') && \
  sh=$(echo $sp | jq -r '.chains.src."channel-id"') && \
  dn=$(echo $sp | jq -r '.chains.dst."connection-id"') && \
  sn=$(echo $sp | jq -r '.chains.src."connection-id"') && \
- tq=".client_state.value.last_header.SignedHeader.header.time" && \
+ tq=".client_state.value.last_header.signed_header.header.time" && \
  ts=$(rly q client $s $sc | jq -r $tq) && td=$(rly q client $d $dc | jq -r $tq) && \
  echo "Time Source: $ts" && echo "Time Destin: $td" && \
  rly tx raw uc $d $s $dc && rly tx raw uc $s $d $sc
@@ -161,7 +224,7 @@ i=$(cat $j1) && s=$(echo $i | jq -r '."chain-id"') && \
  sh=$(echo $sp | jq -r '.chains.src."channel-id"') && \
  dn=$(echo $sp | jq -r '.chains.dst."connection-id"') && \
  sn=$(echo $sp | jq -r '.chains.src."connection-id"') && \
- tq=".client_state.value.last_header.SignedHeader.header.time" && \
+ tq=".client_state.value.last_header.signed_header.header.time" && \
  ts=$(rly q client $s $sc | jq -r $tq) && td=$(rly q client $d $dc | jq -r $tq) && \
  echo "Time Source: $ts" && echo "Time Destin: $td" && \
  rly tx raw uc $d $s $dc && rly tx raw uc $s $d $sc

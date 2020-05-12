@@ -139,10 +139,9 @@ def TransferTokensInternally(src_chain_info, dst_chain_info, amount, path):
     s = f"rly tx transfer {src_id} {dst_id} {amount} true {dst_addr} --path={path}"
     out = callRaw(s, True)
     if out == None:  
-    if "err(" in out:
-        print(f"ERROR: Token transfer failed: {s} => {out}")
+        if "err(" in out:
+            print(f"ERROR: Token transfer failed: {s} => {out}")
         return None
-
     return out
 
 def SendPacket(src_chain_info, dst_chain_info, path, data):
@@ -374,7 +373,7 @@ def GetRemainingTimesToLive(connection):
     time_now = datetime.utcnow()
     src_ttl = -1 ; dst_ttl = -1 # time remaining source & destination
     try:
-        src_datetime=src_client_info["client_state"]["value"]["last_header"]["SignedHeader"]["header"]["time"]
+        src_datetime=src_client_info["client_state"]["value"]["last_header"]["signed_header"]["header"]["time"]
         src_trusting_period=int(src_client_info["client_state"]["value"]["trusting_period"][:-9]) # nanoseconds 10^9
         src_elapsed = (time_now - dateutil.parser.isoparse(src_datetime).replace(tzinfo=None)).total_seconds()
         src_ttl = int(src_trusting_period - src_elapsed)
@@ -385,7 +384,7 @@ def GetRemainingTimesToLive(connection):
         print(f"WARNING: Could NOT find last signed header time of the source chain {src_chain_id}: {str(e)}")
     
     try:
-        dst_datetime=dst_client_info["client_state"]["value"]["last_header"]["SignedHeader"]["header"]["time"]
+        dst_datetime=dst_client_info["client_state"]["value"]["last_header"]["signed_header"]["header"]["time"]
         dst_trusting_period=int(dst_client_info["client_state"]["value"]["trusting_period"][:-9]) # nanoseconds 10^9
         dst_elapsed = (time_now - dateutil.parser.isoparse(dst_datetime).replace(tzinfo=None)).total_seconds()
         dst_ttl = int(dst_trusting_period - dst_elapsed)
