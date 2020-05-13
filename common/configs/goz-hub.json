@@ -4,6 +4,8 @@
   "rpc-addr": "http://goz-trust-alias.kiraex.com:26657",
   "account-prefix": "cosmos",
   "gas": 200000,
+  "gas-min": 50000,
+  "gas-max": 800000,
   "gas-prices": "0.025doubloons",
   "default-denom": "doubloons",
   "trusting-period": "503h"

@@ -126,3 +126,39 @@ def InitializeClientWithJsonFile(json_path, key_prefix, mnemonic, bucket):
         print(f"WARNING: Failed to request {denom} tokens from the {chain_id} faucet...")
     chain_info = AssertRefreshBalances(chain_info)
     return chain_info
+
+def UpdateLiteClient(chain_info):
+    chain_id = chain_info["chain-id"]
+    print(f"INFO: Updating {chain_id} chain lite client...")
+    if not RelayerHelper.UpdateLiteClient(chain_info):
+        print(f"ERROR: Failed to update {chain_id} lite client")
+        return False
+    print(f"SUCCESS: Updated {chain_id} lite client")
+    return True
+
+def RestartLiteClient(chain_info):
+    chain_id=chain_info["chain-id"]
+    print(f"INFO: Re-starting {chain_id} lite client...")
+    if not RelayerHelper.RestartLiteClient(chain_id):
+        print(f"ERROR: Failed to update {chain_id} lite client")
+        return False
+    print(f"SUCCESS: Updated {chain_id} lite client")
+    return True
+
+def DeleteLiteClient(chain_info):
+    chain_id=chain_info["chain-id"]
+    print(f"INFO: Re-starting {chain_id} lite client...")
+    if not RelayerHelper.DeleteLiteClient(chain_id):
+        print(f"ERROR: Failed to update {chain_id} lite client")
+        return False
+    print(f"SUCCESS: Updated {chain_id} lite client")
+    return True
+
+def GasUpdateAssert(chain_info, gas):
+    chain_id = chain_info["chain-id"]
+    if not RelayerHelper.ConfigureDefaultGas(chain_id, gas): # rly ch edit kira-alpha gas 100000
+        raise Exception(f"WARNING: Failed to configure gas of the {chain_id} chain")
+    if not UpdateLiteClient(connection):
+        raise Exception("Failed to update lite client after adjusting gas prices")
+    print(f"SUCCESS: New gas price for {chain_id} chain was set to {gas}")
+    return True

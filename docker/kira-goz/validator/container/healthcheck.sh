@@ -15,8 +15,8 @@ if [ "${MAINTENANCE_MODE}" == "true"  ] || [ -f "$MAINTENANCE_FILE" ] ; then
 fi
 
 # cleanup large files
-find $SELF_LOGS -type f -size +256k -exec rm -vf {} +
-find "/var/log/journal" -type f -size +256k -exec rm -vf {} +
+find "/var/log/journal" -type f -size +256k -exec truncate --size=128k {} +
+find "$SELF_LOGS" -type f -size +256k -exec truncate --size=128k {} +
 
 if [ -f "$INIT_END_FILE" ]; then
    echo "INFO: Initialization was successfull"

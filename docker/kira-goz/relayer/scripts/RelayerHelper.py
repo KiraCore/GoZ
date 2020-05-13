@@ -1,5 +1,6 @@
 import TaskHelper
 import IBCHelper
+import ClientHelper
 import StringHelper
 import multiprocessing
 import ArrayHelper
@@ -17,7 +18,7 @@ from datetime import datetime, timezone
 from joblib import Parallel, delayed
 from subprocess import Popen, PIPE
 
-# Update: (rm $SELF_SCRIPTS/RelayerHelper.py || true) && nano $SELF_SCRIPTS/RelayerHelper.py 
+# Update: (rm $SELF_SCRIPTS/RelayerHelper.py || true) && nano $SELF_SCRIPTS/RelayerHelper.py
 
 def callRaw(s, showErrors):
     err = None
@@ -282,56 +283,6 @@ def PushPendingTransactions(path):
         print(f"INFO: No pending transactions were found in path {path}")
         return True
 
-# Usage: rly transact raw update-client [src-chain-id] [dst-chain-id] [client-id] [flags]
-# rly pth show kira-alpha_kira-1 -j
-# rly transact raw update-client kira-alpha kira-1 nhzihoslfo --debug
-# rly transact link kira-alpha_kira-1
-def UpdateClientConnection(chain_info, path):    
-    info = QueryPath(path) # rly pth show $p -j
-    if not info or (not info["chains"]) or (not info["status"]):
-        print(f"ERROR: Could not correctly query path {path}, chain or status information is missing from the response")
-        return False
-
-    chains = info["chains"]
-    status = info["status"]
-    is_connected = IBCHelper.TestStatus(status)
-    
-    if not is_connected:
-        print(f"WARNING: Chains are not connected, might not be able to propagate transactions")
-    #    print(f"ERROR: Could not update client connection because path {path} does not have established connection")
-    #    return False
-    
-    chain_id = chain_info["chain-id"]
-    src_chain_id = chains["src"]["chain-id"]
-    dst_chain_id = chains["dst"]["chain-id"]
-    is_source = src_chain_id == chain_id
-    is_destination = dst_chain_id == chain_id
-
-    if (not is_source) and (not is_destination):
-        print(f"ERROR: Chain {chain_id} is nither a source nor destination of the path '{path}'")
-        return False
-
-    client_id = None
-    if is_source:
-        client_id = chains["src"]["client-id"]
-    else:
-        client_id = chains["dst"]["client-id"]
-        tmp = dst_chain_id
-        dst_chain_id = src_chain_id
-        src_chain_id = tmp
-
-    tx = callJson(f"rly transact raw update-client {src_chain_id} {dst_chain_id} {client_id}", True)
-    if (None == tx):
-        print(f"ERROR: Client was NOT updated")
-        return False
-    if int(tx.get("height", "0")) <= 0:
-        print(f"ERROR: Failed to propagate raw update-client transactions between {src_chain_id} and {dst_chain_id} with client-id {client_id}, tx response: {tx}")
-        return False
-  
-    print(f"SUCCESS: Client was updated: {tx}")
-    return True
-
-
 def RestartLiteClient(chain_id):
     callRaw(f"rly lite delete {chain_id}",False) # rly lite delete kira-1
     callRaw(f"rly lite update {chain_id}",False) # rly lite init kira-1 -f
@@ -403,4 +354,66 @@ def GetRemainingTimesToLive(connection):
     return { "src": src_ttl, "dst": dst_ttl, "min": min(src_ttl,dst_ttl), "max": max(src_ttl,dst_ttl) } 
     
     
+# Usage: rly transact raw update-client [src-chain-id] [dst-chain-id] [client-id] [flags]
+# rly pth show kira-alpha_kira-1 -j
+# rly transact raw update-client kira-alpha kira-1 nhzihoslfo --debug
+# rly transact link kira-alpha_kira-1
+def UpdateClientConnection(chain_info, path):    
+    info = QueryPath(path) # rly pth show $p -j
+    if not info or (not info["chains"]) or (not info["status"]):
+        print(f"ERROR: Could not correctly query path {path}, chain or status information is missing from the response")
+        return False
 
+    chains = info["chains"]
+    status = info["status"]
+    is_connected = IBCHelper.TestStatus(status)
+    
+    if not is_connected:
+        print(f"WARNING: Chains are not connected, might not be able to propagate transactions")
+    #    print(f"ERROR: Could not update client connection because path {path} does not have established connection")
+    #    return False
+    
+    chain_id = chain_info["chain-id"]
+    src_chain_id = chains["src"]["chain-id"]
+    dst_chain_id = chains["dst"]["chain-id"]
+    is_source = src_chain_id == chain_id
+    is_destination = dst_chain_id == chain_id
+
+    if (not is_source) and (not is_destination):
+        print(f"ERROR: Chain {chain_id} is nither a source nor destination of the path '{path}'")
+        return False
+
+    client_id = None
+    if is_source:
+        client_id = chains["src"]["client-id"]
+    else:
+        client_id = chains["dst"]["client-id"]
+        tmp = dst_chain_id
+        dst_chain_id = src_chain_id
+        src_chain_id = tmp
+
+    depth_now=0
+    depth_max=100
+    while True:
+        depth_now = depth_now + 1
+
+        if depth_now > depth_max: # ensure that loop is not infinite
+            raise  Exception(f"Maximum recursion depth {depth_max} exceeded")
+
+        tx = callJson(f"rly transact raw update-client {src_chain_id} {dst_chain_id} {client_id}", True)
+        if (None == tx):
+            print(f"ERROR: Client was NOT updated")
+            return False
+        if int(tx.get("height", "0")) <= 0: # something went wrong
+            print(f"ERROR: Failed to propagate raw update-client transactions between {src_chain_id} and {dst_chain_id} with client-id {client_id}, tx response: {tx}")
+            gas_used=int(tx.get("gas_used", "0"))
+            gas_wanted=int(tx.get("gas_wanted", "0"))
+            
+            if gas_used > 0 and gas_used > gas_wanted: # update gas if our of gas
+                print(f"WARNING: Out of gas, increasing from {gas_used} to {gas_wanted}")
+                ClientHelper.GasUpdateAssert(chain_info, gas_wanted + 1000)
+                continue
+            
+            return False
+    print(f"SUCCESS: Client was updated: {tx}")
+    return True

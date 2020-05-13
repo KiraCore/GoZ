@@ -75,9 +75,20 @@ upload_time = connection["upload-time"] = state_file.get("upload-time", 0) # tim
 total_uptime = connection["total-uptime"] = state_file.get("total-uptime", 0)
 loop_start = time_start
 
+src_gas_min = src.get("gas-min", 50000)
+dst_gas_min = dst.get("gas-min", 50000)
+src_gas_max = src.get("gas-max", src_gas_min)
+dst_gas_max = dst.get("gas-max", src_gas_min)
+src_cfg = RelayerHelper.ShowChain(src_chain_id) # rly ch show kira-alpha -j
+dst_cfg = RelayerHelper.ShowChain(dst_chain_id) # rly ch show kira-1 -j
+src_gas_default = src_cfg.get("gas", src_gas_min)
+dst_gas_default = dst_cfg.get("gas", dst_gas_min)
+
 print(f"INFO: Connection was established within {init_time}s")
 print(f"INFO: Max init time: {max_init_time}s")
 print(f"INFO: Min init time: {min_init_time}s")
+print(f"INFO: SRC => Gas Min ({src_gas_min}), Gas Now ({src_gas_default}), Gas Max ({src_gas_max})")
+print(f"INFO: DST => Gas Min ({dst_gas_min}), Gas Now ({dst_gas_default}), Gas Max ({dst_gas_max})")
 
 while True:
     loop_elapsed = int(time.time() - loop_start)
@@ -100,6 +111,22 @@ while True:
     ttl_src = int(ttl["src"]) # source connection time to live
     ttl_dst = int(ttl["dst"]) # destination connection time to live
 
+    src_cfg = RelayerHelper.ShowChain(src_chain_id)
+    dst_cfg = RelayerHelper.ShowChain(dst_chain_id)
+    src_gas = src_cfg["gas"]
+    dst_gas = dst_cfg["gas"]
+
+    connection["src"] = src = ClientHelper.AssertRefreshBalances(src)
+    connection["dst"] = dst = ClientHelper.AssertRefreshBalances(dst)
+    src_gas_price = float(src_cfg["gas-prices"][:-len(src_denom)])
+    dst_gas_price = float(dst_cfg["gas-prices"][:-len(dst_denom)])
+    src_tokens = RelayerHelper.GetAmountByDenom(src["balance"], src_denom)
+    dst_tokens = RelayerHelper.GetAmountByDenom(dst["balance"], dst_denom)
+    src_fee = (src_gas * src_gas_price) + 1 # can't be 0
+    dst_fee = (dst_gas * dst_gas_price) + 1 # can't be 0
+    src_tx_left = int(src_tokens / src_fee)
+    dst_tx_left = int(dst_tokens / dst_fee)
+
     print(f"_________________________________")
     print(f"|        Source Chain            - {src_chain_id} ({src_conn_id})")
     print(f"|      Destination Chain         - {dst_chain_id} ({dst_conn_id})")
@@ -113,24 +140,35 @@ while True:
     print(f"| INFO: Next State Upload:       - {max(0,int(time_to_upload))}s")
     print(f"| INFO: Source Key balance:      - {src_key} {ClientHelper.QueryFeeTokenBalance(src)} {src_denom}")
     print(f"| INFO: Destination Key balance: - {dst_key} {ClientHelper.QueryFeeTokenBalance(dst)} {dst_denom}")
+    print(f"| INFO: Source Chain GAS:        - {src_gas}\t| {src_gas_price} {src_denom}")
+    print(f"| INFO: Destination Chain GAS:   - {dst_gas}\t| {dst_gas_price} {dst_denom}")
+    print(f"| INFO: Source Tx Fee:           - {src_fee} {src_denom}")
+    print(f"| INFO: Destination Tx Fee:      - {dst_fee} {dst_denom}")
+    print(f"| INFO: Source Tx Left:          - {src_tx_left}")
+    print(f"| INFO: Destination Tx Left:     - {dst_tx_left}")
     print(f"|________________________________|")
-
     skip_upload = False
-    if ttl_src <= min_ttl:
-        print(f"INFO: Remaining time to live of the source connection ({ttl_src}) is smaller than min TTL of {min_ttl}, updating...")
-        if not RelayerHelper.UpdateClientConnection(src, path):
-            print(f"WARNING: Failed to update source connection")
-            skip_upload = True
-        else:
-            print(f"SUCCESS: Source client connection ({src_chain_id}) was updated")
 
-    if ttl_dst <= min_ttl:
-        print(f"INFO: Remaining time to live of the destination connection ({ttl_dst}) is smaller than min TTL of {min_ttl}, updating...")
-        if not RelayerHelper.UpdateClientConnection(dst, path):
-            print(f"WARNING: Failed to update destination connection")
-            skip_upload = True
-        else:
-            print(f"SUCCESS: Destination client connection ({dst_chain_id}) was updated")
+    if ttl_src <= min_ttl or ttl_dst <= min_ttl:
+        print(f"INFO: Setting GAS prices, to the minimum of SRC => {src_gas_min} and DST => {dst_gas_min}")
+        ClientHelper.GasUpdateAssert(src, src_gas_min)
+        ClientHelper.GasUpdateAssert(dst, dst_gas_min)
+        
+        if ttl_src <= min_ttl:
+            print(f"INFO: Remaining time to live of the source connection ({ttl_src}) is smaller than min TTL of {min_ttl}, updating...")
+            if not RelayerHelper.UpdateClientConnection(src, path): # rly transact raw update-client $s $d $(rly pth s $p -j | jq -r '.chains.dst."client-id"')
+                print(f"WARNING: Failed to update source connection")
+                skip_upload = True
+            else:
+                print(f"SUCCESS: Source client connection ({src_chain_id}) was updated")
+    
+        if ttl_dst <= min_ttl:
+            print(f"INFO: Remaining time to live of the destination connection ({ttl_dst}) is smaller than min TTL of {min_ttl}, updating...")
+            if not RelayerHelper.UpdateClientConnection(dst, path):
+                print(f"WARNING: Failed to update destination connection")
+                skip_upload = True
+            else:
+                print(f"SUCCESS: Destination client connection ({dst_chain_id}) was updated")
             
     if skip_upload:
         continue

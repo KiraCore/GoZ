@@ -41,52 +41,13 @@ def IsConnected(connection):
     return True
 
 def UpdateLiteClients(connection):
-    chain_id_src=connection["src"]["chain-id"]
-    chain_id_dst=connection["dst"]["chain-id"]
-    print(f"INFO: Updating lite clients...")
-    if not RelayerHelper.UpdateLiteClient(chain_id_src):
-        print(f"ERROR: Failed to update {chain_id_src} lite client")
-        return False
-    else:
-        print(f"SUCCESS: Updated {chain_id_src} lite client")
-    if not RelayerHelper.UpdateLiteClient(chain_id_dst):
-        print(f"ERROR: Failed to update {chain_id_dst} lite client")
-        return False
-    else:
-        print(f"SUCCESS: Updated {chain_id_dst} lite client")
-    return True
+    return ClientHelper.UpdateLiteClient(connection["src"]) and ClientHelper.UpdateLiteClient(connection["dst"])
 
 def RestartLiteClients(connection):
-    chain_id_src=connection["src"]["chain-id"]
-    chain_id_dst=connection["dst"]["chain-id"]
-    print(f"INFO: Re-starting lite clients...")
-    if not RelayerHelper.RestartLiteClient(chain_id_src):
-        print(f"ERROR: Failed to update {chain_id_src} lite client")
-        return False
-    else:
-        print(f"SUCCESS: Updated {chain_id_src} lite client")
-    if not RelayerHelper.RestartLiteClient(chain_id_dst):
-        print(f"ERROR: Failed to update {chain_id_dst} lite client")
-        return False
-    else:
-        print(f"SUCCESS: Updated {chain_id_dst} lite client")
-    return True
+    return ClientHelper.RestartLiteClient(connection["src"]) and ClientHelper.RestartLiteClient(connection["dst"])
 
 def DeleteLiteClients(connection):
-    chain_id_src=connection["src"]["chain-id"]
-    chain_id_dst=connection["dst"]["chain-id"]
-    print(f"INFO: Re-starting lite clients...")
-    if not RelayerHelper.DeleteLiteClient(chain_id_src):
-        print(f"ERROR: Failed to update {chain_id_src} lite client")
-        return False
-    else:
-        print(f"SUCCESS: Updated {chain_id_src} lite client")
-    if not RelayerHelper.DeleteLiteClient(chain_id_dst):
-        print(f"ERROR: Failed to update {chain_id_dst} lite client")
-        return False
-    else:
-        print(f"SUCCESS: Updated {chain_id_dst} lite client")
-    return True
+    return ClientHelper.DeleteLiteClient(connection["src"]) and ClientHelper.DeleteLiteClient(connection["dst"])
 
 def ReArmConnection(connection, timeout):
     print(f"INFO: Re-arming connection...")
@@ -306,16 +267,6 @@ def TestConnection(connection):
 
     return is_connected
 
-def GasUpdateAssert(connection, gas):
-    src_chain_info = connection["src"]
-    dst_chain_info = connection["dst"]
-    src_id = src_chain_info["chain-id"]
-    dst_id = dst_chain_info["chain-id"]
-    if not RelayerHelper.ConfigureDefaultGas(src_id, gas): # rly ch edit kira-alpha gas 100000
-        raise Exception(f"WARNING: Failed to configure gas of the source chain")
-    if not RelayerHelper.ConfigureDefaultGas(dst_id, gas): # rly ch edit kira-1 gas 100000
-        raise Exception(f"WARNING: Failed to configure gas of the source chain")
-    if not UpdateLiteClients(connection):
-        raise Exception("Failed to update lite client after adjusting gas prices")
-    print(f"SUCCESS: New gas price was set to {gas}")
+def GasUpdateAsserts(connection, gas):
+    return ClientHelper.GasUpdateAssert(connection["src"], gas) and ClientHelper.GasUpdateAssert(connection["dst"], gas)
 

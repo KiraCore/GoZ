@@ -15,8 +15,8 @@ if [ "${MAINTENANCE_MODE}" == "true"  ] || [ -f "$MAINTENANCE_FILE" ] ; then
 fi
 
 # cleanup large files
-find $SELF_LOGS -type f -size +256k -exec rm -vf {} +
-find "/var/log/journal" -type f -size +256k -exec rm -vf {} +
+find "/var/log/journal" -type f -size +256k -exec truncate --size=128k {} +
+find "$SELF_LOGS" -type f -size +256k -exec truncate --size=128k {} +
 
 if [ -f "$INIT_END_FILE" ]; then
    echo "INFO: Initialization was successfull"
@@ -33,7 +33,7 @@ if [ "${STATUS_RELAYER}" != "active" ] ; then
     if [ "${STATUS_RELAYER}" != "active" ] ; then
         echo ">> Relayer log:"
         tail -n 100 /var/log/journal/relayer.service.log || true
-        systemctl2 restart relayer || systemctl2 status relayer.service || echo "Failed to re-start relayer service" || true
+        systemctl2 restart relayer || systemctl2 status relayer || echo "Failed to re-start relayer service" || true
     fi
 
     if [ -f "$EMAIL_SENT" ]; then

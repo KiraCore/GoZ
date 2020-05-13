@@ -48,6 +48,17 @@ i=$(cat $j1) && s=$(echo $i | jq -r '."chain-id"') && \
 
 
 
+# rly ch edit $s gas 50000
+# rly ch edit $s gas 50000 && rly transact raw update-client $s $d $(rly pth s $p -j | jq -r '.chains.src."client-id"')
+# rly q unrelayed $p
+# rly tx rly $p --debug
+# rly q bal $s -j
+
+# price=90000 && rly ch edit $s gas $price 
+
+# price=90000 && rly ch edit $s gas $price &&  rly ch edit $d gas $price && rly tx transfer $s $d 1ukex true $(rly ch addr $s) -d
+# price=90000 && rly ch edit $s gas $price &&  rly ch edit $d gas $price && rly tx transfer $s $d 1ukex true $(rly ch addr $s) -d
+
 
 
 

@@ -4,7 +4,9 @@
   "rpc-addr": "http://internal-alpha.kiraex.com:10001",
   "account-prefix": "cosmos",
   "gas": 200000,
+  "gas-min": 50000,
+  "gas-max": 800000,
   "gas-prices": "0.025ukex",
   "default-denom": "ukex",
-  "trusting-period": "20m"
+  "trusting-period": "5m"
 }

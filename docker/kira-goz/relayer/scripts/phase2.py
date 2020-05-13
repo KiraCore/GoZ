@@ -198,15 +198,15 @@ while True:
 
             old_gas = gas
             gas = int(gas + ((gas_max - gas) / 2))
-            IBCHelper.GasUpdateAssert(connection, gas)
-            if not RelayerHelper.PushPendingTransactions(path):
+            IBCHelper.GasUpdateAsserts(connection, gas) # rly ch edit $s gas 100000
+            if not RelayerHelper.PushPendingTransactions(path): # rly tx rly $p --debug
                 failed_tx_counter = failed_tx_counter + 1
                 print(f"WARNING: Failed to push pending transactions ({failed_tx_counter})")
                 break
             else:
                 failed_tx_counter = 0
                 gas = int(old_gas + (old_gas / 2))
-                IBCHelper.GasUpdateAssert(connection, gas)
+                IBCHelper.GasUpdateAsserts(connection, gas)
                 continue
         elif success: # success and nothing is pending
             failed_tx_counter = 0
@@ -216,7 +216,7 @@ while True:
                 gas_min = gas_min_pass
 
             gas = int(gas - ((gas - gas_min) / 2))
-            IBCHelper.GasUpdateAssert(connection, gas)
+            IBCHelper.GasUpdateAsserts(connection, gas)
 
             tx_elapsed = float(time.time() - tx_start)
             ttl_src = int(ttl_src - tx_elapsed)
@@ -226,7 +226,7 @@ while True:
         else: # failure
             failed_tx_counter = failed_tx_counter + 1
             gas = int(gas + ((gas_max - gas) / 2))
-            IBCHelper.GasUpdateAssert(connection, gas)
+            IBCHelper.GasUpdateAsserts(connection, gas)
             print(f"ERROR: One of the transactions failed ({failed_tx_counter})")
             break
 
