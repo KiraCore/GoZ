@@ -6,7 +6,7 @@
   "gas": 200000,
   "gas-min": 50000,
   "gas-max": 800000,
-  "gas-prices": "0.025ukex",
+  "gas-prices": "0.0025ukex",
   "default-denom": "ukex",
   "trusting-period": "5m"
 }

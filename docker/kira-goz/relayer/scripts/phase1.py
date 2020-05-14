@@ -122,10 +122,10 @@ while True:
     dst_gas_price = float(dst_cfg["gas-prices"][:-len(dst_denom)])
     src_tokens = RelayerHelper.GetAmountByDenom(src["balance"], src_denom)
     dst_tokens = RelayerHelper.GetAmountByDenom(dst["balance"], dst_denom)
-    src_fee = (src_gas * src_gas_price) + 1 # can't be 0
-    dst_fee = (dst_gas * dst_gas_price) + 1 # can't be 0
-    src_tx_left = int(src_tokens / src_fee)
-    dst_tx_left = int(dst_tokens / dst_fee)
+    src_fee = int(src_gas * src_gas_price)
+    dst_fee = int(dst_gas * dst_gas_price)
+    src_tx_left = int(src_tokens / (src_fee + 1))
+    dst_tx_left = int(dst_tokens / (dst_fee + 1))
 
     print(f"_________________________________")
     print(f"|        Source Chain            - {src_chain_id} ({src_conn_id})")
@@ -149,26 +149,25 @@ while True:
     print(f"|________________________________|")
     skip_upload = False
 
-    if ttl_src <= min_ttl or ttl_dst <= min_ttl:
-        print(f"INFO: Setting GAS prices, to the minimum of SRC => {src_gas_min} and DST => {dst_gas_min}")
+    if ttl_src <= min_ttl:
+        print(f"INFO: Setting GAS prices, to the minimum of SRC => {src_gas_min}")
         ClientHelper.GasUpdateAssert(src, src_gas_min)
+        print(f"INFO: Remaining time to live of the source connection ({ttl_src}) is smaller than min TTL of {min_ttl}, updating...")
+        if not RelayerHelper.UpdateClientConnection(src, path): # rly transact raw update-client $s $d $(rly pth s $p -j | jq -r '.chains.dst."client-id"')
+            print(f"WARNING: Failed to update source connection")
+            skip_upload = True
+        else:
+            print(f"SUCCESS: Source client connection ({src_chain_id}) was updated")
+
+    if ttl_dst <= min_ttl:
+        print(f"INFO: Setting GAS prices, to the minimum of DST => {dst_gas_min}")
         ClientHelper.GasUpdateAssert(dst, dst_gas_min)
-        
-        if ttl_src <= min_ttl:
-            print(f"INFO: Remaining time to live of the source connection ({ttl_src}) is smaller than min TTL of {min_ttl}, updating...")
-            if not RelayerHelper.UpdateClientConnection(src, path): # rly transact raw update-client $s $d $(rly pth s $p -j | jq -r '.chains.dst."client-id"')
-                print(f"WARNING: Failed to update source connection")
-                skip_upload = True
-            else:
-                print(f"SUCCESS: Source client connection ({src_chain_id}) was updated")
-    
-        if ttl_dst <= min_ttl:
-            print(f"INFO: Remaining time to live of the destination connection ({ttl_dst}) is smaller than min TTL of {min_ttl}, updating...")
-            if not RelayerHelper.UpdateClientConnection(dst, path):
-                print(f"WARNING: Failed to update destination connection")
-                skip_upload = True
-            else:
-                print(f"SUCCESS: Destination client connection ({dst_chain_id}) was updated")
+        print(f"INFO: Remaining time to live of the destination connection ({ttl_dst}) is smaller than min TTL of {min_ttl}, updating...")
+        if not RelayerHelper.UpdateClientConnection(dst, path):
+            print(f"WARNING: Failed to update destination connection")
+            skip_upload = True
+        else:
+            print(f"SUCCESS: Destination client connection ({dst_chain_id}) was updated")
             
     if skip_upload:
         continue

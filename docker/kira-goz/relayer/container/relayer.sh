@@ -54,7 +54,9 @@ python3 $SELF_SCRIPTS/phase2.py \
  $BUCKET \
  $RLY_PATH \
  $RLY_KEY_PREFIX \
- $MIN_TTL &> $SELF_LOGS/relayer.txt ||  true
+ $MIN_TTL &> $SELF_LOGS/relayer.txt || true
+
+tail -n 100 $SELF_LOGS/relayer.txt || true
 
 CDHelper email send \
  --from="noreply@kiracore.com" \

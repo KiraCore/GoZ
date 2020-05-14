@@ -162,7 +162,7 @@ def TryQueryBalance(chain_id):
 def DeletePath(path):
     return False if (None == callRaw(f"rly pth delete {path}",True)) else True
 
-def PathExists(path): # rly pth show kira-alpha_kira-1-2 -j
+def PathExists(path): # rly pth show kira-alpha_kira-1-1b -j
     return False if not callJson(f"rly pth show {path} -j",False) else True
 
 def GeneratePath(chain_id_src, chain_id_dst, path):
@@ -394,6 +394,7 @@ def UpdateClientConnection(chain_info, path):
 
     depth_now=0
     depth_max=100
+    gas_min = chain_info.get("gas-min", 0)
     while True:
         depth_now = depth_now + 1
 
@@ -406,12 +407,12 @@ def UpdateClientConnection(chain_info, path):
             return False
         if int(tx.get("height", "0")) <= 0: # something went wrong
             print(f"ERROR: Failed to propagate raw update-client transactions between {src_chain_id} and {dst_chain_id} with client-id {client_id}, tx response: {tx}")
-            gas_used=int(tx.get("gas_used", "0"))
-            gas_wanted=int(tx.get("gas_wanted", "0"))
+            gas_used=int(tx.get("gas_used", f"{gas_min}"))
+            gas_wanted=int(tx.get("gas_wanted", f"{gas_min}"))
             
             if gas_used > 0 and gas_used > gas_wanted: # update gas if our of gas
-                print(f"WARNING: Out of gas, increasing from {gas_used} to {gas_wanted}")
-                ClientHelper.GasUpdateAssert(chain_info, gas_wanted + 1000)
+                print(f"WARNING: Out of gas, increasing from {gas_wanted} to {gas_used}")
+                ClientHelper.GasUpdateAssert(chain_info, gas_used + 1000)
                 continue
             
             return False

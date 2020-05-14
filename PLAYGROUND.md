@@ -1,11 +1,11 @@
 # phase 2
-cat $SELF_UPDATE/common/configs/kira-1-2.json > kira-1-2.json 
+cat $SELF_UPDATE/common/configs/kira-1-1b.json > kira-1-1b.json 
 cat $SELF_UPDATE/common/configs/kira-alpha.json > kira-alpha.json
 cat $SELF_UPDATE/common/configs/goz-hub.json > goz-hub.json
 
 m="cost goat lazy genre spring transfer uncle canvas fashion tuition tired heart usual child gauge flag sign barrel during disagree false ocean drum weekend" && \
  j1=./kira-alpha.json && \
- j2=./kira-1-2.json && \
+ j2=./kira-1-1b.json && \
  k=alpha
 
 i=$(cat $j1) && s=$(echo $i | jq -r '."chain-id"') && \
@@ -67,12 +67,6 @@ i=$(cat $j1) && s=$(echo $i | jq -r '."chain-id"') && \
 
 
 
-
-
-
-
-
-
 # Usefully Snippets
 ```
 cat $SELF_UPDATE/common/configs/kira-1.json > kira-1.json 
@@ -80,12 +74,12 @@ cat $SELF_UPDATE/common/configs/kira-alpha.json > kira-alpha.json
 cat $SELF_UPDATE/common/configs/goz-hub.json > goz-hub.json
 
 m=$RLYKEY_MNEMONIC && \
- j1=./kira-1-2.json && \
+ j1=./kira-1-1b.json && \
  j2=./goz-hub.json
 
 m="cost goat lazy genre spring transfer uncle canvas fashion tuition tired heart usual child gauge flag sign barrel during disagree false ocean drum weekend" && \
  j1=./kira-alpha.json && \
- j2=./kira-1-2.json
+ j2=./kira-1-1b.json
 
 i=$(cat $j1) && s=$(echo $i | jq -r '."chain-id"') && \
  o=$(cat $j2) && d=$(echo $o | jq -r '."chain-id"') && \

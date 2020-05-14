@@ -14,7 +14,7 @@ from joblib import Parallel, delayed
 # Update: (rm $SELF_SCRIPTS/IBCHelper.py || true) && nano $SELF_SCRIPTS/IBCHelper.py 
 
 def QueryStatus(path):
-    path_info = RelayerHelper.QueryPath(path) # rly pth show kira-alpha_kira-1-2 -j
+    path_info = RelayerHelper.QueryPath(path) # rly pth show kira-alpha_kira-1-b -j
     status = None if (not path_info) else path_info["status"]
     return status
 
@@ -73,20 +73,20 @@ def ReArmConnection(connection, timeout):
         print(f"INFO: Path {path} status: Chains {status['chains']} | Clients {status['clients']} | Connection {status['connection']} | Channel {status['channel']}")
 
         if not status["clients"]: 
-            if not RelayerHelper.TransactClients(path, timeout): # rly transact clients kira-alpha_kira-1-2 --debug
+            if not RelayerHelper.TransactClients(path, timeout): # rly transact clients kira-alpha_kira-1-1b --debug
                 print(f"ERROR: Failed to create clients (Step 1) between {chain_id_src} and {chain_id_dst}, path: '{path}'")
                 return False
             else:
                 print(f"SUCCESS: Established clients (Step 1) between {chain_id_src} and {chain_id_dst}, path: '{path}'")
 
         if not status["connection"]: 
-            if not RelayerHelper.TransactConnection(path, timeout): # rly transact connection kira-alpha_kira-1-2 --debug
+            if not RelayerHelper.TransactConnection(path, timeout): # rly transact connection kira-alpha_kira-1-1b --debug
                 print(f"ERROR: Failed to create connection (step 2) between {chain_id_src} and {chain_id_dst}, path: '{path}'")
                 return False
             else:
                 print(f"SUCCESS: Established connection (Step 2) between {chain_id_src} and {chain_id_dst}, path: '{path}'")
 
-        if not status["channel"]: # rly transact channel kira-alpha_kira-1-2 --debug
+        if not status["channel"]: # rly transact channel kira-alpha_kira-1-1b --debug
             if not RelayerHelper.TransactChannel(path, timeout):
                 print(f"ERROR: Failed to create channel (step 3) between {chain_id_src} and {chain_id_dst}, path: '{path}'")
                 return False

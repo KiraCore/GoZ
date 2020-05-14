@@ -130,7 +130,7 @@ def InitializeClientWithJsonFile(json_path, key_prefix, mnemonic, bucket):
 def UpdateLiteClient(chain_info):
     chain_id = chain_info["chain-id"]
     print(f"INFO: Updating {chain_id} chain lite client...")
-    if not RelayerHelper.UpdateLiteClient(chain_info):
+    if not RelayerHelper.UpdateLiteClient(chain_id):
         print(f"ERROR: Failed to update {chain_id} lite client")
         return False
     print(f"SUCCESS: Updated {chain_id} lite client")
@@ -158,7 +158,7 @@ def GasUpdateAssert(chain_info, gas):
     chain_id = chain_info["chain-id"]
     if not RelayerHelper.ConfigureDefaultGas(chain_id, gas): # rly ch edit kira-alpha gas 100000
         raise Exception(f"WARNING: Failed to configure gas of the {chain_id} chain")
-    if not UpdateLiteClient(connection):
+    if not UpdateLiteClient(chain_info):
         raise Exception("Failed to update lite client after adjusting gas prices")
     print(f"SUCCESS: New gas price for {chain_id} chain was set to {gas}")
     return True
