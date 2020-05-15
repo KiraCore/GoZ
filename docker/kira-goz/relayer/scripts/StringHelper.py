@@ -30,10 +30,19 @@ def Trim(s):
           return s
       else:
           oldLen = newLen
-    
+
 def IsString(s):
     return isinstance(s, (str))
 
+def ToBool(b):
+    if isinstance(b, (bool)):
+        return b
+    if isinstance(b, (bytes, bytearray)):
+        b = bytes(b).decode('utf-8')
+    if not b:
+        return False
+    return Trim(b.lower()) in ("yes", "true", "t", "1", "y", "ok")
+    
 def IsSafeJson(data):
     if data is None:
         return True
@@ -52,3 +61,4 @@ def WriteJsonToFile(s, path):
     else:
         json.dump(f"{s}",f,ensure_ascii=False, indent=4)
     f.close()
+

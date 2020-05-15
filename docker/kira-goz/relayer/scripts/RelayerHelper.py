@@ -392,9 +392,13 @@ def UpdateClientConnection(chain_info, path):
         dst_chain_id = src_chain_id
         src_chain_id = tmp
 
-    depth_now=0
-    depth_max=100
+    
     gas_min = chain_info.get("gas-min", 0)
+    gas_step = chain_info.get("gas-step", 10000) + 1
+    gas_max = chain_info.get("gas-max", 2000000)
+
+    depth_now=0
+    depth_max=int((gas_max-gas_min)/gas_step)
     while True:
         depth_now = depth_now + 1
 
@@ -411,10 +415,14 @@ def UpdateClientConnection(chain_info, path):
             gas_wanted=int(tx.get("gas_wanted", f"{gas_min}"))
             
             if gas_used > 0 and gas_used > gas_wanted: # update gas if our of gas
-                print(f"WARNING: Out of gas, increasing from {gas_wanted} to {gas_used}")
-                ClientHelper.GasUpdateAssert(chain_info, gas_used + 1000)
+                if(gas_used < gas_max - gas_step):
+                    gas_used = gas_used + gas_step
+                print(f"WARNING: Out of gas. Re-Try {depth_now}/{depth_max}, increasing from {gas_wanted} to {gas_used}")
+                ClientHelper.GasUpdateAssert(chain_info, gas_used)
                 continue
-            
             return False
+        else: # success
+            break
+    
     print(f"SUCCESS: Client was updated: {tx}")
     return True

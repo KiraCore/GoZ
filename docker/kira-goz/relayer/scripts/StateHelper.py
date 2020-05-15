@@ -34,7 +34,17 @@ def TryS3WriteText(text, bucket, s3_key_path):
 def TryS3FileExists(bucket, s3_key_path):
     return False if None == RelayerHelper.callRaw(f"AWSHelper s3 object-exists --bucket='{bucket}' --path='{s3_key_path}' --throw-if-not-found=True",False) else True
 
+def S3FileExists(bucket, s3_key_path):
+    out = RelayerHelper.callRaw(f"AWSHelper s3 object-exists --bucket='{bucket}' --path='{s3_key_path}' --throw-if-not-found=False --silent=True",True)
+    if None == out:
+        raise Exception(f"Call failed when checking if file exists as {s3_key_path} in the {bucket} S3 bucket")
+    return StringHelper.ToBool(out)
+
 def S3ReadText(bucket, s3_key_path):
+    if not S3FileExists(bucket, s3_key_path):
+        print(f"WARNING: File {bucket}/{s3_key_path} does not exist in S3")
+        return {}
+        
     out = RelayerHelper.callRaw(f"AWSHelper s3 download-text --bucket='{bucket}' --path='{s3_key_path}' --silent=true --throw-if-not-found=False",True)
     if None == out:
         raise Exception(f"Failed to read {s3_key_path} file from {bucket} bucket in S3")
@@ -42,7 +52,11 @@ def S3ReadText(bucket, s3_key_path):
         print(f"SUCCESS: Read all {len(out)} characters from {bucket}/{s3_key_path} path in S3")
         return out
 
-def S3ReadJson(bucket, s3_key_path):
+def S3ReadJson(bucket, s3_key_path): # AWSHelper s3 object-exists --bucket='kira-core-goz' --path='relayer/kira-alpha_kira-1-1b/alpha/state.json' --throw-if-not-found=False
+    if not S3FileExists(bucket, s3_key_path):
+        print(f"WARNING: File {bucket}/{s3_key_path} does not exist in S3")
+        return {}
+
     out = RelayerHelper.callJson(f"AWSHelper s3 download-text --bucket='{bucket}' --path='{s3_key_path}' --silent=true --throw-if-not-found=False",True)
     if None == out:
         raise Exception(f"Failed to read {s3_key_path} file from {bucket} bucket in S3")

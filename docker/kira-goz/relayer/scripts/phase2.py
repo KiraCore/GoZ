@@ -60,7 +60,7 @@ print(f"|_________________________________|")
 state_file_path = f"relayer/{path}/{key_prefix}/state.json"
 print(f"INFO: Fetching '{state_file_path}' state file from S3...")
 state_file = StateHelper.S3ReadJson(BUCKET,state_file_path)
-if None == state_file or (len(state_file) <= 1): # error
+if None == state_file: # error
     raise Exception(f"Error occurred while fetching {state_file_path} from {BUCKET} bucket")
 
 # this command is asserted and throws if connection is not estbalished
