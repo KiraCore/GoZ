@@ -9,5 +9,5 @@
   "gas-max": 4000000,
   "gas-prices": "0.0025ukex",
   "default-denom": "ukex",
-  "trusting-period": "503h"
+  "trusting-period": "9m"
 }
