@@ -6,8 +6,8 @@
   "gas": 200000,
   "gas-min": 0,
   "gas-step": 100,
-  "gas-max": 4000000,
+  "gas-max": 1000000,
   "gas-prices": "0.0025ulol",
   "default-denom": "ulol",
-  "trusting-period": "4m"
+  "trusting-period": "3m"
 }

@@ -11,7 +11,7 @@ RUN LC_ALL=C DEBIAN_FRONTEND=noninteractive ${BUILD_SCRIPT}
 
 RUN printenv 
 
-HEALTHCHECK --interval=60s --timeout=600s --start-period=600s --retries=3 CMD ${HEALTHCHECK_SCRIPT} $> ${SELF_LOGS}/healthcheck_script_output.txt
+HEALTHCHECK --interval=60s --timeout=600s --start-period=600s --retries=3 CMD ${HEALTHCHECK_SCRIPT} $>> ${SELF_LOGS}/healthcheck_script_output.txt
 
 CMD ["sh", "-c", "/bin/bash ${START_SCRIPT}"]
 

@@ -65,8 +65,6 @@ CDHelper email send \
  --html="false" \
  --recursive="true" \
  --attachments="$SELF_LOGS,/var/log/journal"
-        sleep 120 # rate limit
-        rm -f ${SELF_LOGS}/healthcheck_script_output.txt # remove old log to save space
     fi
     exit 1  
 else 
@@ -81,8 +79,6 @@ CDHelper email send \
  --body="[$(date)] Gaia($STATUS_GAIA), LCD($STATUS_LCD) and NGINX($STATUS_NGINX) suceeded, RPC Status: $RPC_STATUS" \
  --html="false" || true
     fi
-    sleep 120 # rate limit
-    rm -f ${SELF_LOGS}/healthcheck_script_output.txt # remove old log to save space
 fi
 
 echo "INFO: Healthcheck => STOP"

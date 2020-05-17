@@ -3,11 +3,11 @@
   "chain-id": "gameofzoneshub-1b",
   "rpc-addr": "http://goz-trust-alias.kiraex.com:26657",
   "account-prefix": "cosmos",
-  "gas": 1000000,
+  "gas": 200000,
   "gas-min": 70000,
-  "gas-step": 10000,
-  "gas-max": 4000000,
+  "gas-step": 5000,
+  "gas-max": 2000000,
   "gas-prices": "0.0025doubloons",
   "default-denom": "doubloons",
-  "trusting-period": "503h"
+  "trusting-period": "4m"
 }

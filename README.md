@@ -1,6 +1,20 @@
 # GoZ
 Game of Zones
 
+## Phase 1b
+START: `18.05.2020 07:00 AM` 
+END:   `21.05.2020 07:00 AM` 
+DURATION: `72h`
+RLY Public Key: `cosmos1efzs6x9244z9hjz6pcrsam4muxxms74wz98h7c`
+Tokens In Genesis: `1200000`
+Gas Price: `0.0025`
+Estimated Tx Cost Min: `200000*0.0025=500`
+Estimated Tx Cost Max: `1000000*0.0025=2500`
+Transactions Max: `1200000/500=2400`
+Transactions Min: `1200000/2500=480`
+Update Span Min: `(3600*72)/2400=108s` or `1.8m`
+Update Span Max: `(3600*72)/480=540s` or `9m`
+
 Validator Address: `goz.kiraex.com` 
 Node Info: 
  * External: `curl goz.kiraex.com:10002/node_info`

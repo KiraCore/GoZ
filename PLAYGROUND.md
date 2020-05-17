@@ -62,7 +62,15 @@ i=$(cat $j1) && s=$(echo $i | jq -r '."chain-id"') && \
 
 
 
-
+CDHelper email send \
+ --from="noreply@kiracore.com" \
+ --to="asmodat@gmail.com" \
+ --subject="[GoZ] $(curl -H 'Metadata-Flavor: Google' http://metadata/computeMetadata/v1/instance/name 2>/dev/null) DEBUG" \
+ --body="[$(date)] PHASE1 debug." \
+ --html="false" \
+ --recursive="false" \
+ --attachments="$SELF_LOGS/relayer.txt"
+    exit 1
 
 
 

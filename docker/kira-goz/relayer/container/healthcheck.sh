@@ -49,8 +49,6 @@ CDHelper email send \
  --html="false" \
  --recursive="true" \
  --attachments="$SELF_LOGS,/var/log/journal"
-        sleep 120 # allow user to grab log output
-        rm -f ${SELF_LOGS}/healthcheck_script_output.txt # remove old log to save space
         fi
     exit 1  
 else 
@@ -65,8 +63,6 @@ CDHelper email send \
  --body="[$(date)] Relayer($STATUS_RELAYER) suceeded" \
  --html="false" || true
     fi
-    sleep 120 # allow user to grab log output
-    rm -f ${SELF_LOGS}/healthcheck_script_output.txt # remove old log to save space
 fi
 
 echo "INFO: Healthcheck => STOP"
