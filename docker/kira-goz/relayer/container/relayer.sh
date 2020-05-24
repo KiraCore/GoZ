@@ -83,4 +83,7 @@ fi
 
 # Phase 2
 # Alpha -> Kira
-# python3 $SELF_SCRIPTS/phase2.py $SELF_UPDATE/common/configs/kira-alpha.json "$RLYKEY_MNEMONIC" $SELF_UPDATE/common/configs/kira-1.json "$RLYKEY_MNEMONIC" $BUCKET "goz_alpha_v1" "alpha" 2
+# python3 $SELF_SCRIPTS/phase2.py $SELF_UPDATE/common/configs/kira-alpha.json "$RLYKEY_MNEMONIC" $SELF_UPDATE/common/configs/kira-1-2.json "$RLYKEY_MNEMONIC" $BUCKET "goz_alpha_v7" "test_key_v7" 2
+
+
+# python3 $SELF_SCRIPTS/phase2.py $SELF_UPDATE/common/configs/kira-alpha.json "$RLYKEY_MNEMONIC" $SELF_UPDATE/common/configs/kira-1-2.json "$RLYKEY_MNEMONIC" $BUCKET "goz_alpha_v8" "test_key_v8" 2

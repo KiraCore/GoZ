@@ -32,7 +32,7 @@ key_prefix = "chain_key" if ((not key_prefix) or (len(key_prefix) <= 1)) else ke
 min_ttl = int(min_ttl)*60
 
 # constants 
-timeout = 60
+timeout = 120
 upload_period = 60*60
 
 print(f" _________________________________")
@@ -109,15 +109,6 @@ while True:
         print(f"FAILURE: Connection was dropped or failed to query status. Current session duration: {timedelta(seconds=current_session)}")
         break
 
-    ttl = RelayerHelper.GetRemainingTimesToLive(connection)
-
-    if not ttl:
-        print(f"FAILURE: Could not fetch remaining TTL")
-        break
-
-    ttl_src = int(ttl["src"]) # source connection time to live
-    ttl_dst = int(ttl["dst"]) # destination connection time to live
-
     src_cfg = RelayerHelper.ShowChain(src_chain_id)
     dst_cfg = RelayerHelper.ShowChain(dst_chain_id)
     src_gas = src_cfg["gas"]
@@ -143,8 +134,6 @@ while True:
     print(f"|--------------------------------|")
     print(f"| INFO: Current Session:         - {timedelta(seconds=current_session)}") # time since routine was started
     print(f"| INFO: Total uptime:            - {timedelta(seconds=total_uptime)}")
-    print(f"| INFO: Source Client TTL:       - {max(0, ttl_src)}s")
-    print(f"| INFO: Destination Client TTL:  - {max(0, ttl_dst)}s")
     print(f"| INFO: Next State Upload:       - {max(0,int(time_to_upload))}s")
     print(f"| INFO: Source Key balance:      - {src_key} {ClientHelper.QueryFeeTokenBalance(src)} {src_denom}")
     print(f"| INFO: Destination Key balance: - {dst_key} {ClientHelper.QueryFeeTokenBalance(dst)} {dst_denom}")
@@ -159,7 +148,6 @@ while True:
 
     print(f"INFO: Setting GAS prices, to the minimum of SRC => {src_gas_min}")
     ClientHelper.GasUpdateAssert(src, src_gas_min)
-    print(f"INFO: Remaining time to live of the source connection ({ttl_src}) is smaller than min TTL of {min_ttl}, updating...")
     if not RelayerHelper.UpdateClientConnection(src, path): # rly transact raw update-client $s $d $(rly pth s $p -j | jq -r '.chains.dst."client-id"')
         print(f"WARNING: Failed to update source connection")
         continue
@@ -168,7 +156,6 @@ while True:
 
     print(f"INFO: Setting GAS prices, to the minimum of DST => {dst_gas_min}")
     ClientHelper.GasUpdateAssert(dst, dst_gas_min)
-    print(f"INFO: Remaining time to live of the destination connection ({ttl_dst}) is smaller than min TTL of {min_ttl}, updating...")
     if not RelayerHelper.UpdateClientConnection(dst, path):
         print(f"WARNING: Failed to update destination connection")
         continue
@@ -180,7 +167,7 @@ while True:
 ########################################################################################################################################
 
     amount_src = f"1{src_denom}"
-    amount_dst = f"1{dst_denom}"
+    #amount_dst = f"1{dst_denom}"
 
     pending = RelayerHelper.CountPendingTransactions(path)
     if pending > 0:
@@ -216,18 +203,18 @@ while True:
         pending = RelayerHelper.CountPendingTransactions(path)
         if pending > 0:
             print(f"WARNING: Found {pending} pending transactions")
-            
-            if pending > 4:
-                print(f"FATAL: Maximum number of pending transactions exceeded, shutting down connection")
-                IBCHelper.ShutdownConnection(connection)
-                exit(1)
 
             if not RelayerHelper.PushPendingTransactions(path): # rly tx rly $p --debug
                 print(f"WARNING: Failed to push pending transactions ({failed_tx_counter})")
-                continue
             else:
+                pending = 0
                 failed_tx_counter = 0
                 continue
+            
+            if pending > 10:
+                print(f"FATAL: Maximum number of pending transactions exceeded, shutting down connection")
+                IBCHelper.ShutdownConnection(connection)
+                exit(1)
         elif success: # success and nothing is pending
             tx_elapsed = float(time.time() - tx_start)
             print(f"INFO: Current Tx Speed: {(tx_cnt/tx_elapsed)} TPS")

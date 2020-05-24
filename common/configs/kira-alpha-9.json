@@ -1,0 +1,13 @@
+{
+  "key": "faucet",
+  "chain-id": "kira-alpha-9",
+  "rpc-addr": "http://internal-alpha-9.kiraex.com:10001",
+  "account-prefix": "cosmos",
+  "gas": 500001,
+  "gas-min": 500001,
+  "gas-step": 100000,
+  "gas-max": 4000001,
+  "gas-prices": "0.005ulol9",
+  "default-denom": "ulol9",
+  "trusting-period": "501h"
+}
