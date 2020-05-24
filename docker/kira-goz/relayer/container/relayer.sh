@@ -46,7 +46,7 @@ if [ "${RLY_TEST}" == "true"  ] ; then
      exit 0
 else
     echo "INFO: Entering relayer MAINNET mode"
-python3 $SELF_SCRIPTS/phase1.py \
+python3 $SELF_SCRIPTS/phase2.py \
  $SRC_CHAIN_FULL_PATH \
  "$RLYKEY_MNEMONIC" \
  $DST_CHAIN_FULL_PATH \

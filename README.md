@@ -2,18 +2,50 @@
 Game of Zones
 
 ## Phase 1b
-START: `18.05.2020 07:00 AM` 
-END:   `21.05.2020 07:00 AM` 
-DURATION: `72h`
-RLY Public Key: `cosmos1efzs6x9244z9hjz6pcrsam4muxxms74wz98h7c`
-Tokens In Genesis: `1200000`
-Gas Price: `0.0025`
-Estimated Tx Cost Min: `200000*0.0025=500`
-Estimated Tx Cost Max: `1000000*0.0025=2500`
-Transactions Max: `1200000/500=2400`
-Transactions Min: `1200000/2500=480`
-Update Span Min: `(3600*72)/2400=108s` or `1.8m`
-Update Span Max: `(3600*72)/480=540s` or `9m`
+
+* START: `18.05.2020 07:00 AM` 
+* END:   `21.05.2020 07:00 AM` 
+* DURATION: `72h`
+* RLY Public Key: `cosmos1efzs6x9244z9hjz6pcrsam4muxxms74wz98h7c`
+* Tokens In Genesis: `1200000`
+* Gas Price: `0.0025`
+* Estimated Tx Cost Min: `200000*0.0025=500`
+* Estimated Tx Cost Max: `1000000*0.0025=2500`
+* Transactions Max: `1200000/500=2400`
+* Transactions Min: `1200000/2500=480`
+* Update Span Min: `(3600*72)/2400=108s` or `1.8m`
+* Update Span Max: `(3600*72)/480=540s` or `9m`
+
+* Actual Tx Gas: `111247`
+* Balance Remaining: `1194500`
+* Actual Tx Cost: `111247*0.0025=~300`
+* Transactions Max: `1194500/300=3981`
+* Update Span Min: `(3600*79)/3981=71s` or `1.18m`
+
+* Tokens In Genesis: `1200000`
+* Cost To Connect: `2500`
+* Average Update Cost: `84500`
+* Gas Price: `0.0025`
+* Tx Cost: `84500*0.0025=212`
+* Max Number Of Updates: `(1200000-2500)/212=5648`
+* Shortest Trust Possible: `255600/5648=46`
+
+## Phase 2b
+
+* START: `25.05.2020 07:00 AM` 
+* END:   `28.05.2020 07:00 AM` 
+* DURATION: `72h`
+* RLY Public Key: `cosmos1efzs6x9244z9hjz6pcrsam4muxxms74wz98h7c`
+* Tokens In Genesis: `10000000000`
+* Gas Price: `0.0025`
+* Estimated Tx Cost Min: `200000*0.0025=500`
+* Estimated Tx Cost Max: `1000000*0.01=10000`
+* Transactions Max: `10000000000/500=20000000`
+* Transactions Min: `10000000000/10000=1000000`
+* Update Span Min: `(3600*72)/20000000=0.013s` or `77 TPS`
+* Update Span Max: `(3600*72)/1000000=0.26s` or `39 TPS`
+
+
 
 Validator Address: `goz.kiraex.com` 
 Node Info: 
@@ -65,7 +97,7 @@ Private Sentry:
 
 SEEDS: 
 ```
-d95a9f97e31f36d0a467e6855c71f5e5b8eccf65@34.83.90.172:26656,6ed008bf3a2ad341d84391bf47ea46e75a87e35e@35.233.155.199:26656,7cb9cbba21fdc3b004f098c116e5e2c2ac77ddfb@34.83.218.4:26656,tcp://c65d517ed3784605c96fb6be5a16c4d577e35bb3@internal-goz-sentry-public.kiraex.com:10000
+d95a9f97e31f36d0a467e6855c71f5e5b8eccf65@34.83.90.172:26656,6ed008bf3a2ad341d84391bf47ea46e75a87e35e@35.233.155.199:26656,7cb9cbba21fdc3b004f098c116e5e2c2ac77ddfb@34.83.218.4:26656,ef36b3167b8599c46b0daf799f089068360c3911@34.83.0.237:26656,tcp://c65d517ed3784605c96fb6be5a16c4d577e35bb3@internal-goz-sentry-public.kiraex.com:10000
 ```
 
 Public Sentry:
@@ -75,7 +107,7 @@ Public Sentry:
 
 SEEDS: 
 ```
-d95a9f97e31f36d0a467e6855c71f5e5b8eccf65@34.83.90.172:26656,6ed008bf3a2ad341d84391bf47ea46e75a87e35e@35.233.155.199:26656,7cb9cbba21fdc3b004f098c116e5e2c2ac77ddfb@34.83.218.4:26656
+d95a9f97e31f36d0a467e6855c71f5e5b8eccf65@34.83.90.172:26656,6ed008bf3a2ad341d84391bf47ea46e75a87e35e@35.233.155.199:26656,7cb9cbba21fdc3b004f098c116e5e2c2ac77ddfb@34.83.218.4:26656,ef36b3167b8599c46b0daf799f089068360c3911@34.83.0.237:26656
 ```
 
 # Localhost

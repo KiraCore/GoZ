@@ -1,6 +1,7 @@
 
 import IBCHelper
 import RelayerHelper
+import NetworkHelper
 import StringHelper
 import StateHelper
 import ClientHelper

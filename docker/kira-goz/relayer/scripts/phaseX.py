@@ -11,11 +11,13 @@ import statistics
 import sys
 import os
 import time
+import asyncio
+# import settings
 from joblib import Parallel, delayed
 from datetime import timedelta, datetime
-from multiprocessing import Process, Queue
 
-# Update: (rm $SELF_SCRIPTS/phase1.py || true) && nano $SELF_SCRIPTS/phase1.py 
+
+# Update: (rm $SELF_SCRIPTS/phase2.py || true) && nano $SELF_SCRIPTS/phase2.py 
 
 # console args
 t0 = time.time()
@@ -33,7 +35,15 @@ min_ttl = int(min_ttl)*60
 
 # constants 
 timeout = 60
-upload_period = 60*60
+upload_period = 5*60
+
+# variables
+state_file = {}
+src = None ; dst = None
+src_conn_id = None ; dst_conn_id =  None
+src_chain_id = None ; dst_chain_id = None
+src_denom = None ; dst_denom = None
+src_key = None ; dst_key = None
 
 print(f" _________________________________")
 print(f"|     STARTING RELAYER v0.0.2     |")
@@ -77,21 +87,16 @@ total_uptime = connection["total-uptime"] = state_file.get("total-uptime", 0)
 total_transactions = connection["total-transactions"] = state_file.get("total-transactions", 0)
 loop_start = time_start
 
+gas_min = min(src.get("gas-min", 0),dst.get("gas-min", 0))
+gas = 0
+gas_max = max(src.get("gas-max", 1000000),dst.get("gas-max", 1000000))
+gas_min_pass = gas_max
+gas_adjustments = 0
 failed_tx_counter = 0
-src_gas_min = src.get("gas-min", 200001)
-dst_gas_min = dst.get("gas-min", 200001)
-src_gas_max = src.get("gas-max", src_gas_min)
-dst_gas_max = dst.get("gas-max", src_gas_min)
-src_cfg = RelayerHelper.ShowChain(src_chain_id) # rly ch show kira-alpha -j
-dst_cfg = RelayerHelper.ShowChain(dst_chain_id) # rly ch show kira-1 -j
-src_gas_default = src_cfg.get("gas", src_gas_min)
-dst_gas_default = dst_cfg.get("gas", dst_gas_min)
 
 print(f"INFO: Connection was established within {init_time}s")
 print(f"INFO: Max init time: {max_init_time}s")
 print(f"INFO: Min init time: {min_init_time}s")
-print(f"INFO: SRC => Gas Min ({src_gas_min}), Gas Now ({src_gas_default}), Gas Max ({src_gas_max})")
-print(f"INFO: DST => Gas Min ({dst_gas_min}), Gas Now ({dst_gas_default}), Gas Max ({dst_gas_max})")
 
 while True:
     loop_elapsed = int(time.time() - loop_start)
@@ -118,24 +123,28 @@ while True:
     ttl_src = int(ttl["src"]) # source connection time to live
     ttl_dst = int(ttl["dst"]) # destination connection time to live
 
-    src_cfg = RelayerHelper.ShowChain(src_chain_id)
-    dst_cfg = RelayerHelper.ShowChain(dst_chain_id)
-    src_gas = src_cfg["gas"]
-    dst_gas = dst_cfg["gas"]
-
     connection["src"] = src = ClientHelper.AssertRefreshBalances(src)
     connection["dst"] = dst = ClientHelper.AssertRefreshBalances(dst)
+    src_balances = src["balance"] 
+    dst_balances = dst["balance"]
+    src_tokens = RelayerHelper.GetAmountByDenom(src_balances, src_denom)
+    dst_tokens = RelayerHelper.GetAmountByDenom(dst_balances, dst_denom)
+    src_cfg = RelayerHelper.ShowChain(src_chain_id) # rly ch show kira-alpha -j
+    dst_cfg = RelayerHelper.ShowChain(dst_chain_id) # rly ch show kira-1 -j
+    src_gas = src_cfg.get("gas", gas_min)
+    dst_gas = dst_cfg.get("gas", gas_min)
     src_gas_price = float(src_cfg["gas-prices"][:-len(src_denom)])
     dst_gas_price = float(dst_cfg["gas-prices"][:-len(dst_denom)])
-    src_tokens = RelayerHelper.GetAmountByDenom(src["balance"], src_denom)
-    dst_tokens = RelayerHelper.GetAmountByDenom(dst["balance"], dst_denom)
-    src_fee = int(src_gas * src_gas_price)
-    dst_fee = int(dst_gas * dst_gas_price)
-    src_tx_left = int(src_tokens / (src_fee + 1))
-    dst_tx_left = int(dst_tokens / (dst_fee + 1))
+    src_fee = (src_gas * src_gas_price) + 1 # can't be 0
+    dst_fee = (dst_gas * dst_gas_price) + 1 # can't be 0
+    gas_now = max(src_gas, dst_gas)
+    gas = gas_now if gas <= 0 else gas
     tps = (total_transactions/(total_uptime + 0.1))
+    src_tx_left = src_tokens / src_fee
+    dst_tx_left = dst_tokens / dst_fee
+    max_transactions_left = min(src_tx_left, dst_tx_left)
 
-    print(f"----------------------------------")
+    print(f"_________________________________")
     print(f"|        Source Chain            - {src_chain_id} ({src_conn_id})")
     print(f"|      Destination Chain         - {dst_chain_id} ({dst_conn_id})")
     print(f"|       Connection Path          - {path}")
@@ -146,116 +155,107 @@ while True:
     print(f"| INFO: Source Client TTL:       - {max(0, ttl_src)}s")
     print(f"| INFO: Destination Client TTL:  - {max(0, ttl_dst)}s")
     print(f"| INFO: Next State Upload:       - {max(0,int(time_to_upload))}s")
-    print(f"| INFO: Source Key balance:      - {src_key} {ClientHelper.QueryFeeTokenBalance(src)} {src_denom}")
-    print(f"| INFO: Destination Key balance: - {dst_key} {ClientHelper.QueryFeeTokenBalance(dst)} {dst_denom}")
-    print(f"| INFO: Source Chain GAS:        - {src_gas} | {src_gas_price} {src_denom}")
-    print(f"| INFO: Destination Chain GAS:   - {dst_gas} | {dst_gas_price} {dst_denom}")
-    print(f"| INFO: Source Tx Fee:           - {src_fee} {src_denom}")
-    print(f"| INFO: Destination Tx Fee:      - {dst_fee} {dst_denom}")
-    print(f"| INFO: Source Tx Left:          - {src_tx_left}")
-    print(f"| INFO: Destination Tx Left:     - {dst_tx_left}")
+    print(f"| INFO: Source Key balance:      - {src_key} {src_tokens} {src_denom}")
+    print(f"| INFO: Destination Key balance: - {dst_key} {dst_tokens} {dst_denom}")
+    print(f"| INFO: Total Transactions:      - {total_transactions}")
+    print(f"| INFO: Max Transactions Left:   - {max_transactions_left}")
     print(f"| INFO: Average TPS:             - {tps}")
-    print(f"----------------------------------")
+    print(f"| INFO: Gas Current:             - {gas_now}")
+    print(f"| INFO: Gas Minimum:             - {gas_min}")
+    print(f"|________________________________|")
 
-    print(f"INFO: Setting GAS prices, to the minimum of SRC => {src_gas_min}")
-    ClientHelper.GasUpdateAssert(src, src_gas_min)
-    print(f"INFO: Remaining time to live of the source connection ({ttl_src}) is smaller than min TTL of {min_ttl}, updating...")
-    if not RelayerHelper.UpdateClientConnection(src, path): # rly transact raw update-client $s $d $(rly pth s $p -j | jq -r '.chains.dst."client-id"')
-        print(f"WARNING: Failed to update source connection")
-        continue
-    else:
-        print(f"SUCCESS: Source client connection ({src_chain_id}) was updated")
-
-    print(f"INFO: Setting GAS prices, to the minimum of DST => {dst_gas_min}")
-    ClientHelper.GasUpdateAssert(dst, dst_gas_min)
-    print(f"INFO: Remaining time to live of the destination connection ({ttl_dst}) is smaller than min TTL of {min_ttl}, updating...")
-    if not RelayerHelper.UpdateClientConnection(dst, path):
-        print(f"WARNING: Failed to update destination connection")
-        continue
-    else:
-        print(f"SUCCESS: Destination client connection ({dst_chain_id}) was updated")
-            
 ########################################################################################################################################
 #                                                          Tx Relay                                                                    #
 ########################################################################################################################################
 
-    amount_src = f"1{src_denom}"
-    amount_dst = f"1{dst_denom}"
-    def tx1(r):
-        tx_src = RelayerHelper.TransferTokensInternally(src, dst, amount_src, path)
-        r.put(tx_src)
-    def tx2(r):
-        tx_dst = RelayerHelper.TransferTokensInternally(src, dst, amount_src, path)
-        r.put(tx_dst)
-
-    while True:
-        tx_to_relay = 10
-        tx_cnt = 0
+    print(f"INFO: Starting transfer loop...")
+    while min(ttl_src, ttl_dst) > min_ttl and time_to_upload > 0:
         tx_start = time.time()
-        print(f"INFO: Pushing any pending transactions...");
-        if not RelayerHelper.PushPendingTransactions(path):
-            print(f"WARNING: Failed to push pending transactions")
-
+        upload_elapsed = int(time.time() - upload_time)
+        time_to_upload = int(upload_period - upload_elapsed)
         success=True
-        
-        for i in range(tx_to_relay/2):
-            r1 = Queue()
-            r2 = Queue()
-            p1 = Process(target=tx1, args=(r1))
-            p1.start()
-            p2 = Process(target=tx2, args=(r2))
-            p2.start()
-            
-            tx_src = r1.get()
-            tx_dst = r2.get()
-
-            if tx_src:
-                tx_cnt = tx_cnt + 1
-                total_transactions = total_transactions + 1
-                print(f"INFO: Transfer {total_transactions} {amount_src} from {src_chain_id} -> {dst_chain_id}, Result: {tx_src}")
-            else:
-                failed_tx_counter = failed_tx_counter + 1
-                success = False
-                break
-
-            if tx_dst:
-                tx_cnt = tx_cnt + 1
-                total_transactions = total_transactions + 1
-                print(f"INFO: Transfer {total_transactions} {amount_dst} from {dst_chain_id} -> {src_chain_id}, Result: {tx_dst}")
-            else:
-                failed_tx_counter = failed_tx_counter + 1
-                success = False
-                break
+        amount_src = f"1{src_denom}"
+        amount_dst = f"1{dst_denom}"
+        tx_src = RelayerHelper.TransferTokensInternally(src, dst, amount_src, path)
+        tx_dst = RelayerHelper.TransferTokensInternally(dst, src, amount_dst, path)
+        if tx_src:
+            print(f"INFO: Transfer {amount_src} from {src_chain_id} -> {dst_chain_id}, Result: {tx_src}")
+        else:
+            success = False
+        if tx_dst:
+            print(f"INFO: Transfer {amount_dst} from {dst_chain_id} -> {src_chain_id}, Result: {tx_dst}")
+        else:
+            success = False
 
         pending = RelayerHelper.CountPendingTransactions(path)
         if pending > 0:
             print(f"WARNING: Found {pending} pending transactions")
             
-            if pending > tx_to_relay:
+            if pending > 10:
                 print(f"FATAL: Maximum number of pending transactions exceeded, shutting down connection")
                 IBCHelper.ShutdownConnection(connection)
                 exit(1)
 
+            old_gas = gas
+            gas = int(gas + ((gas_max - gas) / 2))
+            IBCHelper.GasUpdateAsserts(connection, gas) # rly ch edit $s gas 100000
             if not RelayerHelper.PushPendingTransactions(path): # rly tx rly $p --debug
+                failed_tx_counter = failed_tx_counter + 1
                 print(f"WARNING: Failed to push pending transactions ({failed_tx_counter})")
                 break
             else:
                 failed_tx_counter = 0
+                gas = int(old_gas + (old_gas / 2))
+                IBCHelper.GasUpdateAsserts(connection, gas)
                 continue
         elif success: # success and nothing is pending
+            failed_tx_counter = 0
+            gas_adjustments = gas_adjustments + 1
+            gas_min_pass = gas if gas_min_pass > gas else gas_min_pass
+            if gas_adjustments == 25: # change min gas after 25 successful transactions
+                gas_min = gas_min_pass
+
+            gas = int(gas - ((gas - gas_min) / 2))
+            IBCHelper.GasUpdateAsserts(connection, gas)
+
             tx_elapsed = float(time.time() - tx_start)
-            print(f"INFO: Current Tx Speed: {(tx_cnt/tx_elapsed)} TPS")
+            ttl_src = int(ttl_src - tx_elapsed)
+            ttl_dst = int(ttl_src - tx_elapsed)
+            total_transactions = total_transactions + 2
+            print(f"INFO: Current Tx Speed: {(2/tx_elapsed)} TPS, TTL: {min(ttl_src,ttl_dst)}s")
         else: # failure
+            failed_tx_counter = failed_tx_counter + 1
+            gas = int(gas + ((gas_max - gas) / 2))
+            IBCHelper.GasUpdateAsserts(connection, gas)
             print(f"ERROR: One of the transactions failed ({failed_tx_counter})")
             break
 
 ########################################################################################################################################
-#                                                          Tx Relay                                                                    #
-########################################################################################################################################
+
+    skip_upload = False
+    if ttl_src <= min_ttl:
+        print(f"INFO: Remaining time to live of the source connection ({ttl_src}) is smaller than min TTL of {min_ttl}, updating...")
+        if not RelayerHelper.UpdateClientConnection(src, path):
+            print(f"WARNING: Failed to update source connection")
+            skip_upload = True
+        else:
+            print(f"SUCCESS: Source client connection ({src_chain_id}) was updated")
+
+    if ttl_dst <= min_ttl:
+        print(f"INFO: Remaining time to live of the destination connection ({ttl_dst}) is smaller than min TTL of {min_ttl}, updating...")
+        if not RelayerHelper.UpdateClientConnection(dst, path):
+            print(f"WARNING: Failed to update destination connection")
+            skip_upload = True
+        else:
+            print(f"SUCCESS: Destination client connection ({dst_chain_id}) was updated")
 
     print(f"INFO: Updating lite clients...");
     if not IBCHelper.RestartLiteClients(connection):
         print(f"WARNING: Failed to update lite clients")
+
+    print(f"INFO: Pushing any pending transactions...");
+    if not RelayerHelper.PushPendingTransactions(path):
+        print(f"WARNING: Failed to push pending transactions")
 
     if time_to_upload < 0:
         connection["total-transactions"] = total_transactions
@@ -263,6 +263,6 @@ while True:
         StateHelper.S3WriteText(connection,BUCKET,state_file_path);
 
 
-print(f"ERROR: Failed to maitain connection between {src_id} and {dst_id}, Uptime: {timedelta(seconds=int(time.time() - time_start))}")
+print(f"ERROR: Failed to maitain connection between {src_chain_id} and {dst_chain_id}, Uptime: {timedelta(seconds=int(time.time() - time_start))}")
 print(f"INFO: Script Failed (1)")
 exit(1)

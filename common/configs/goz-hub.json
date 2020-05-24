@@ -1,13 +1,13 @@
 {
   "key": "faucet",
-  "chain-id": "gameofzoneshub-1b",
+  "chain-id": "gameofzoneshub-2a",
   "rpc-addr": "http://goz-trust-alias.kiraex.com:26657",
   "account-prefix": "cosmos",
-  "gas": 200000,
-  "gas-min": 70000,
-  "gas-step": 5000,
-  "gas-max": 2000000,
-  "gas-prices": "0.0025doubloons",
+  "gas": 500001,
+  "gas-min": 500001,
+  "gas-step": 100000,
+  "gas-max": 4000001,
+  "gas-prices": "0.005doubloons",
   "default-denom": "doubloons",
-  "trusting-period": "4m"
+  "trusting-period": "501h"
 }

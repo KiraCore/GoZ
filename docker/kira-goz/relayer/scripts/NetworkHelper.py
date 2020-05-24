@@ -20,7 +20,6 @@ def IsPortOpen(host,port,timeout):
         return False
     finally:
         # s.shutdown(socket.SHUT_RDWR)
-        time.sleep(0.1)
         s.close()
 
 
