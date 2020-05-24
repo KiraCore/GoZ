@@ -15,7 +15,7 @@ from joblib import Parallel, delayed
 from datetime import timedelta, datetime
 from multiprocessing import Process, Queue
 
-# Update: (rm $SELF_SCRIPTS/phase1.py || true) && nano $SELF_SCRIPTS/phase1.py 
+# Update: (rm $SELF_SCRIPTS/phase2.py || true) && nano $SELF_SCRIPTS/phase2.py 
 
 # console args
 t0 = time.time()
@@ -181,64 +181,50 @@ while True:
 
     amount_src = f"1{src_denom}"
     amount_dst = f"1{dst_denom}"
-    def tx1(r):
-        tx_src = RelayerHelper.TransferTokensInternally(src, dst, amount_src, path)
-        r.put(tx_src)
-    def tx2(r):
-        tx_dst = RelayerHelper.TransferTokensInternally(src, dst, amount_src, path)
-        r.put(tx_dst)
 
-    while True:
-        tx_to_relay = 10
-        tx_cnt = 0
-        tx_start = time.time()
-        print(f"INFO: Pushing any pending transactions...");
+    pending = RelayerHelper.CountPendingTransactions(path)
+    if pending > 0:
+        print(f"WARNING: Found {pending} pending transactions")
         if not RelayerHelper.PushPendingTransactions(path):
             print(f"WARNING: Failed to push pending transactions")
 
+    while True:
+        tx_cnt = 0
+        tx_start = time.time()
+
         success=True
-        
-        for i in range(tx_to_relay/2):
-            r1 = Queue()
-            r2 = Queue()
-            p1 = Process(target=tx1, args=(r1))
-            p1.start()
-            p2 = Process(target=tx2, args=(r2))
-            p2.start()
-            
-            tx_src = r1.get()
-            tx_dst = r2.get()
+        tx_src = RelayerHelper.TransferTokensInternally(src, dst, amount_src, path)
 
-            if tx_src:
-                tx_cnt = tx_cnt + 1
-                total_transactions = total_transactions + 1
-                print(f"INFO: Transfer {total_transactions} {amount_src} from {src_chain_id} -> {dst_chain_id}, Result: {tx_src}")
-            else:
-                failed_tx_counter = failed_tx_counter + 1
-                success = False
-                break
+        if tx_src:
+            tx_cnt = tx_cnt + 1
+            total_transactions = total_transactions + 1
+            print(f"INFO: Transfer {total_transactions} {amount_src} from {src_chain_id} -> {dst_chain_id}, Result: {tx_src}")
+        else:
+            failed_tx_counter = failed_tx_counter + 1
+            success = False
 
-            if tx_dst:
-                tx_cnt = tx_cnt + 1
-                total_transactions = total_transactions + 1
-                print(f"INFO: Transfer {total_transactions} {amount_dst} from {dst_chain_id} -> {src_chain_id}, Result: {tx_dst}")
-            else:
-                failed_tx_counter = failed_tx_counter + 1
-                success = False
-                break
+        #if not success:
+        #    tx_dst = RelayerHelper.TransferTokensInternally(dst, src, amount_dst, path)
+        #    if tx_dst:
+        #        tx_cnt = tx_cnt + 1
+        #        total_transactions = total_transactions + 1
+        #        print(f"INFO: Transfer {total_transactions} {amount_dst} from {dst_chain_id} -> {src_chain_id}, Result: {tx_dst}")
+        #    else:
+        #        failed_tx_counter = failed_tx_counter + 1
+        #        success = False
 
         pending = RelayerHelper.CountPendingTransactions(path)
         if pending > 0:
             print(f"WARNING: Found {pending} pending transactions")
             
-            if pending > tx_to_relay:
+            if pending > 4:
                 print(f"FATAL: Maximum number of pending transactions exceeded, shutting down connection")
                 IBCHelper.ShutdownConnection(connection)
                 exit(1)
 
             if not RelayerHelper.PushPendingTransactions(path): # rly tx rly $p --debug
                 print(f"WARNING: Failed to push pending transactions ({failed_tx_counter})")
-                break
+                continue
             else:
                 failed_tx_counter = 0
                 continue
@@ -265,4 +251,5 @@ while True:
 
 print(f"ERROR: Failed to maitain connection between {src_id} and {dst_id}, Uptime: {timedelta(seconds=int(time.time() - time_start))}")
 print(f"INFO: Script Failed (1)")
+IBCHelper.ShutdownConnection(connection)
 exit(1)

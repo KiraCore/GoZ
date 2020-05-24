@@ -9,8 +9,9 @@ gaiacli query ibc client states --chain-id gameofzoneshub-1b -o json --limit 150
 docker exec -it $(docker ps -a -q --filter ancestor=kiracore/goz:kira-goz-relayer) bash
 
 
-cat $SELF_UPDATE/common/configs/kira-1-1b-long.json > a.json 
+cat $SELF_UPDATE/common/configs/kira-1-2-long.json > a.json 
 cat $SELF_UPDATE/common/configs/goz-hub-long.json > b.json
+cat $SELF_UPDATE/common/configs/kira-alpha.json > b.json # optionally
 
 cat a.json
 cat b.json
