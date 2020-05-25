@@ -3,11 +3,11 @@
   "chain-id": "kira-alpha-10",
   "rpc-addr": "http://internal-alpha-10.kiraex.com:10001",
   "account-prefix": "cosmos",
-  "gas": 500001,
-  "gas-min": 500001,
+  "gas": 1000000,
+  "gas-min": 1000000,
   "gas-step": 100000,
-  "gas-max": 4000001,
-  "gas-prices": "0.005ulol10",
+  "gas-max": 4000000,
+  "gas-prices": "0.05ulol10",
   "default-denom": "ulol10",
   "trusting-period": "501h"
 }

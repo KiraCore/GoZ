@@ -208,7 +208,11 @@ while True:
                 print(f"WARNING: Failed to push pending transactions ({failed_tx_counter})")
             else:
                 pending = 0
+                tx_cnt = tx_cnt + pending
+                total_transactions = total_transactions + pending
                 failed_tx_counter = 0
+                tx_elapsed = float(time.time() - tx_start)
+                print(f"SUCCESS: Recovered, Current Tx Speed: {(tx_cnt/tx_elapsed)} TPS")
                 continue
             
             if pending > 10:
@@ -217,7 +221,7 @@ while True:
                 exit(1)
         elif success: # success and nothing is pending
             tx_elapsed = float(time.time() - tx_start)
-            print(f"INFO: Current Tx Speed: {(tx_cnt/tx_elapsed)} TPS")
+            print(f"SUCCESS: Current Tx Speed: {(tx_cnt/tx_elapsed)} TPS")
         else: # failure
             print(f"ERROR: One of the transactions failed ({failed_tx_counter})")
             break
@@ -238,5 +242,4 @@ while True:
 
 print(f"ERROR: Failed to maitain connection between {src_id} and {dst_id}, Uptime: {timedelta(seconds=int(time.time() - time_start))}")
 print(f"INFO: Script Failed (1)")
-IBCHelper.ShutdownConnection(connection)
 exit(1)

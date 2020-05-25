@@ -3,6 +3,13 @@
 gaiacli query ibc client states --chain-id gameofzoneshub-1b -o json --limit 1500 | jq ' .[] | select(.value.trusting_period!=null) | (.value.trusting_period +","+.value.last_header.signed_header.header.time+","+.value.last_header.signed_header.header.chain_id  )'
 
 
+ci1=kira-1-2 && \
+ci2=kira-alpha && \
+ kp=test_key_v7 && \
+ rly k list $ci1 && rly k list $ci2 && \
+ rly k d $ci1 ${kp}_${ci1} && rly k d $ci2 ${kp}_${ci2}
+
+
 # Phase 1b
 > Liveness Reward
 
@@ -32,7 +39,7 @@ rly ch d $s && rly ch d $d && \
  rly k r $s $k$s "$m" && rly k r $d $k$d "$m" && \
  rly ch e $s key $k$s && rly ch e $d key $k$d && \
  rly l d $s && rly l d $d && rly pth d $p || : && \
- rly pth gen $s transfer $d transfer $p -f && \
+ rly pth gen $s transfer $d transfer $p -f --unordered && \
  rly l i $s -f && rly l i $d -f && \
  rly l u $s && rly l u $d && \
  rly tst req $s || : && rly tst req $d || :

@@ -39,11 +39,11 @@ Game of Zones
 * Tokens In Genesis: `10000000000`
 * Gas Price: `0.0025`
 * Estimated Tx Cost Min: `200000*0.0025=500`
-* Estimated Tx Cost Max: `1000000*0.01=10000`
+* Estimated Tx Cost Max: `1000000*0.05=50000`
 * Transactions Max: `10000000000/500=20000000`
-* Transactions Min: `10000000000/10000=1000000`
+* Transactions Min: `10000000000/50000=200000`
 * Update Span Min: `(3600*72)/20000000=0.013s` or `77 TPS`
-* Update Span Max: `(3600*72)/1000000=0.26s` or `39 TPS`
+* Update Span Max: `(3600*80)/200000=1.44s`
 
 
 
